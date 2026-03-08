@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { format, addDays, addWeeks, subWeeks, startOfWeek } from "date-fns";
+import { format, addDays, addWeeks, subWeeks, startOfWeek, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Agendamento } from "@/types";
@@ -111,9 +111,27 @@ export default function AdminDashboard() {
           >
             <ChevronLeft size={16} />
           </button>
-          <span className="text-sm font-sans text-[rgba(245,240,232,0.6)] min-w-[150px] text-center">
-            {weekLabel}
-          </span>
+          <div className="relative min-w-[150px] text-center">
+            <span className="text-sm font-sans text-[rgba(245,240,232,0.6)] cursor-pointer hover:text-[rgba(245,240,232,0.9)] transition-colors select-none">
+              {weekLabel}
+            </span>
+            <input
+              type="date"
+              className="absolute inset-0 opacity-0 cursor-pointer w-full"
+              onChange={(e) => {
+                if (e.target.value) {
+                  setWeekStart(
+                    format(
+                      startOfWeek(parseISO(e.target.value + "T12:00:00"), {
+                        weekStartsOn: 1,
+                      }),
+                      "yyyy-MM-dd"
+                    )
+                  );
+                }
+              }}
+            />
+          </div>
           <button
             onClick={nextWeek}
             className="p-1.5 border border-[rgba(201,168,76,0.2)] text-[rgba(245,240,232,0.5)] hover:border-[rgba(201,168,76,0.5)] transition-colors"

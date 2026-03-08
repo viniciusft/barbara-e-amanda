@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Servico } from "@/types";
 import { formatCurrency, formatDuration } from "@/lib/utils";
 import { ImageIcon } from "lucide-react";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 const EMPTY_FORM = {
   nome: "",
@@ -185,27 +186,12 @@ export default function ServicosPage() {
             </div>
             <div className="sm:col-span-2">
               <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
-                URL da Imagem
+                Imagem
               </label>
-              <input
-                type="url"
+              <ImageUpload
                 value={form.imagem_url}
-                onChange={(e) =>
-                  setForm({ ...form, imagem_url: e.target.value })
-                }
-                className="input-luxury"
-                placeholder="https://exemplo.com/imagem.jpg"
+                onChange={(url) => setForm({ ...form, imagem_url: url })}
               />
-              {form.imagem_url && (
-                <div className="mt-2 w-24 h-16 overflow-hidden border border-[rgba(201,168,76,0.2)]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={form.imagem_url}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
             </div>
           </div>
           {error && (

@@ -18,7 +18,6 @@ interface HorarioLocal {
   customTimes: string[];
 }
 
-const INTERVALOS = [15, 20, 30, 45, 60];
 
 function generateSlots(inicio: string, fim: string, intervalo: number): string[] {
   const [hS, mS] = inicio.split(":").map(Number);
@@ -279,23 +278,27 @@ export default function HorariosPage() {
                           </div>
                           <div>
                             <label className="text-xs font-sans text-[rgba(245,240,232,0.4)] block mb-1">
-                              Intervalo
+                              Intervalo (min)
                             </label>
-                            <select
-                              value={h.intervalo_minutos}
-                              onChange={(e) =>
-                                update(h.dia_semana, {
-                                  intervalo_minutos: Number(e.target.value),
-                                })
-                              }
-                              className="bg-[#0a0a0a] border border-[rgba(201,168,76,0.2)] text-[#F5F0E8] px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#C9A84C]"
-                            >
-                              {INTERVALOS.map((v) => (
-                                <option key={v} value={v}>
-                                  {v} min
-                                </option>
-                              ))}
-                            </select>
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                value={h.intervalo_minutos}
+                                min={15}
+                                max={480}
+                                onChange={(e) => {
+                                  const v = Number(e.target.value);
+                                  if (!isNaN(v))
+                                    update(h.dia_semana, { intervalo_minutos: v });
+                                }}
+                                onBlur={(e) => {
+                                  const v = Math.min(480, Math.max(15, Number(e.target.value) || 30));
+                                  update(h.dia_semana, { intervalo_minutos: v });
+                                }}
+                                className="bg-transparent border border-[rgba(201,168,76,0.2)] text-[#F5F0E8] px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#C9A84C] w-20 tabular-nums"
+                              />
+                              <span className="text-xs font-sans text-[rgba(245,240,232,0.4)]">min</span>
+                            </div>
                           </div>
                         </div>
                       )}
