@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Servico } from "@/types";
 import { formatCurrency, formatDuration } from "@/lib/utils";
+import { Scissors, Clock, CheckCircle } from "lucide-react";
 
 interface Props {
   selected: Servico | null;
@@ -19,19 +20,19 @@ export default function StepServicos({ selected, onSelect }: Props) {
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d)) setServicos(d);
-        else setError("Erro ao carregar serviços");
+        else setError("Erro ao carregar servicos");
       })
-      .catch(() => setError("Erro ao carregar serviços"))
+      .catch(() => setError("Erro ao carregar servicos"))
       .finally(() => setLoading(false));
   }, []);
 
   return (
     <div>
       <h2 className="font-display text-3xl text-[#F5F0E8] font-light mb-2">
-        Escolha o Serviço
+        Escolha o Servico
       </h2>
       <p className="text-[rgba(245,240,232,0.5)] font-sans text-sm mb-8">
-        Selecione o serviço que deseja agendar
+        Selecione o servico que deseja agendar
       </p>
 
       {loading && (
@@ -48,49 +49,78 @@ export default function StepServicos({ selected, onSelect }: Props) {
 
       {!loading && !error && servicos.length === 0 && (
         <p className="text-[rgba(245,240,232,0.4)] font-sans text-center py-12">
-          Nenhum serviço disponível no momento.
+          Nenhum servico disponivel no momento.
         </p>
       )}
 
       <div className="grid gap-4">
-        {servicos.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => onSelect(s)}
-            className={`text-left border p-6 transition-all duration-200 group ${
-              selected?.id === s.id
-                ? "border-[#C9A84C] bg-[rgba(201,168,76,0.06)]"
-                : "border-[rgba(201,168,76,0.2)] bg-[#141414] hover:border-[rgba(201,168,76,0.5)] hover:bg-[rgba(201,168,76,0.03)]"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <h3 className="font-display text-xl text-[#F5F0E8] font-medium mb-1">
-                  {s.nome}
-                </h3>
+        {servicos.map((s) => {
+          const isSelected = selected?.id === s.id;
+          return (
+            <button
+              key={s.id}
+              onClick={() => onSelect(s)}
+              className={`text-left border overflow-hidden transition-all duration-200 flex ${
+                isSelected
+                  ? "border-[#C9A84C] bg-[rgba(201,168,76,0.06)]"
+                  : "border-[rgba(201,168,76,0.2)] bg-[#141414] hover:border-[rgba(201,168,76,0.5)] hover:bg-[rgba(201,168,76,0.03)]"
+              }`}
+            >
+              {/* Left: info (65%) */}
+              <div className="flex-1 p-5 min-w-0">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <h3 className="font-display text-xl text-[#F5F0E8] font-medium leading-tight">
+                    {s.nome}
+                  </h3>
+                  {isSelected && (
+                    <CheckCircle
+                      size={18}
+                      className="text-[#C9A84C] shrink-0 mt-0.5"
+                      strokeWidth={1.5}
+                    />
+                  )}
+                </div>
                 {s.descricao && (
-                  <p className="text-[rgba(245,240,232,0.5)] text-sm font-sans mb-3">
+                  <p className="text-[rgba(245,240,232,0.5)] text-sm font-sans mb-3 leading-relaxed">
                     {s.descricao}
                   </p>
                 )}
-                <span className="text-[rgba(245,240,232,0.4)] text-xs font-sans flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
-                  </svg>
-                  {formatDuration(s.duracao_minutos)}
-                </span>
+                <div className="flex items-center gap-4">
+                  <span className="flex items-center gap-1.5 text-[rgba(245,240,232,0.4)] text-xs font-sans">
+                    <Clock size={12} strokeWidth={1.5} />
+                    {formatDuration(s.duracao_minutos)}
+                  </span>
+                  <span className="font-display text-lg text-[#C9A84C]">
+                    {formatCurrency(s.preco)}
+                  </span>
+                </div>
               </div>
-              <div className="text-right shrink-0">
-                <p className="font-display text-xl text-[#C9A84C]">
-                  {formatCurrency(s.preco)}
-                </p>
-                {selected?.id === s.id && (
-                  <p className="text-[#C9A84C] text-xs font-sans mt-1">Selecionado</p>
+
+              {/* Right: image (35%) */}
+              <div className="w-[35%] shrink-0 relative bg-[#1a1a1a] min-h-[120px] overflow-hidden">
+                {s.imagem_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={s.imagem_url}
+                    alt={s.nome}
+                    className="w-full h-full object-cover absolute inset-0"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Scissors
+                      size={28}
+                      className="text-[rgba(201,168,76,0.15)]"
+                      strokeWidth={1}
+                    />
+                  </div>
+                )}
+                {isSelected && (
+                  <div className="absolute inset-0 bg-[rgba(201,168,76,0.12)]" />
                 )}
               </div>
-            </div>
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
