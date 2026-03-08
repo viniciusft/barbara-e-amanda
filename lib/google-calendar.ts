@@ -31,12 +31,24 @@ async function getTokensFromDB() {
 }
 
 async function refreshAndSaveToken(refreshToken: string) {
+  console.log("[GCal] Refreshing access token...");
   oauth2Client.setCredentials({ refresh_token: refreshToken });
-  const { credentials } = await oauth2Client.refreshAccessToken();
+
+  let credentials;
+  try {
+    ({ credentials } = await oauth2Client.refreshAccessToken());
+  } catch (err: unknown) {
+    const e = err as { message?: string; response?: { data?: unknown } };
+    console.error("[GCal] Token refresh failed — message:", e?.message);
+    console.error("[GCal] Token refresh response:", JSON.stringify(e?.response?.data ?? null));
+    throw err;
+  }
+
+  console.log("[GCal] Token refreshed. Has access_token:", !!credentials.access_token);
 
   if (credentials.access_token) {
     const supabaseServer = createServerSupabaseClient();
-    await supabaseServer
+    const { error: updateErr } = await supabaseServer
       .from("admin_config")
       .update({
         google_access_token: credentials.access_token,
@@ -46,6 +58,10 @@ async function refreshAndSaveToken(refreshToken: string) {
         updated_at: new Date().toISOString(),
       })
       .not("id", "is", null);
+
+    if (updateErr) {
+      console.error("[GCal] Failed to save refreshed token to DB:", updateErr.message);
+    }
   }
 
   return credentials;
@@ -54,15 +70,23 @@ async function refreshAndSaveToken(refreshToken: string) {
 async function getAuthenticatedClient() {
   const tokens = await getTokensFromDB();
 
+  console.log(
+    "[GCal] Token expiry:", tokens.token_expiry ?? "null",
+    "| Has access_token:", !!tokens.access_token,
+    "| Has refresh_token:", !!tokens.refresh_token
+  );
+
   // Check if token is expired or will expire in next 5 minutes
   const isExpired = tokens.token_expiry
     ? new Date(tokens.token_expiry).getTime() < Date.now() + 5 * 60 * 1000
     : true;
 
   if (isExpired) {
+    console.log("[GCal] Token expired or missing — refreshing...");
     const freshCreds = await refreshAndSaveToken(tokens.refresh_token);
     oauth2Client.setCredentials(freshCreds);
   } else {
+    console.log("[GCal] Using existing valid token.");
     oauth2Client.setCredentials({
       refresh_token: tokens.refresh_token,
       access_token: tokens.access_token,
