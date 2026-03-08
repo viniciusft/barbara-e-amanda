@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, Instagram, Phone, MapPin, ImageIcon, User } from "lucide-react";
+import { Save, Instagram, Phone, MapPin } from "lucide-react";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 interface PerfilForm {
   nome_studio: string;
@@ -93,38 +94,16 @@ export default function PerfilPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Photo preview */}
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[rgba(201,168,76,0.3)] bg-[#1a1a1a] flex items-center justify-center shrink-0">
-              {form.foto_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={form.foto_url}
-                  alt="Foto do studio"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <User size={28} className="text-[rgba(201,168,76,0.3)]" strokeWidth={1} />
-              )}
-            </div>
-            <div className="flex-1">
-              <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
-                URL da Foto
-              </label>
-              <div className="relative">
-                <ImageIcon
-                  size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgba(245,240,232,0.3)]"
-                />
-                <input
-                  type="url"
-                  value={form.foto_url}
-                  onChange={(e) => set("foto_url", e.target.value)}
-                  className="input-luxury pl-9"
-                  placeholder="https://exemplo.com/foto.jpg"
-                />
-              </div>
-            </div>
+          {/* Photo */}
+          <div>
+            <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-3">
+              Foto do Perfil
+            </label>
+            <ImageUpload
+              value={form.foto_url}
+              onChange={(url) => set("foto_url", url)}
+              rounded
+            />
           </div>
 
           {/* Studio name */}
