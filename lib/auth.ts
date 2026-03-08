@@ -83,11 +83,27 @@ export const authOptions: NextAuthOptions = {
       session.accessToken = token.accessToken as string;
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // Always use HTTPS on production — prevent http:// redirect loops on Vercel
+      const safeBase = baseUrl.startsWith("http://")
+        ? baseUrl.replace("http://", "https://")
+        : baseUrl;
+
+      if (url.startsWith("/")) return `${safeBase}${url}`;
+      if (url.startsWith(safeBase)) return url;
+      // Also accept http variant of the same host (Vercel internal)
+      if (url.startsWith(safeBase.replace("https://", "http://"))) {
+        return url.replace("http://", "https://");
+      }
+      return safeBase;
+    },
   },
   pages: {
     signIn: "/admin/login",
     error: "/admin/login",
   },
+  // Trust the NEXTAUTH_URL env var — critical for Vercel
+  ...(process.env.NEXTAUTH_URL ? { url: process.env.NEXTAUTH_URL } : {}),
 };
 
 declare module "next-auth" {
