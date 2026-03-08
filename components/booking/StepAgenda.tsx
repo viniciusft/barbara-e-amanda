@@ -74,7 +74,7 @@ export default function StepAgenda({
   );
 
   const today = startOfDay(new Date());
-  const maxDate = addDays(today, 90);
+  const maxDate = addDays(today, 365);
 
   // Calendar days for current month view (Mon-first grid)
   const calDays = useMemo(() => {

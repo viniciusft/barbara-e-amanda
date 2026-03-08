@@ -97,16 +97,16 @@ export default function StepServicos({ selected, onSelect }: Props) {
               </div>
 
               {/* Right: image (35%) */}
-              <div className="w-[35%] shrink-0 relative bg-[#1a1a1a] min-h-[120px] overflow-hidden">
+              <div className="w-[35%] shrink-0 bg-[#1a1a1a] overflow-hidden relative" style={{ aspectRatio: "9/16" }}>
                 {s.imagem_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={s.imagem_url}
                     alt={s.nome}
-                    className="w-full h-full object-cover absolute inset-0"
+                    className="w-full h-full object-cover object-center"
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-full h-full flex items-center justify-center">
                     <Scissors
                       size={28}
                       className="text-[rgba(201,168,76,0.15)]"
