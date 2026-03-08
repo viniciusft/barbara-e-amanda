@@ -1,31 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { format, startOfWeek } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Agendamento } from "@/types";
 import AgendamentoCard from "@/components/admin/AgendamentoCard";
 
-type ViewMode = "dia" | "semana";
+type ViewMode = "dia" | "semana" | "todos";
+
+const HOJE = () => format(new Date(), "yyyy-MM-dd");
 
 export default function AdminDashboard() {
   const [viewMode, setViewMode] = useState<ViewMode>("dia");
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [selectedDate, setSelectedDate] = useState(HOJE);
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function fetchAgendamentos() {
     setLoading(true);
-    let url = "/api/agendamentos?";
+    let url = "/api/agendamentos";
     if (viewMode === "dia") {
-      url += `data=${selectedDate}`;
-    } else {
-      const weekStart = format(
-        startOfWeek(new Date(selectedDate + "T12:00:00"), { weekStartsOn: 1 }),
-        "yyyy-MM-dd"
-      );
-      url += `semana=${weekStart}`;
+      url += `?data=${selectedDate}`;
+    } else if (viewMode === "semana") {
+      // 7-day window starting from selectedDate — resolved server-side in BRT
+      url += `?semana=${selectedDate}`;
     }
+    // "todos": no params → API returns all future from today in BRT
     try {
       const res = await fetch(url);
       const data = await res.json();
@@ -49,12 +49,23 @@ export default function AdminDashboard() {
     fetchAgendamentos();
   }
 
+  function handleHoje() {
+    setSelectedDate(HOJE());
+    setViewMode("dia");
+  }
+
   const grouped: Record<string, Agendamento[]> = {};
   for (const a of agendamentos) {
     const dateKey = a.data ?? a.data_hora.substring(0, 10);
     if (!grouped[dateKey]) grouped[dateKey] = [];
     grouped[dateKey].push(a);
   }
+
+  const BUTTONS: { mode: ViewMode; label: string; onClick?: () => void }[] = [
+    { mode: "dia", label: "Hoje", onClick: handleHoje },
+    { mode: "semana", label: "Semana" },
+    { mode: "todos", label: "Todos" },
+  ];
 
   return (
     <div className="py-6">
@@ -68,30 +79,34 @@ export default function AdminDashboard() {
             {agendamentos.length} agendamento{agendamentos.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <div className="sm:ml-auto flex items-center gap-3">
-          {/* View toggle */}
+
+        <div className="sm:ml-auto flex flex-wrap items-center gap-3">
+          {/* View mode toggle */}
           <div className="flex border border-[rgba(201,168,76,0.2)]">
-            {(["dia", "semana"] as ViewMode[]).map((v) => (
+            {BUTTONS.map(({ mode, label, onClick }) => (
               <button
-                key={v}
-                onClick={() => setViewMode(v)}
-                className={`px-4 py-2 text-sm font-sans capitalize transition-colors ${
-                  viewMode === v
+                key={mode}
+                onClick={onClick ?? (() => setViewMode(mode))}
+                className={`px-4 py-2 text-sm font-sans transition-colors ${
+                  viewMode === mode
                     ? "bg-[rgba(201,168,76,0.1)] text-[#C9A84C]"
                     : "text-[rgba(245,240,232,0.5)] hover:text-[rgba(245,240,232,0.8)]"
                 }`}
               >
-                {v === "dia" ? "Hoje" : "Semana"}
+                {label}
               </button>
             ))}
           </div>
-          {/* Date picker */}
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="bg-transparent border border-[rgba(201,168,76,0.2)] text-[rgba(245,240,232,0.7)] px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#C9A84C]"
-          />
+
+          {/* Date picker — hidden in "Todos" mode */}
+          {viewMode !== "todos" && (
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="bg-transparent border border-[rgba(201,168,76,0.2)] text-[rgba(245,240,232,0.7)] px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#C9A84C]"
+            />
+          )}
         </div>
       </div>
 
