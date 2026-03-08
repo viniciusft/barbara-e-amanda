@@ -7,6 +7,7 @@ export interface Servico {
   ativo: boolean;
   cor_agenda: string | null;
   ordem: number | null;
+  imagem_url: string | null;
   created_at: string;
 }
 
@@ -16,6 +17,8 @@ export interface HorarioDisponivel {
   hora_inicio: string; // HH:MM
   hora_fim: string; // HH:MM
   ativo: boolean;
+  intervalo_minutos: number | null;
+  horarios_customizados: string[] | null;
   created_at?: string;
 }
 
@@ -56,6 +59,11 @@ export interface AdminConfig {
   google_token_expiry: string | null;
   google_calendar_id: string | null;
   nome_studio: string | null;
+  bio: string | null;
+  instagram: string | null;
+  whatsapp: string | null;
+  endereco: string | null;
+  foto_url: string | null;
   created_at: string;
   updated_at: string;
 }

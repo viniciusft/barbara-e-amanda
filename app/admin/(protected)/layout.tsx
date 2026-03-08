@@ -17,9 +17,14 @@ export default async function AdminProtectedLayout({
 
   return (
     <SessionProvider session={session}>
-      <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
+      <div className="min-h-screen bg-[#0a0a0a]">
         <AdminNav />
-        <main className="flex-1 p-6 max-w-6xl mx-auto w-full">{children}</main>
+        {/* lg:pl-56 offsets fixed sidebar; pb-20 offsets mobile bottom nav */}
+        <main className="lg:pl-56 pb-20 lg:pb-0">
+          <div className="max-w-6xl mx-auto px-4 lg:px-8">
+            {children}
+          </div>
+        </main>
       </div>
     </SessionProvider>
   );
