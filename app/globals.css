@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #F5F0E8;
+  --gold: #C9A84C;
+  --gold-light: #E8C97A;
+  --font-cormorant: "Cormorant Garamond", serif;
+  --font-dm-sans: "DM Sans", sans-serif;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-dm-sans);
+  min-height: 100vh;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .font-display {
+    font-family: var(--font-cormorant), serif;
+  }
+
+  .border-gold {
+    border-color: #C9A84C;
+  }
+
+  .border-gold-dim {
+    border-color: rgba(201, 168, 76, 0.3);
+  }
+
+  .text-gold {
+    color: #C9A84C;
+  }
+
+  .text-gold-light {
+    color: #E8C97A;
+  }
+
+  .bg-gold {
+    background-color: #C9A84C;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #141414;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(201, 168, 76, 0.4);
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  .btn-gold {
+    @apply bg-gold text-background font-sans font-medium px-6 py-3 transition-all duration-200 hover:bg-gold-light disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-outline-gold {
+    @apply border border-[#C9A84C] text-gold px-6 py-3 font-sans font-medium transition-all duration-200 hover:bg-[rgba(201,168,76,0.08)] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .card-luxury {
+    @apply bg-surface border border-[rgba(201,168,76,0.2)] p-6;
+  }
+
+  .input-luxury {
+    @apply bg-transparent border border-[rgba(201,168,76,0.3)] text-foreground px-4 py-3 w-full focus:outline-none focus:border-[#C9A84C] transition-colors placeholder:text-[rgba(245,240,232,0.3)];
+  }
+}
