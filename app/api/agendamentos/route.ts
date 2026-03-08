@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { createCalendarEvent } from "@/lib/google-calendar";
 import { addMinutes, parseISO, format } from "date-fns";
-import { fromZonedTime } from "date-fns-tz";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
 
 const TZ = "America/Sao_Paulo";
 
@@ -46,13 +46,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Add computed display fields for the UI
-  const enriched = (agendamentos || []).map((a) => ({
-    ...a,
-    data: format(new Date(a.data_hora), "yyyy-MM-dd"),
-    hora_inicio: format(new Date(a.data_hora), "HH:mm"),
-    hora_fim: format(new Date(a.data_hora_fim), "HH:mm"),
-  }));
+  // Add computed display fields in BRT (server runs in UTC on Vercel)
+  const enriched = (agendamentos || []).map((a) => {
+    const startBRT = toZonedTime(new Date(a.data_hora), TZ);
+    const endBRT = toZonedTime(new Date(a.data_hora_fim), TZ);
+    return {
+      ...a,
+      data: format(startBRT, "yyyy-MM-dd"),
+      hora_inicio: format(startBRT, "HH:mm"),
+      hora_fim: format(endBRT, "HH:mm"),
+    };
+  });
 
   return NextResponse.json(enriched);
 }
@@ -151,9 +155,18 @@ export async function POST(req: NextRequest) {
         .from("agendamentos")
         .update({ gcal_event_id: event.id })
         .eq("id", agendamento.id);
-    } catch (calError) {
-      console.error("Google Calendar event creation failed:", calError);
-      // Don't fail the booking just because calendar failed
+
+      console.log("[GCal] Event created:", event.id);
+    } catch (calError: unknown) {
+      // Log full error details so we can debug from Vercel function logs
+      const err = calError as {
+        message?: string;
+        response?: { status?: number; data?: unknown };
+      };
+      console.error("[GCal] createCalendarEvent failed — message:", err?.message);
+      console.error("[GCal] HTTP status:", err?.response?.status);
+      console.error("[GCal] Response data:", JSON.stringify(err?.response?.data ?? null));
+      // Booking is saved — calendar failure is non-fatal
     }
 
     return NextResponse.json(agendamento, { status: 201 });
