@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { format, addDays, addWeeks, subWeeks, startOfWeek, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Agendamento } from "@/types";
 import AgendamentoCard from "@/components/admin/AgendamentoCard";
 
@@ -99,6 +99,32 @@ export default function AdminDashboard() {
           Agenda
         </h2>
         <div className="sm:ml-auto flex items-center gap-2">
+          {/* Calendar jump picker */}
+          <div className="relative">
+            <button
+              type="button"
+              className="p-1.5 text-[#C9A84C] hover:bg-[rgba(201,168,76,0.1)] transition-colors rounded-sm cursor-pointer"
+              title="Ir para data"
+            >
+              <Calendar size={18} strokeWidth={1.5} />
+            </button>
+            <input
+              type="date"
+              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+              onChange={(e) => {
+                if (e.target.value) {
+                  setWeekStart(
+                    format(
+                      startOfWeek(parseISO(e.target.value + "T12:00:00"), {
+                        weekStartsOn: 1,
+                      }),
+                      "yyyy-MM-dd"
+                    )
+                  );
+                }
+              }}
+            />
+          </div>
           <button
             onClick={goToday}
             className="px-3 py-1.5 text-xs font-sans border border-[rgba(201,168,76,0.2)] text-[rgba(245,240,232,0.6)] hover:border-[rgba(201,168,76,0.5)] transition-colors"

@@ -192,6 +192,10 @@ export default function ServicosPage() {
                 value={form.imagem_url}
                 onChange={(url) => setForm({ ...form, imagem_url: url })}
               />
+              <p className="text-[11px] font-sans text-[rgba(245,240,232,0.35)] mt-2 leading-relaxed">
+                Tamanho recomendado: 1536 x 2752px (proporcao 9:16 — retrato vertical).
+                Formatos aceitos: JPG, PNG, WebP. Tamanho maximo: 5MB.
+              </p>
             </div>
           </div>
           {error && (

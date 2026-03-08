@@ -198,7 +198,7 @@ export default async function HomePage() {
                   className="border border-[rgba(201,168,76,0.12)] bg-[#141414] overflow-hidden group hover:border-[rgba(201,168,76,0.3)] transition-all duration-300"
                 >
                   {/* Image */}
-                  <div className="h-48 bg-[#1a1a1a] overflow-hidden relative">
+                  <div className="bg-[#1a1a1a] overflow-hidden relative" style={{ aspectRatio: "9/16" }}>
                     {s.imagem_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
