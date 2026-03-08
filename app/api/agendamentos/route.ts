@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { createCalendarEvent } from "@/lib/google-calendar";
-import { addMinutes, parseISO, format } from "date-fns";
+import { addMinutes, addDays, parseISO, format } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 
 const TZ = "America/Sao_Paulo";
@@ -27,17 +27,21 @@ export async function GET(req: NextRequest) {
     .order("data_hora", { ascending: true });
 
   if (data) {
-    // Filter by date: data_hora between start and end of day in BRT
-    const startOfDay = fromZonedTime(`${data}T00:00:00`, TZ).toISOString();
-    const endOfDay = fromZonedTime(`${data}T23:59:59`, TZ).toISOString();
-    query = query.gte("data_hora", startOfDay).lte("data_hora", endOfDay);
+    // Exact BRT date: equivalent to WHERE (data_hora AT TIME ZONE 'America/Sao_Paulo')::date = data
+    const startUTC = fromZonedTime(`${data}T00:00:00`, TZ).toISOString();
+    const endUTC = fromZonedTime(`${data}T23:59:59`, TZ).toISOString();
+    query = query.gte("data_hora", startUTC).lte("data_hora", endUTC);
   } else if (semana) {
-    // semana=YYYY-MM-DD (Monday)
-    const endDate = new Date(new Date(semana + "T12:00:00").getTime() + 6 * 24 * 60 * 60 * 1000);
-    const endDateStr = format(endDate, "yyyy-MM-dd");
-    const startISO = fromZonedTime(`${semana}T00:00:00`, TZ).toISOString();
-    const endISO = fromZonedTime(`${endDateStr}T23:59:59`, TZ).toISOString();
-    query = query.gte("data_hora", startISO).lte("data_hora", endISO);
+    // 7-day window starting from semana date (inclusive), all in BRT
+    const endDateStr = format(addDays(parseISO(semana), 6), "yyyy-MM-dd");
+    const startUTC = fromZonedTime(`${semana}T00:00:00`, TZ).toISOString();
+    const endUTC = fromZonedTime(`${endDateStr}T23:59:59`, TZ).toISOString();
+    query = query.gte("data_hora", startUTC).lte("data_hora", endUTC);
+  } else {
+    // Default (Todos): all future appointments from start of today in BRT
+    const todayBRT = format(toZonedTime(new Date(), TZ), "yyyy-MM-dd");
+    const todayStartUTC = fromZonedTime(`${todayBRT}T00:00:00`, TZ).toISOString();
+    query = query.gte("data_hora", todayStartUTC);
   }
 
   const { data: agendamentos, error } = await query;
