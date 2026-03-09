@@ -70,6 +70,13 @@ export default function AdminDashboard() {
     setSelected(null);
   }
 
+  function handleAgendamentoUpdated(updated: Agendamento) {
+    setAgendamentos((prev) =>
+      prev.map((a) => (a.id === updated.id ? updated : a))
+    );
+    setSelected((prev) => (prev?.id === updated.id ? updated : prev));
+  }
+
   const prevWeek = () =>
     setWeekStart(
       format(subWeeks(new Date(weekStart + "T12:00:00"), 1), "yyyy-MM-dd")
@@ -192,6 +199,7 @@ export default function AdminDashboard() {
                 key={a.id}
                 agendamento={a}
                 onStatusChange={handleStatusChange}
+                onUpdated={handleAgendamentoUpdated}
               />
             ))}
         </div>
@@ -398,6 +406,7 @@ export default function AdminDashboard() {
             <AgendamentoCard
               agendamento={selected}
               onStatusChange={handleStatusChange}
+              onUpdated={handleAgendamentoUpdated}
             />
           </div>
         </div>

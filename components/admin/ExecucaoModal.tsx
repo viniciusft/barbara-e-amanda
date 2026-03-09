@@ -11,7 +11,13 @@ interface Props {
   onSaved: (updated: Agendamento) => void;
 }
 
-const FORMAS_PAGAMENTO = ["PIX", "Dinheiro", "Crédito", "Débito", "Outro"];
+const FORMAS_PAGAMENTO = [
+  { label: "PIX", value: "pix" },
+  { label: "Dinheiro", value: "dinheiro" },
+  { label: "Crédito", value: "credito" },
+  { label: "Débito", value: "debito" },
+  { label: "Outro", value: "outro" },
+];
 
 export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) {
   const precoOriginal = agendamento.servico?.preco ?? 0;
@@ -21,7 +27,7 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
     String(agendamento.preco_cobrado ?? precoOriginal)
   );
   const [motivoAjuste, setMotivoAjuste] = useState(agendamento.motivo_ajuste ?? "");
-  const [formaPagamento, setFormaPagamento] = useState(agendamento.forma_pagamento ?? "PIX");
+  const [formaPagamento, setFormaPagamento] = useState(agendamento.forma_pagamento ?? "pix");
   const [observacoes, setObservacoes] = useState(agendamento.observacoes_execucao ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -188,15 +194,15 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
             <div className="flex flex-wrap gap-2">
               {FORMAS_PAGAMENTO.map((forma) => (
                 <button
-                  key={forma}
-                  onClick={() => setFormaPagamento(forma)}
+                  key={forma.value}
+                  onClick={() => setFormaPagamento(forma.value)}
                   className={`px-3 py-1.5 text-xs font-sans border transition-colors ${
-                    formaPagamento === forma
+                    formaPagamento === forma.value
                       ? "border-[#C9A84C] bg-[rgba(201,168,76,0.1)] text-[#C9A84C]"
                       : "border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.4)] hover:border-[rgba(255,255,255,0.25)]"
                   }`}
                 >
-                  {forma}
+                  {forma.label}
                 </button>
               ))}
             </div>
