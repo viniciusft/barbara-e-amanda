@@ -9,6 +9,12 @@ interface Props {
   onCreated: () => void;
 }
 
+function addMins(hhmm: string, mins: number): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  const total = h * 60 + m + mins;
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
 const CATEGORIA_LABEL: Record<string, string> = {
   maquiagem: "💄 Maquiagem",
   cabelo: "💇 Cabelo",
@@ -20,7 +26,7 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
   const [servicoId, setServicoId] = useState("");
   const [data, setData] = useState("");
   const [slots, setSlots] = useState<SlotDisponivel[]>([]);
-  const [horaInicio, setHoraInicio] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState<SlotDisponivel | null>(null);
   const [nomeCliente, setNomeCliente] = useState("");
   const [telefone, setTelefone] = useState("");
   const [observacoes, setObservacoes] = useState("");
@@ -38,10 +44,10 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!servicoId || !data) { setSlots([]); setHoraInicio(""); return; }
+    if (!servicoId || !data) { setSlots([]); setSelectedSlot(null); return; }
     setLoadingSlots(true);
     setSlots([]);
-    setHoraInicio("");
+    setSelectedSlot(null);
     fetch(`/api/slots?data=${data}&servico_id=${servicoId}`)
       .then((r) => r.json())
       .then((d) => setSlots(Array.isArray(d) ? d : []))
@@ -51,6 +57,7 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
   const servico = servicos.find((s) => s.id === servicoId);
 
   async function handleSubmit() {
+    const horaInicio = selectedSlot?.hora_inicio ?? "";
     if (!servicoId || !data || !horaInicio || !nomeCliente || !telefone) {
       setError("Preencha todos os campos obrigatórios");
       return;
@@ -69,6 +76,11 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
           data,
           hora_inicio: horaInicio,
           status_inicial: statusInicial,
+          ...(selectedSlot?.combo_ordem && {
+            combo_ordem: selectedSlot.combo_ordem,
+            hora_maquiagem: selectedSlot.hora_maquiagem,
+            hora_cabelo: selectedSlot.hora_cabelo,
+          }),
         }),
       });
       if (!res.ok) {
@@ -172,21 +184,29 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
                   {slots.map((s) => (
                     <button
                       key={s.hora_inicio}
-                      onClick={() => setHoraInicio(s.hora_inicio)}
+                      onClick={() => setSelectedSlot(s)}
                       className={`px-3 py-1.5 text-xs font-sans border transition-colors ${
-                        horaInicio === s.hora_inicio
+                        selectedSlot?.hora_inicio === s.hora_inicio
                           ? "border-[#C9A84C] bg-[rgba(201,168,76,0.12)] text-[#C9A84C]"
                           : "border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.5)] hover:border-[rgba(255,255,255,0.25)]"
                       }`}
                     >
                       {s.hora_inicio}
-                      {s.hora_inicio_cabelo && (
+                      {s.combo_ordem && (
                         <span className="text-[rgba(245,240,232,0.4)] ml-1">
-                          · 💇{s.hora_inicio_cabelo}
+                          {s.combo_ordem === "maquiagem_primeiro" ? "· 💄→💇" : "· 💇→💄"}
                         </span>
                       )}
                     </button>
                   ))}
+                  {/* Combo summary */}
+                  {selectedSlot?.combo_ordem && (
+                    <div className="w-full mt-2 p-2.5 bg-[rgba(201,168,76,0.06)] border border-[rgba(201,168,76,0.2)] text-xs font-sans text-[rgba(245,240,232,0.6)] space-y-0.5">
+                      <p className="text-[#C9A84C] mb-1">Organização do atendimento:</p>
+                      <p>💄 Maquiagem: {selectedSlot.hora_maquiagem} – {addMins(selectedSlot.hora_maquiagem!, servico?.duracao_maquiagem_min ?? 0)}</p>
+                      <p>💇 Cabelo: {selectedSlot.hora_cabelo} – {selectedSlot.hora_fim}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

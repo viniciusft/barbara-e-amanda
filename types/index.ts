@@ -54,6 +54,7 @@ export interface Agendamento {
   data_hora_cabelo: string | null; // ISO — start of cabelo block for combos
   gcal_event_id: string | null;
   gcal_event_id_cabelo: string | null;
+  combo_ordem: string | null;
   status: "pendente" | "confirmado" | "cancelado" | "concluido";
   created_at: string;
   updated_at: string;
@@ -71,7 +72,8 @@ export interface Agendamento {
   data?: string; // YYYY-MM-DD (BRT)
   hora_inicio?: string; // HH:MM (BRT)
   hora_fim?: string; // HH:MM (BRT)
-  hora_inicio_cabelo?: string; // HH:MM (BRT) — for combos
+  hora_inicio_cabelo?: string; // HH:MM (BRT) — cabelo start for combos
+  hora_inicio_maquiagem?: string; // HH:MM (BRT) — maquiagem start for combos
 }
 
 export interface AdminConfig {
@@ -91,7 +93,10 @@ export interface AdminConfig {
 }
 
 export interface SlotDisponivel {
-  hora_inicio: string; // HH:MM
-  hora_fim: string; // HH:MM
-  hora_inicio_cabelo?: string; // HH:MM — only for combos
+  hora_inicio: string; // HH:MM — overall start (first service)
+  hora_fim: string; // HH:MM — overall end
+  // For combos:
+  combo_ordem?: "maquiagem_primeiro" | "cabelo_primeiro";
+  hora_maquiagem?: string; // HH:MM — when maquiagem block starts
+  hora_cabelo?: string; // HH:MM — when cabelo block starts
 }

@@ -283,6 +283,43 @@ export default function StepAgenda({
               );
             })}
           </div>
+
+          {/* Combo schedule summary — shown after selecting a combo slot */}
+          {selectedSlotLocal?.combo_ordem && (
+            <div className="mt-4 p-4 border border-[rgba(201,168,76,0.25)] bg-[rgba(201,168,76,0.04)]">
+              <p className="text-[rgba(245,240,232,0.5)] font-sans text-xs uppercase tracking-widest mb-3">
+                Seu atendimento será organizado assim:
+              </p>
+              <div className="space-y-2">
+                {/* Ordem A: maquiagem ends at hora_cabelo; Ordem B: maquiagem ends at hora_fim */}
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">💄</span>
+                  <div>
+                    <p className="font-sans text-sm text-[#F5F0E8]">Maquiagem</p>
+                    <p className="font-sans text-xs text-[#C9A84C]">
+                      {selectedSlotLocal.hora_maquiagem} –{" "}
+                      {selectedSlotLocal.combo_ordem === "maquiagem_primeiro"
+                        ? selectedSlotLocal.hora_cabelo
+                        : selectedSlotLocal.hora_fim}
+                    </p>
+                  </div>
+                </div>
+                {/* Ordem A: cabelo ends at hora_fim; Ordem B: cabelo ends at hora_maquiagem */}
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">💇</span>
+                  <div>
+                    <p className="font-sans text-sm text-[#F5F0E8]">Cabelo</p>
+                    <p className="font-sans text-xs text-[#C9A84C]">
+                      {selectedSlotLocal.hora_cabelo} –{" "}
+                      {selectedSlotLocal.combo_ordem === "cabelo_primeiro"
+                        ? selectedSlotLocal.hora_maquiagem
+                        : selectedSlotLocal.hora_fim}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

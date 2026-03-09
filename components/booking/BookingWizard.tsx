@@ -165,6 +165,11 @@ export default function BookingWizard() {
                     observacoes: data.observacoes || undefined,
                     data: data.data,
                     hora_inicio: data.slot!.hora_inicio,
+                    ...(data.slot!.combo_ordem && {
+                      combo_ordem: data.slot!.combo_ordem,
+                      hora_maquiagem: data.slot!.hora_maquiagem,
+                      hora_cabelo: data.slot!.hora_cabelo,
+                    }),
                   }),
                 });
                 if (!res.ok) {
