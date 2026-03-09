@@ -62,6 +62,8 @@ export async function PATCH(
     "sinal_forma_pagamento",
     "valor_restante",
     "whatsapp_enviado_em",
+    "sinal_reembolsado_em",
+    "sinal_reembolso_obs",
   ];
 
   for (const field of allowedFields) {

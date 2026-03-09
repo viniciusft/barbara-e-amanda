@@ -518,22 +518,25 @@ export default function AdminDashboard() {
       {/* Detail modal */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75" onClick={() => setSelected(null)}>
-          <div className="bg-[#141414] border border-[rgba(201,168,76,0.3)] max-w-lg w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-[#C9A84C] text-xs font-sans uppercase tracking-widest mb-1">Detalhes</p>
-                <h3 className="font-display text-2xl text-[#F5F0E8] font-light">{selected.nome_cliente}</h3>
-              </div>
-              <button onClick={() => setSelected(null)} className="text-[rgba(245,240,232,0.4)] hover:text-[rgba(245,240,232,0.8)] transition-colors mt-1">
-                <X size={20} />
+          <div
+            className="bg-[#141414] border border-[rgba(201,168,76,0.3)] max-w-2xl w-full shadow-2xl overflow-y-auto"
+            style={{ maxHeight: "90vh" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[rgba(201,168,76,0.15)] sticky top-0 bg-[#141414] z-10">
+              <p className="text-[#C9A84C] text-[10px] font-sans uppercase tracking-[0.3em]">Agendamento</p>
+              <button onClick={() => setSelected(null)} className="text-[rgba(245,240,232,0.4)] hover:text-[rgba(245,240,232,0.8)] transition-colors">
+                <X size={18} />
               </button>
             </div>
-            <AgendamentoCard
-              agendamento={selected}
-              onStatusChange={handleStatusChange}
-              onUpdated={handleAgendamentoUpdated}
-              adminConfig={adminConfig}
-            />
+            <div className="p-6">
+              <AgendamentoCard
+                agendamento={selected}
+                onStatusChange={handleStatusChange}
+                onUpdated={handleAgendamentoUpdated}
+                adminConfig={adminConfig}
+              />
+            </div>
           </div>
         </div>
       )}
