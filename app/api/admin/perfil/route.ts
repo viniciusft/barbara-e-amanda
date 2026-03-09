@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { revalidatePath } from "next/cache";
 
 export async function GET() {
   try {
@@ -92,6 +93,9 @@ export async function PATCH(req: NextRequest) {
   if (result.error) {
     return NextResponse.json({ error: result.error.message }, { status: 500 });
   }
+
+  // Revalidate the home page so the new images/content appear without manual F5
+  revalidatePath("/");
 
   return NextResponse.json(result.data);
 }

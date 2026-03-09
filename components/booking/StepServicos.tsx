@@ -13,6 +13,9 @@ interface Props {
 const CASAMENTO_MSG =
   "Ola! Gostaria de saber mais sobre os pacotes para casamento e noivas. 💍";
 
+const SUPORTE_MSG =
+  "Ola! Tenho uma duvida sobre os agendamentos, podem me ajudar?";
+
 export default function StepServicos({ selected, onSelect }: Props) {
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,7 +140,7 @@ export default function StepServicos({ selected, onSelect }: Props) {
           );
         })}
 
-        {/* Casamento special card — opens WhatsApp directly */}
+        {/* ── Casamento special card — opens WhatsApp directly ── */}
         {!loading && !error && (
           <button
             onClick={handleCasamentoClick}
@@ -163,6 +166,27 @@ export default function StepServicos({ selected, onSelect }: Props) {
               </div>
             </div>
           </button>
+        )}
+        {/* ── Suporte / "Falar com a equipe" ── */}
+        {!loading && !error && (
+          <div className="mt-2 pt-5 border-t border-[rgba(255,255,255,0.06)] flex flex-col items-center gap-3">
+            <p className="text-[rgba(245,240,232,0.35)] text-xs font-sans">
+              Duvidas sobre seu agendamento?
+            </p>
+            <a
+              href={
+                whatsapp
+                  ? `https://wa.me/55${whatsapp}?text=${encodeURIComponent(SUPORTE_MSG)}`
+                  : `https://wa.me/?text=${encodeURIComponent(SUPORTE_MSG)}`
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-[#25D366] hover:text-[#20bc5a] transition-colors text-sm font-sans"
+            >
+              <MessageCircle size={15} strokeWidth={1.5} className="shrink-0" />
+              Falar com alguem da equipe
+            </a>
+          </div>
         )}
       </div>
     </div>
