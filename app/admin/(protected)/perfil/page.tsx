@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, Instagram, Phone, MapPin, CreditCard, MessageCircle, RefreshCw } from "lucide-react";
+import { Save, Instagram, Phone, MapPin, CreditCard, MessageCircle, RefreshCw, Image } from "lucide-react";
 import ImageUpload from "@/components/admin/ImageUpload";
 
 const DEFAULT_TEMPLATE = `Ola {nome_cliente}! Sou {nome_secretaria} do {nome_studio}.
@@ -55,6 +55,7 @@ interface PerfilForm {
   whatsapp: string;
   endereco: string;
   foto_url: string;
+  foto_header_url: string;
   chave_pix: string;
   tipo_chave_pix: string;
   nome_recebedor_pix: string;
@@ -70,6 +71,7 @@ const EMPTY: PerfilForm = {
   whatsapp: "",
   endereco: "",
   foto_url: "",
+  foto_header_url: "",
   chave_pix: "",
   tipo_chave_pix: "celular",
   nome_recebedor_pix: "",
@@ -98,6 +100,7 @@ export default function PerfilPage() {
             whatsapp: data.whatsapp ?? "",
             endereco: data.endereco ?? "",
             foto_url: data.foto_url ?? "",
+            foto_header_url: data.foto_header_url ?? "",
             chave_pix: data.chave_pix ?? "",
             tipo_chave_pix: data.tipo_chave_pix ?? "celular",
             nome_recebedor_pix: data.nome_recebedor_pix ?? "",
@@ -120,6 +123,7 @@ export default function PerfilPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
+          foto_header_url: form.foto_header_url || null,
           sinal_percentual_padrao: parseInt(form.sinal_percentual_padrao) || 50,
         }),
       });
@@ -170,6 +174,23 @@ export default function PerfilPage() {
                 value={form.foto_url}
                 onChange={(url) => set("foto_url", url)}
                 rounded
+              />
+            </div>
+
+            {/* Header / hero background image */}
+            <div className="border-t border-[rgba(201,168,76,0.08)] pt-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Image size={14} className="text-[#C9A84C]" strokeWidth={1.5} />
+                <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest">
+                  Imagem de Fundo do Hero
+                </label>
+              </div>
+              <p className="text-[rgba(245,240,232,0.35)] text-xs font-sans mb-3">
+                Exibida como plano de fundo da secao principal na pagina publica. Recomendado: 1920 x 600 px.
+              </p>
+              <ImageUpload
+                value={form.foto_header_url}
+                onChange={(url) => set("foto_header_url", url)}
               />
             </div>
             <div>
