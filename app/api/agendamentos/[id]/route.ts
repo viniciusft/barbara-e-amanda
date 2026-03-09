@@ -15,10 +15,36 @@ export async function PATCH(
 
   const { id } = params;
   const body = await req.json();
-  const { status } = body;
+  const { status, ...executionFields } = body;
 
-  if (!["confirmado", "cancelado", "pendente"].includes(status)) {
-    return NextResponse.json({ error: "Status inválido" }, { status: 400 });
+  // Build update payload
+  const updatePayload: Record<string, unknown> = {};
+
+  if (status !== undefined) {
+    if (!["confirmado", "cancelado", "pendente", "concluido"].includes(status)) {
+      return NextResponse.json({ error: "Status inválido" }, { status: 400 });
+    }
+    updatePayload.status = status;
+  }
+
+  const allowedExecutionFields = [
+    "servico_executado",
+    "preco_cobrado",
+    "preco_original",
+    "tipo_ajuste_preco",
+    "motivo_ajuste",
+    "forma_pagamento",
+    "observacoes_execucao",
+    "executado_em",
+  ];
+  for (const field of allowedExecutionFields) {
+    if (field in executionFields) {
+      updatePayload[field] = executionFields[field];
+    }
+  }
+
+  if (Object.keys(updatePayload).length === 0) {
+    return NextResponse.json({ error: "Nenhum campo para atualizar" }, { status: 400 });
   }
 
   const supabase = createServerSupabaseClient();
@@ -45,7 +71,7 @@ export async function PATCH(
 
   const { data: updated, error: updateError } = await supabase
     .from("agendamentos")
-    .update({ status })
+    .update(updatePayload)
     .eq("id", id)
     .select()
     .single();

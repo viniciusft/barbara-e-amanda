@@ -45,6 +45,15 @@ export interface Agendamento {
   gcal_event_id: string | null;
   created_at: string;
   updated_at: string;
+  // Execution fields
+  servico_executado: boolean | null;
+  preco_cobrado: number | null;
+  preco_original: number | null;
+  tipo_ajuste_preco: string | null;
+  motivo_ajuste: string | null;
+  forma_pagamento: string | null;
+  observacoes_execucao: string | null;
+  executado_em: string | null;
   servico?: Servico;
   // Computed display fields added by API
   data?: string; // YYYY-MM-DD (BRT)
