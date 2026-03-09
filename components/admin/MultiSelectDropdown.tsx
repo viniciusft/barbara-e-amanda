@@ -1,0 +1,115 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { Check, ChevronDown } from "lucide-react";
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  label: string;
+  options: SelectOption[];
+  selected: string[];
+  onChange: (values: string[]) => void;
+  allLabel?: string;
+}
+
+export default function MultiSelectDropdown({
+  label,
+  options,
+  selected,
+  onChange,
+  allLabel = "Todos",
+}: Props) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  function toggle(value: string) {
+    if (selected.includes(value)) {
+      onChange(selected.filter((v) => v !== value));
+    } else {
+      onChange([...selected, value]);
+    }
+  }
+
+  const displayLabel =
+    selected.length === 0
+      ? allLabel
+      : selected.length === 1
+      ? (options.find((o) => o.value === selected[0])?.label ?? selected[0])
+      : `${selected.length} selecionados`;
+
+  const isAll = selected.length === 0;
+
+  return (
+    <div className="relative" ref={ref}>
+      <p className="text-[rgba(245,240,232,0.35)] text-[10px] font-sans uppercase tracking-wider mb-1.5">
+        {label}
+      </p>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-2 bg-[#1a1a1a] border text-sm font-sans px-3 py-1.5 min-w-[160px] focus:outline-none transition-colors ${
+          open
+            ? "border-[#C9A84C] text-[rgba(245,240,232,0.8)]"
+            : "border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.6)] hover:border-[rgba(255,255,255,0.2)]"
+        } ${!isAll ? "border-[rgba(201,168,76,0.4)] text-[#C9A84C]" : ""}`}
+      >
+        <span className="flex-1 text-left truncate">{displayLabel}</span>
+        <ChevronDown
+          size={13}
+          className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+          strokeWidth={1.5}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 mt-1 z-50 bg-[#1c1c1c] border border-[rgba(255,255,255,0.1)] min-w-[200px] shadow-2xl">
+          <button
+            onClick={() => onChange([])}
+            className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-sans text-left border-b border-[rgba(255,255,255,0.06)] transition-colors ${
+              isAll
+                ? "text-[#C9A84C] bg-[rgba(201,168,76,0.06)]"
+                : "text-[rgba(245,240,232,0.45)] hover:text-[rgba(245,240,232,0.75)] hover:bg-[rgba(255,255,255,0.03)]"
+            }`}
+          >
+            <span className="w-[13px] flex items-center">
+              {isAll && <Check size={12} strokeWidth={2} />}
+            </span>
+            {allLabel}
+          </button>
+          {options.map((opt) => {
+            const active = selected.includes(opt.value);
+            return (
+              <button
+                key={opt.value}
+                onClick={() => toggle(opt.value)}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-sans text-left transition-colors ${
+                  active
+                    ? "text-[#C9A84C] bg-[rgba(201,168,76,0.06)]"
+                    : "text-[rgba(245,240,232,0.6)] hover:text-[rgba(245,240,232,0.8)] hover:bg-[rgba(255,255,255,0.03)]"
+                }`}
+              >
+                <span className="w-[13px] flex items-center">
+                  {active && <Check size={12} strokeWidth={2} />}
+                </span>
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
