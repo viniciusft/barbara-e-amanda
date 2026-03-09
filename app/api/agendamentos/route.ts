@@ -114,9 +114,9 @@ export async function POST(req: NextRequest) {
     // Determine initial status — admin can set it
     const session = await getServerSession(authOptions);
     const statusInicial =
-      session && (status_inicial === "confirmado" || status_inicial === "pendente")
+      session && (status_inicial === "confirmado" || status_inicial === "aguardando_sinal" || status_inicial === "solicitacao")
         ? status_inicial
-        : "pendente";
+        : "solicitacao";
 
     const supabase = createServerSupabaseClient();
 

@@ -27,7 +27,7 @@ const INITIAL_DATA: BookingData = {
   observacoes: "",
 };
 
-const STEPS = ["Serviço", "Data & Horário", "Seus Dados", "Confirmação"];
+const STEPS = ["Serviço", "Data & Horário", "Seus Dados", "Solicitação"];
 
 export default function BookingWizard() {
   const [step, setStep] = useState(0);

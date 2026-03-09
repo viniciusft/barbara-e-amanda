@@ -63,6 +63,9 @@ interface Totais {
   ticket_medio: number;
   total_descontos: number;
   pendentes_execucao: number;
+  total_sinais: number;
+  nao_compareceram: number;
+  sinais_retidos: number;
 }
 
 interface PorServico {
@@ -114,8 +117,10 @@ const PIE_COLORS = [
 
 const STATUS_OPTIONS: SelectOption[] = [
   { value: "concluido", label: "Concluído" },
+  { value: "nao_compareceu", label: "Não compareceu" },
   { value: "confirmado", label: "Confirmado" },
-  { value: "pendente", label: "Pendente" },
+  { value: "aguardando_sinal", label: "Aguardando sinal" },
+  { value: "solicitacao", label: "Solicitação" },
 ];
 
 const PAGAMENTO_OPTIONS: SelectOption[] = [
@@ -480,7 +485,7 @@ export default function FinanceiroPage() {
       )}
 
       {/* ── KPI Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <KPICard
           icon={<DollarSign size={17} className="text-[#C9A84C]" strokeWidth={1.5} />}
           label="Receita Total"
@@ -505,6 +510,19 @@ export default function FinanceiroPage() {
           value={totais ? formatCurrency(totais.total_descontos) : "—"}
           loading={loading}
           highlight={!!totais && totais.total_descontos > 0}
+        />
+        <KPICard
+          icon={<Zap size={17} className="text-[#C9A84C]" strokeWidth={1.5} />}
+          label="Sinais Recebidos"
+          value={totais ? formatCurrency(totais.total_sinais) : "—"}
+          loading={loading}
+        />
+        <KPICard
+          icon={<AlertCircle size={17} className="text-[#C9A84C]" strokeWidth={1.5} />}
+          label="Não compareceram"
+          value={totais ? `${totais.nao_compareceram}x · ${formatCurrency(totais.sinais_retidos)}` : "—"}
+          loading={loading}
+          highlight={!!totais && totais.nao_compareceram > 0}
         />
       </div>
 
@@ -770,17 +788,23 @@ export default function FinanceiroPage() {
 
                     const statusCfg: Record<string, string> = {
                       concluido: "text-emerald-400 border-emerald-800 bg-emerald-950/30",
+                      nao_compareceu: "text-red-800 border-red-900 bg-red-950/40",
                       confirmado: "text-green-400 border-green-800 bg-green-950/20",
+                      aguardando_sinal: "text-orange-400 border-orange-700 bg-orange-950/20",
+                      solicitacao: "text-amber-400 border-amber-700 bg-amber-950/20",
                       pendente: "text-yellow-400 border-yellow-800 bg-yellow-950/20",
                     };
                     const statusLabel: Record<string, string> = {
                       concluido: "Concluído",
+                      nao_compareceu: "Não compareceu",
                       confirmado: "Confirmado",
+                      aguardando_sinal: "Ag. Sinal",
+                      solicitacao: "Solicitação",
                       pendente: "Pendente",
                     };
 
                     return (
-                      <tr key={a.id} className="hover:bg-[rgba(255,255,255,0.015)] transition-colors">
+                      <tr key={a.id} className={`hover:bg-[rgba(255,255,255,0.015)] transition-colors ${a.status === "nao_compareceu" ? "bg-red-950/10" : ""}`}>
                         <td className="py-2.5 pr-3 text-[rgba(245,240,232,0.45)] whitespace-nowrap">
                           {formatShortDate(a.data_brt)}
                           {a.hora_inicio && (
@@ -836,7 +860,7 @@ export default function FinanceiroPage() {
                       colSpan={4}
                       className="pt-3 text-[rgba(245,240,232,0.35)] text-xs font-sans uppercase tracking-wider"
                     >
-                      Total ({totais?.count ?? 0} concluídos)
+                      {totais?.count ?? 0} concluídos · {totais?.nao_compareceram ?? 0} não compareceram
                     </td>
                     <td className="pt-3 text-[#C9A84C] font-medium text-sm">
                       {totais ? formatCurrency(totais.receita) : "—"}

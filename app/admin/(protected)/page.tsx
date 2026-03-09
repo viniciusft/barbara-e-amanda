@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { format, addDays, addWeeks, subWeeks, startOfWeek, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, ChevronLeft, ChevronRight, X, Plus } from "lucide-react";
-import { Agendamento } from "@/types";
+import { Agendamento, AdminConfig } from "@/types";
 import AgendamentoCard from "@/components/admin/AgendamentoCard";
 import NovoAgendamentoModal from "@/components/admin/NovoAgendamentoModal";
 
@@ -14,9 +14,12 @@ const END_HOUR = 20;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => i + START_HOUR);
 
 const STATUS_COLORS: Record<string, string> = {
+  solicitacao: "rgba(245,158,11,0.85)",
+  aguardando_sinal: "rgba(249,115,22,0.85)",
   pendente: "rgba(201,168,76,0.85)",
   confirmado: "rgba(76,175,80,0.85)",
   concluido: "rgba(30,100,30,0.85)",
+  nao_compareceu: "rgba(127,29,29,0.85)",
 };
 
 const CATEGORIA_BORDER: Record<string, string> = {
@@ -146,6 +149,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Agendamento | null>(null);
   const [showNovoModal, setShowNovoModal] = useState(false);
+  const [adminConfig, setAdminConfig] = useState<AdminConfig | null>(null);
   // Mobile: which day is currently shown
   const [activeDay, setActiveDay] = useState(today);
 
@@ -173,6 +177,13 @@ export default function AdminDashboard() {
   }, [weekStart]);
 
   useEffect(() => { fetchAgendamentos(); }, [fetchAgendamentos]);
+
+  useEffect(() => {
+    fetch("/api/admin/perfil")
+      .then((r) => r.json())
+      .then((d) => setAdminConfig(d))
+      .catch(() => {});
+  }, []);
 
   async function handleStatusChange(id: string, status: string) {
     const res = await fetch(`/api/agendamentos/${id}`, {
@@ -421,9 +432,12 @@ export default function AdminDashboard() {
               .sort((a, b) => a.data_hora.localeCompare(b.data_hora))
               .map((a) => {
                 const statusColor: Record<string, string> = {
+                  solicitacao: "border-amber-800/40 bg-amber-950/20",
+                  aguardando_sinal: "border-orange-800/40 bg-orange-950/20",
                   pendente: "border-yellow-800/40 bg-yellow-950/20",
                   confirmado: "border-green-800/40 bg-green-950/20",
                   concluido: "border-blue-800/40 bg-blue-950/20",
+                  nao_compareceu: "border-red-900/40 bg-red-950/20",
                 };
                 return (
                   <button
@@ -518,6 +532,7 @@ export default function AdminDashboard() {
               agendamento={selected}
               onStatusChange={handleStatusChange}
               onUpdated={handleAgendamentoUpdated}
+              adminConfig={adminConfig}
             />
           </div>
         </div>
