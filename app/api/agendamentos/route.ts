@@ -36,6 +36,7 @@ export async function GET(req: NextRequest) {
   let query = supabase
     .from("agendamentos")
     .select("*, servico:servicos(*)")
+    .neq("status", "cancelado")
     .order("data_hora", { ascending: true });
 
   if (data) {
