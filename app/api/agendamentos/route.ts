@@ -60,15 +60,23 @@ export async function GET(req: NextRequest) {
   }
 
   const enriched = (agendamentos || []).map((a) => {
-    const startBRT = toZonedTime(new Date(a.data_hora), TZ);
+    const maqStartBRT = toZonedTime(new Date(a.data_hora), TZ);
     const endBRT = toZonedTime(new Date(a.data_hora_fim), TZ);
+
+    // Overall display start = min(maquiagem, cabelo) so Ordem B shows client arrival time
+    let displayStart = maqStartBRT;
+    if (a.data_hora_cabelo && new Date(a.data_hora_cabelo) < new Date(a.data_hora)) {
+      displayStart = toZonedTime(new Date(a.data_hora_cabelo), TZ);
+    }
+
     const extra: Record<string, string> = {
-      data: format(startBRT, "yyyy-MM-dd"),
-      hora_inicio: format(startBRT, "HH:mm"),
+      data: format(displayStart, "yyyy-MM-dd"),
+      hora_inicio: format(displayStart, "HH:mm"),
       hora_fim: format(endBRT, "HH:mm"),
     };
     if (a.data_hora_cabelo) {
       extra.hora_inicio_cabelo = format(toZonedTime(new Date(a.data_hora_cabelo), TZ), "HH:mm");
+      extra.hora_inicio_maquiagem = format(maqStartBRT, "HH:mm");
     }
     return { ...a, ...extra };
   });
@@ -89,6 +97,10 @@ export async function POST(req: NextRequest) {
       data,
       hora_inicio,
       status_inicial,  // admin only
+      // Combo-specific slot fields
+      hora_maquiagem,
+      hora_cabelo,
+      combo_ordem: comboOrdem,
     } = body;
 
     if (!servico_id || !nome_cliente || !telefone_cliente || !data || !hora_inicio) {
@@ -127,42 +139,61 @@ export async function POST(req: NextRequest) {
     // Build UTC datetimes
     const startLocal = `${data}T${hora_inicio}:00`;
     const startUTC = fromZonedTime(parseISO(startLocal), TZ);
-    const endUTC = addMinutes(startUTC, duracaoTotal);
 
-    // For combos: cabelo starts right after maquiagem
-    const cabeloStartUTC = categoria === "combo" ? addMinutes(startUTC, duracaoMaquiagem) : null;
+    // Combo with explicit slot times (hora_maquiagem + hora_cabelo from slots API)
+    let maqStartUTC: Date, maqEndUTC: Date, cabStartUTC: Date | null, cabEndUTC: Date, overallEndUTC: Date;
 
-    // Conflict check based on category
+    if (categoria === "combo" && hora_maquiagem && hora_cabelo) {
+      maqStartUTC = fromZonedTime(parseISO(`${data}T${hora_maquiagem}:00`), TZ);
+      maqEndUTC = addMinutes(maqStartUTC, duracaoMaquiagem);
+      cabStartUTC = fromZonedTime(parseISO(`${data}T${hora_cabelo}:00`), TZ);
+      cabEndUTC = addMinutes(cabStartUTC, duracaoCabelo);
+      overallEndUTC = maqEndUTC > cabEndUTC ? maqEndUTC : cabEndUTC;
+    } else {
+      maqStartUTC = startUTC;
+      maqEndUTC = categoria === "combo" ? addMinutes(startUTC, duracaoMaquiagem) : addMinutes(startUTC, duracaoTotal);
+      cabStartUTC = categoria === "combo" ? addMinutes(startUTC, duracaoMaquiagem) : null;
+      cabEndUTC = addMinutes(startUTC, duracaoTotal);
+      overallEndUTC = cabEndUTC;
+    }
+
+    // Conflict check — maquiagem track
     if (categoria === "maquiagem" || categoria === "combo") {
-      // Check maquiagem track
-      const maqEnd = categoria === "combo" ? addMinutes(startUTC, duracaoMaquiagem) : endUTC;
       const { data: maqConflicts } = await supabase
         .from("agendamentos")
         .select("id")
         .neq("status", "cancelado")
         .in("categoria_servico", ["maquiagem", "combo"])
-        .lt("data_hora", maqEnd.toISOString())
-        .gt("data_hora_fim", startUTC.toISOString());
+        .lt("data_hora", maqEndUTC.toISOString())
+        .gt("data_hora_fim", maqStartUTC.toISOString());
 
       if (maqConflicts && maqConflicts.length > 0) {
         return NextResponse.json({ error: "Horário de maquiagem não disponível" }, { status: 409 });
       }
     }
 
+    // Conflict check — cabelo track
     if (categoria === "cabelo" || categoria === "combo") {
-      const cabStart = cabeloStartUTC ?? startUTC;
-      const cabEnd = categoria === "combo" ? endUTC : addMinutes(startUTC, duracaoCabelo);
+      const cabStart = cabStartUTC ?? startUTC;
+      const cabEnd = categoria === "combo" ? (cabStartUTC ? addMinutes(cabStartUTC, duracaoCabelo) : overallEndUTC) : addMinutes(startUTC, duracaoCabelo);
       const { data: cabConflicts } = await supabase
         .from("agendamentos")
-        .select("id, data_hora_cabelo, data_hora_fim, categoria_servico")
+        .select("data_hora, data_hora_cabelo, data_hora_fim, categoria_servico")
         .neq("status", "cancelado")
         .in("categoria_servico", ["cabelo", "combo"]);
 
       const hasConflict = (cabConflicts ?? []).some((a) => {
-        const aStart = a.categoria_servico === "combo" && a.data_hora_cabelo
-          ? new Date(a.data_hora_cabelo)
-          : new Date(a.data_hora_cabelo ?? a.data_hora_fim);
-        const aEnd = new Date(a.data_hora_fim);
+        let aStart: Date, aEnd: Date;
+        if (a.categoria_servico === "combo" && a.data_hora_cabelo) {
+          const maq = new Date(a.data_hora);
+          const cab = new Date(a.data_hora_cabelo);
+          // Cabelo block: [cab, maq] if maq > cab (Ordem B), else [cab, data_hora_fim]
+          aStart = cab;
+          aEnd = maq > cab ? maq : new Date(a.data_hora_fim);
+        } else {
+          aStart = new Date(a.data_hora);
+          aEnd = new Date(a.data_hora_fim);
+        }
         return cabStart < aEnd && cabEnd > aStart;
       });
 
@@ -180,14 +211,17 @@ export async function POST(req: NextRequest) {
       telefone: telefone_cliente,
       email: email_cliente || null,
       observacoes: observacoes || null,
-      data_hora: startUTC.toISOString(),
-      data_hora_fim: endUTC.toISOString(),
+      data_hora: maqStartUTC.toISOString(),
+      data_hora_fim: overallEndUTC.toISOString(),
       categoria_servico: categoria,
       status: statusInicial,
     };
 
-    if (cabeloStartUTC) {
-      insertData.data_hora_cabelo = cabeloStartUTC.toISOString();
+    if (cabStartUTC) {
+      insertData.data_hora_cabelo = cabStartUTC.toISOString();
+    }
+    if (categoria === "combo" && comboOrdem) {
+      insertData.combo_ordem = comboOrdem;
     }
 
     const { data: agendamento, error: insertError } = await supabase
@@ -208,20 +242,20 @@ export async function POST(req: NextRequest) {
 
     try {
       if (categoria === "combo") {
-        // Two events: maquiagem + cabelo
-        const maqEnd = cabeloStartUTC!;
+        // Two events: maquiagem + cabelo (at their actual times, respecting combo_ordem)
+        const comboDesc = `${descricaoBase}\n⚠️ Parte de um combo: ${servico.nome}`;
         const maqEvent = await createCalendarEvent({
           summary: buildEventTitle(statusInicial, `💄 Maquiagem — ${servico.nome}`, nome_cliente),
-          description: `${descricaoBase}\n⚠️ Parte de um combo: ${servico.nome}`,
-          startDateTime: startUTC.toISOString(),
-          endDateTime: maqEnd.toISOString(),
+          description: comboDesc,
+          startDateTime: maqStartUTC.toISOString(),
+          endDateTime: maqEndUTC.toISOString(),
         });
 
         const cabEvent = await createCalendarEvent({
           summary: buildEventTitle(statusInicial, `💇 Cabelo — ${servico.nome}`, nome_cliente),
-          description: `${descricaoBase}\n⚠️ Parte de um combo: ${servico.nome}`,
-          startDateTime: maqEnd.toISOString(),
-          endDateTime: endUTC.toISOString(),
+          description: comboDesc,
+          startDateTime: cabStartUTC!.toISOString(),
+          endDateTime: (cabStartUTC ? addMinutes(cabStartUTC, duracaoCabelo) : overallEndUTC).toISOString(),
         });
 
         await supabase
@@ -233,8 +267,8 @@ export async function POST(req: NextRequest) {
         const event = await createCalendarEvent({
           summary: buildEventTitle(statusInicial, `${icon} ${servico.nome}`, nome_cliente),
           description: descricaoBase,
-          startDateTime: startUTC.toISOString(),
-          endDateTime: endUTC.toISOString(),
+          startDateTime: maqStartUTC.toISOString(),
+          endDateTime: overallEndUTC.toISOString(),
         });
 
         await supabase

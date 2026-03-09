@@ -46,6 +46,60 @@ function getHeightPx(duracao: number): number {
   return Math.max((duracao / 60) * HOUR_HEIGHT, 28);
 }
 
+// A "visual block" — one renderable rectangle on the calendar
+interface CalBlock {
+  id: string;       // unique key (agendamento id + suffix for combos)
+  top: number;
+  height: number;
+  agendamento: Agendamento;
+  label: string;
+  borderColor: string;
+}
+
+// Assign side-by-side column positions to overlapping blocks.
+// Returns array of { block, colIndex, numCols }.
+function assignColumns(blocks: CalBlock[]): { block: CalBlock; colIndex: number; numCols: number }[] {
+  if (blocks.length === 0) return [];
+
+  // Sort by top (start time)
+  const sorted = [...blocks].sort((a, b) => a.top - b.top);
+
+  // Greedy column assignment: keep track of when each column becomes free
+  const colEnds: number[] = [];
+  const assigned: { block: CalBlock; colIndex: number }[] = [];
+
+  for (const block of sorted) {
+    // Find first column whose end <= block.top
+    let col = colEnds.findIndex((end) => end <= block.top);
+    if (col === -1) {
+      col = colEnds.length;
+      colEnds.push(0);
+    }
+    colEnds[col] = block.top + block.height;
+    assigned.push({ block, colIndex: col });
+  }
+
+  // Determine numCols for each block: find all blocks that overlap with it
+  // and use the max column count within each connected component.
+  // Simple: for each block, numCols = max(colIndex+1) of all blocks it overlaps with.
+  const numColsMap = new Map<string, number>();
+  for (const a of assigned) {
+    let maxCols = a.colIndex + 1;
+    for (const b of assigned) {
+      if (a.block.top < b.block.top + b.block.height && a.block.top + a.block.height > b.block.top) {
+        maxCols = Math.max(maxCols, b.colIndex + 1);
+      }
+    }
+    numColsMap.set(a.block.id, maxCols);
+  }
+
+  return assigned.map(({ block, colIndex }) => ({
+    block,
+    colIndex,
+    numCols: numColsMap.get(block.id) ?? 1,
+  }));
+}
+
 export default function AdminDashboard() {
   const [weekStart, setWeekStart] = useState(() =>
     format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd")
@@ -354,6 +408,50 @@ export default function AdminDashboard() {
             {weekDays.map((day) => {
               const isToday = day === today;
               const dayAgendamentos = getForDay(day);
+
+              // Build visual blocks (combos → two blocks each)
+              const rawBlocks: CalBlock[] = dayAgendamentos.flatMap((a) => {
+                const cat = a.categoria_servico ?? "maquiagem";
+
+                if (cat === "combo" && a.hora_inicio_cabelo) {
+                  const maqHora = a.hora_inicio_maquiagem ?? a.hora_inicio ?? "08:00";
+                  const cabHora = a.hora_inicio_cabelo;
+                  const maqDur = a.servico?.duracao_maquiagem_min ?? Math.floor(a.servico_duracao / 2);
+                  const cabDur = a.servico?.duracao_cabelo_min ?? (a.servico_duracao - maqDur);
+                  return [
+                    {
+                      id: `${a.id}-maq`,
+                      top: getTopPx(maqHora),
+                      height: getHeightPx(maqDur),
+                      agendamento: a,
+                      label: `💄 ${maqHora}\n${a.nome_cliente}`,
+                      borderColor: CATEGORIA_BORDER.maquiagem,
+                    } as CalBlock,
+                    {
+                      id: `${a.id}-cab`,
+                      top: getTopPx(cabHora),
+                      height: getHeightPx(cabDur),
+                      agendamento: a,
+                      label: `💇 ${cabHora}\n↑ combo`,
+                      borderColor: CATEGORIA_BORDER.cabelo,
+                    } as CalBlock,
+                  ];
+                }
+
+                return [
+                  {
+                    id: a.id,
+                    top: getTopPx(a.hora_inicio ?? "08:00"),
+                    height: getHeightPx(a.servico_duracao),
+                    agendamento: a,
+                    label: `${CATEGORIA_ICON[cat] ?? "💄"} ${a.hora_inicio}\n${a.nome_cliente}`,
+                    borderColor: CATEGORIA_BORDER[cat] ?? CATEGORIA_BORDER.maquiagem,
+                  } as CalBlock,
+                ];
+              });
+
+              const positioned = assignColumns(rawBlocks);
+
               return (
                 <div
                   key={day}
@@ -369,73 +467,33 @@ export default function AdminDashboard() {
                       style={{ top: (h - START_HOUR) * HOUR_HEIGHT }}
                     />
                   ))}
-                  {dayAgendamentos.flatMap((a) => {
-                    const cat = a.categoria_servico ?? "maquiagem";
-                    const borderColor = CATEGORIA_BORDER[cat] ?? CATEGORIA_BORDER.maquiagem;
-                    const icon = CATEGORIA_ICON[cat] ?? "💄";
-
-                    if (cat === "combo" && a.hora_inicio_cabelo) {
-                      // Render two separate blocks for combo
-                      const maqDur = a.servico?.duracao_maquiagem_min ?? Math.floor(a.servico_duracao / 2);
-                      const cabDur = a.servico?.duracao_cabelo_min ?? (a.servico_duracao - maqDur);
-                      return [
-                        <button
-                          key={`${a.id}-maq`}
-                          className="absolute left-0.5 right-0.5 text-left overflow-hidden hover:brightness-125 transition-all z-10"
-                          style={{
-                            top: getTopPx(a.hora_inicio ?? "08:00"),
-                            height: getHeightPx(maqDur),
-                            backgroundColor: STATUS_COLORS[a.status] ?? STATUS_COLORS.pendente,
-                            borderLeft: `3px solid ${CATEGORIA_BORDER.maquiagem}`,
-                          }}
-                          onClick={() => setSelected(a)}
-                        >
-                          <div className="px-1.5 py-0.5">
-                            <p className="text-[9px] text-white/90 font-sans font-semibold truncate">💄 {a.hora_inicio}</p>
-                            <p className="text-[9px] text-white/75 font-sans truncate">{a.nome_cliente}</p>
-                          </div>
-                        </button>,
-                        <button
-                          key={`${a.id}-cab`}
-                          className="absolute left-0.5 right-0.5 text-left overflow-hidden hover:brightness-125 transition-all z-10"
-                          style={{
-                            top: getTopPx(a.hora_inicio_cabelo),
-                            height: getHeightPx(cabDur),
-                            backgroundColor: STATUS_COLORS[a.status] ?? STATUS_COLORS.pendente,
-                            borderLeft: `3px solid ${CATEGORIA_BORDER.cabelo}`,
-                          }}
-                          onClick={() => setSelected(a)}
-                        >
-                          <div className="px-1.5 py-0.5">
-                            <p className="text-[9px] text-white/90 font-sans font-semibold truncate">💇 {a.hora_inicio_cabelo}</p>
-                            <p className="text-[9px] text-white/75 font-sans truncate">↑ combo</p>
-                          </div>
-                        </button>,
-                      ];
-                    }
-
-                    return [
+                  {positioned.map(({ block, colIndex, numCols }) => {
+                    const widthPct = 100 / numCols;
+                    const leftPct = colIndex * widthPct;
+                    const lines = block.label.split("\n");
+                    return (
                       <button
-                        key={a.id}
-                        className="absolute left-0.5 right-0.5 rounded text-left overflow-hidden hover:brightness-125 transition-all z-10"
+                        key={block.id}
+                        className="absolute text-left overflow-hidden hover:brightness-125 transition-all z-10"
                         style={{
-                          top: getTopPx(a.hora_inicio ?? "08:00"),
-                          height: getHeightPx(a.servico_duracao),
-                          backgroundColor: STATUS_COLORS[a.status] ?? STATUS_COLORS.pendente,
-                          borderLeft: `3px solid ${borderColor}`,
+                          top: block.top,
+                          height: block.height,
+                          left: `calc(${leftPct}% + 1px)`,
+                          width: `calc(${widthPct}% - 2px)`,
+                          backgroundColor: STATUS_COLORS[block.agendamento.status] ?? STATUS_COLORS.pendente,
+                          borderLeft: `3px solid ${block.borderColor}`,
                         }}
-                        onClick={() => setSelected(a)}
+                        onClick={() => setSelected(block.agendamento)}
                       >
-                        <div className="px-1.5 py-1">
-                          <p className="text-[10px] text-white/90 font-sans font-semibold leading-tight truncate">
-                            {icon} {a.hora_inicio}
-                          </p>
-                          <p className="text-[10px] text-white/75 font-sans truncate leading-tight">
-                            {a.nome_cliente}
-                          </p>
+                        <div className="px-1 py-0.5">
+                          {lines.map((line, i) => (
+                            <p key={i} className={`font-sans truncate leading-tight ${i === 0 ? "text-[9px] text-white/90 font-semibold" : "text-[9px] text-white/70"}`}>
+                              {line}
+                            </p>
+                          ))}
                         </div>
-                      </button>,
-                    ];
+                      </button>
+                    );
                   })}
                 </div>
               );

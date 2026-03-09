@@ -94,19 +94,24 @@ export async function GET(req: NextRequest) {
 
   for (const a of appts) {
     const cat = a.categoria_servico ?? "maquiagem";
-    const start = new Date(a.data_hora);
+    const maqStart = new Date(a.data_hora);
     const end = new Date(a.data_hora_fim);
 
     if (cat === "maquiagem") {
-      maquiagemBusy.push({ start, end });
+      maquiagemBusy.push({ start: maqStart, end });
     } else if (cat === "cabelo") {
-      cabeloBusy.push({ start, end });
+      cabeloBusy.push({ start: maqStart, end });
     } else if (cat === "combo") {
-      // Maquiagem portion: data_hora → data_hora_cabelo
-      const cabeloStart = a.data_hora_cabelo ? new Date(a.data_hora_cabelo) : end;
-      maquiagemBusy.push({ start, end: cabeloStart });
-      // Cabelo portion: data_hora_cabelo → data_hora_fim
-      cabeloBusy.push({ start: cabeloStart, end });
+      const cabStart = a.data_hora_cabelo ? new Date(a.data_hora_cabelo) : end;
+      if (maqStart <= cabStart) {
+        // Ordem A (maquiagem first): maquiagem = [data_hora, data_hora_cabelo], cabelo = [data_hora_cabelo, fim]
+        maquiagemBusy.push({ start: maqStart, end: cabStart });
+        cabeloBusy.push({ start: cabStart, end });
+      } else {
+        // Ordem B (cabelo first): cabelo = [data_hora_cabelo, data_hora], maquiagem = [data_hora, fim]
+        cabeloBusy.push({ start: cabStart, end: maqStart });
+        maquiagemBusy.push({ start: maqStart, end });
+      }
     }
   }
 
@@ -130,7 +135,15 @@ export async function GET(req: NextRequest) {
   const intervalo = horario.intervalo_minutos ?? 30;
   const nowUTC = new Date();
 
-  const slots: { hora_inicio: string; hora_fim: string; hora_inicio_cabelo?: string }[] = [];
+  type SlotResult = {
+    hora_inicio: string;
+    hora_fim: string;
+    combo_ordem?: "maquiagem_primeiro" | "cabelo_primeiro";
+    hora_maquiagem?: string;
+    hora_cabelo?: string;
+  };
+
+  const slots: SlotResult[] = [];
 
   let current = dayStartUTC;
 
@@ -162,29 +175,56 @@ export async function GET(req: NextRequest) {
       current = addMinutes(current, intervalo);
       continue;
     } else if (categoria === "combo") {
-      // Maquiagem block: current → current + duracao_maquiagem_min
-      const maqEnd = addMinutes(current, duracaoMaquiagemMin);
-      // Cabelo block starts right after: maqEnd → maqEnd + duracao_cabelo_min
-      const cabStart = maqEnd;
-      const cabEnd = addMinutes(cabStart, duracaoCabeloMin);
-
-      // Both blocks must fit within their respective schedules
-      if (maqEnd > dayEndUTC) break;
-      if (cabEnd > cabeloDayEndUTC) {
-        current = addMinutes(current, intervalo);
-        continue;
+      // Break when even the shorter first block can't fit in either schedule
+      const shortDur = Math.min(duracaoMaquiagemMin, duracaoCabeloMin);
+      if (
+        addMinutes(current, shortDur) > dayEndUTC &&
+        addMinutes(current, shortDur) > cabeloDayEndUTC
+      ) {
+        break;
       }
 
       if (!isBefore(current, nowUTC)) {
-        const maqFree = !overlaps(current, maqEnd, maquiagemBusy);
-        const cabFree = !overlaps(cabStart, cabEnd, cabeloBusy);
+        const totalEnd = addMinutes(current, duracaoMaquiagemMin + duracaoCabeloMin);
 
-        if (maqFree && cabFree) {
+        // Ordem A: maquiagem first, then cabelo
+        const maqEndA = addMinutes(current, duracaoMaquiagemMin);
+        const cabStartA = maqEndA;
+        const cabEndA = addMinutes(cabStartA, duracaoCabeloMin);
+        const ordenA =
+          maqEndA <= dayEndUTC &&
+          cabEndA <= cabeloDayEndUTC &&
+          !overlaps(current, maqEndA, maquiagemBusy) &&
+          !overlaps(cabStartA, cabEndA, cabeloBusy);
+
+        if (ordenA) {
           slots.push({
             hora_inicio: format(toZonedTime(current, TZ), "HH:mm"),
-            hora_fim: format(toZonedTime(cabEnd, TZ), "HH:mm"),
-            hora_inicio_cabelo: format(toZonedTime(cabStart, TZ), "HH:mm"),
+            hora_fim: format(toZonedTime(totalEnd, TZ), "HH:mm"),
+            combo_ordem: "maquiagem_primeiro",
+            hora_maquiagem: format(toZonedTime(current, TZ), "HH:mm"),
+            hora_cabelo: format(toZonedTime(cabStartA, TZ), "HH:mm"),
           });
+        } else {
+          // Ordem B: cabelo first, then maquiagem
+          const cabEndB = addMinutes(current, duracaoCabeloMin);
+          const maqStartB = cabEndB;
+          const maqEndB = addMinutes(maqStartB, duracaoMaquiagemMin);
+          const ordenB =
+            cabEndB <= cabeloDayEndUTC &&
+            maqEndB <= dayEndUTC &&
+            !overlaps(current, cabEndB, cabeloBusy) &&
+            !overlaps(maqStartB, maqEndB, maquiagemBusy);
+
+          if (ordenB) {
+            slots.push({
+              hora_inicio: format(toZonedTime(current, TZ), "HH:mm"),
+              hora_fim: format(toZonedTime(totalEnd, TZ), "HH:mm"),
+              combo_ordem: "cabelo_primeiro",
+              hora_maquiagem: format(toZonedTime(maqStartB, TZ), "HH:mm"),
+              hora_cabelo: format(toZonedTime(current, TZ), "HH:mm"),
+            });
+          }
         }
       }
     }
