@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
         .gt("data_hora_fim", maqStartUTC.toISOString());
 
       if (maqConflicts && maqConflicts.length > 0) {
-        return NextResponse.json({ error: "Horário de maquiagem não disponível" }, { status: 409 });
+        return NextResponse.json({ error: "Horário não disponível" }, { status: 409 });
       }
     }
 
@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
       });
 
       if (hasConflict) {
-        return NextResponse.json({ error: "Horário de cabelo não disponível" }, { status: 409 });
+        return NextResponse.json({ error: "Horário não disponível" }, { status: 409 });
       }
     }
 

@@ -33,6 +33,7 @@ export default function BookingWizard() {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<BookingData>(INITIAL_DATA);
   const [booked, setBooked] = useState(false);
+  const [slotTakenMsg, setSlotTakenMsg] = useState("");
 
   function updateData(partial: Partial<BookingData>) {
     setData((prev) => ({ ...prev, ...partial }));
@@ -50,6 +51,7 @@ export default function BookingWizard() {
     setData(INITIAL_DATA);
     setStep(0);
     setBooked(false);
+    setSlotTakenMsg("");
   }
 
   return (
@@ -127,16 +129,24 @@ export default function BookingWizard() {
             />
           )}
           {step === 1 && (
-            <StepAgenda
-              servico={data.servico!}
-              selectedData={data.data}
-              selectedSlot={data.slot}
-              onSelect={(date, slot) => {
-                updateData({ data: date, slot });
-                goNext();
-              }}
-              onBack={goBack}
-            />
+            <>
+              {slotTakenMsg && (
+                <div className="mb-4 border border-amber-700/40 bg-amber-950/20 px-4 py-3 text-sm font-sans text-amber-300">
+                  {slotTakenMsg}
+                </div>
+              )}
+              <StepAgenda
+                servico={data.servico!}
+                selectedData={data.data}
+                selectedSlot={data.slot}
+                onSelect={(date, slot) => {
+                  updateData({ data: date, slot });
+                  setSlotTakenMsg("");
+                  goNext();
+                }}
+                onBack={goBack}
+              />
+            </>
           )}
           {step === 2 && (
             <StepDados
@@ -173,10 +183,17 @@ export default function BookingWizard() {
                   }),
                 });
                 if (!res.ok) {
-                  const err = await res.json();
-                  throw new Error(err.error || "Erro ao agendar");
+                  if (res.status === 409) {
+                    // Slot was taken between selection and confirmation — go back silently
+                    updateData({ slot: null });
+                    setSlotTakenMsg("Este horário acabou de ser reservado. Por favor selecione outro horário disponível.");
+                    setStep(1);
+                    return;
+                  }
+                  throw new Error("Erro ao realizar agendamento. Tente novamente.");
                 }
                 setBooked(true);
+                setSlotTakenMsg("");
               }}
               onBack={goBack}
               onReset={handleReset}
