@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Agendamento, AdminConfig } from "@/types";
 import { formatCurrency, formatDuration } from "@/lib/utils";
+import { calcSinal } from "@/lib/sinal";
 import {
   ClipboardCheck, TrendingDown, TrendingUp, MessageCircle,
   CheckCircle2, UserX, AlertTriangle,
@@ -108,9 +109,15 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
   const [showExecucao, setShowExecucao] = useState(false);
   const [current, setCurrent] = useState<Agendamento>(agendamento);
 
-  // Sinal section state
-  const defaultPct = adminConfig?.sinal_percentual_padrao ?? 50;
-  const [sinalPct, setSinalPct] = useState<number>(current.sinal_percentual ?? defaultPct);
+  // Sinal section state — initialize using per-service config if available
+  const valorTotalInit = agendamento.servico?.preco ?? 0;
+  const { sinalPct: defaultSinalPct } = calcSinal(
+    valorTotalInit,
+    agendamento,
+    agendamento.servico,
+    adminConfig
+  );
+  const [sinalPct, setSinalPct] = useState<number>(defaultSinalPct);
   const [showSinalForm, setShowSinalForm] = useState(false);
   const [sinalValorInput, setSinalValorInput] = useState("");
   const [sinalForma, setSinalForma] = useState("pix");

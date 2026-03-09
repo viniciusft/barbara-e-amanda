@@ -3,10 +3,27 @@
 import { useEffect, useState } from "react";
 import { Servico } from "@/types";
 import { formatCurrency, formatDuration } from "@/lib/utils";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, GripVertical } from "lucide-react";
 import ImageUpload from "@/components/admin/ImageUpload";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Categoria = "maquiagem" | "cabelo" | "combo";
+type SinalOpcao = "padrao" | "percentual" | "fixo";
 
 const EMPTY_FORM = {
   nome: "",
@@ -17,6 +34,10 @@ const EMPTY_FORM = {
   duracao_cabelo_min: 60,
   preco: 0,
   imagem_url: "",
+  // Sinal config
+  sinal_opcao: "padrao" as SinalOpcao,
+  sinal_percentual_custom: 50,
+  sinal_valor_fixo: 0,
 };
 
 const CATEGORIA_LABEL: Record<Categoria, string> = {
@@ -31,6 +52,114 @@ const CATEGORIA_BADGE: Record<Categoria, string> = {
   combo: "text-[#C9A84C] border-[rgba(201,168,76,0.4)] bg-[rgba(201,168,76,0.08)]",
 };
 
+// ── Sortable item component ───────────────────────────────────────────────────
+interface SortableItemProps {
+  servico: Servico;
+  onEdit: (s: Servico) => void;
+  onToggle: (s: Servico) => void;
+  onDelete: (id: string) => void;
+}
+
+function SortableItem({ servico: s, onEdit, onToggle, onDelete }: SortableItemProps) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
+    useSortable({ id: s.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  const cat: Categoria = (s.categoria as Categoria) ?? "maquiagem";
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`border flex overflow-hidden ${
+        isDragging
+          ? "border-[#C9A84C] bg-[rgba(201,168,76,0.08)] shadow-lg shadow-[rgba(201,168,76,0.15)]"
+          : s.ativo
+          ? "border-[rgba(201,168,76,0.15)] bg-[#141414]"
+          : "border-[rgba(255,255,255,0.05)] bg-[#111] opacity-60"
+      }`}
+    >
+      {/* Drag handle */}
+      <button
+        ref={setActivatorNodeRef}
+        {...attributes}
+        {...listeners}
+        className="w-8 shrink-0 flex items-center justify-center cursor-grab active:cursor-grabbing touch-none text-[rgba(201,168,76,0.25)] hover:text-[rgba(201,168,76,0.6)] transition-colors border-r border-[rgba(201,168,76,0.08)]"
+        aria-label="Arrastar para reordenar"
+        style={{ minHeight: 44 }}
+      >
+        <GripVertical size={16} strokeWidth={1.5} />
+      </button>
+
+      {/* Image thumbnail */}
+      <div className="w-20 h-20 shrink-0 bg-[#1a1a1a] flex items-center justify-center overflow-hidden">
+        {s.imagem_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={s.imagem_url} alt={s.nome} className="w-full h-full object-cover" />
+        ) : (
+          <ImageIcon size={20} className="text-[rgba(201,168,76,0.2)]" strokeWidth={1} />
+        )}
+      </div>
+
+      <div className="flex-1 p-4 flex flex-col sm:flex-row sm:items-center gap-3 min-w-0">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <h4 className="font-display text-lg text-[#F5F0E8]">{s.nome}</h4>
+            <span className={`text-[10px] font-sans border px-2 py-0.5 ${CATEGORIA_BADGE[cat]}`}>
+              {CATEGORIA_LABEL[cat]}
+            </span>
+            {!s.ativo && (
+              <span className="text-xs font-sans text-[rgba(245,240,232,0.3)] border border-[rgba(255,255,255,0.1)] px-2 py-0.5">
+                Inativo
+              </span>
+            )}
+          </div>
+          {s.descricao && (
+            <p className="text-[rgba(245,240,232,0.4)] text-sm font-sans mb-1 truncate">{s.descricao}</p>
+          )}
+          <div className="flex gap-4 text-sm font-sans text-[rgba(245,240,232,0.5)]">
+            {cat === "combo" ? (
+              <span>
+                💄{s.duracao_maquiagem_min}min + 💇{s.duracao_cabelo_min}min ={" "}
+                <span className="text-[rgba(245,240,232,0.7)]">{s.duracao_minutos}min</span>
+              </span>
+            ) : (
+              <span>{formatDuration(s.duracao_minutos)}</span>
+            )}
+            <span className="text-[#C9A84C]">{formatCurrency(s.preco)}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => onToggle(s)}
+            className="px-3 py-1.5 text-xs font-sans border border-[rgba(201,168,76,0.3)] text-[rgba(245,240,232,0.6)] hover:border-[rgba(201,168,76,0.5)] transition-colors"
+          >
+            {s.ativo ? "Desativar" : "Ativar"}
+          </button>
+          <button
+            onClick={() => onEdit(s)}
+            className="px-3 py-1.5 text-xs font-sans border border-[rgba(201,168,76,0.3)] text-[#C9A84C] hover:bg-[rgba(201,168,76,0.05)] transition-colors"
+          >
+            Editar
+          </button>
+          <button
+            onClick={() => onDelete(s.id)}
+            className="px-3 py-1.5 text-xs font-sans border border-red-900 text-red-400 hover:bg-red-950/20 transition-colors"
+          >
+            Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ServicosPage() {
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +168,42 @@ export default function ServicosPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [reorderError, setReorderError] = useState("");
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
+  );
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = servicos.findIndex((s) => s.id === active.id);
+    const newIndex = servicos.findIndex((s) => s.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(servicos, oldIndex, newIndex);
+    setServicos(reordered);
+    setReorderError("");
+
+    try {
+      const res = await fetch("/api/admin/servicos/reorder", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: reordered.map((s, i) => ({ id: s.id, ordem: i })),
+        }),
+      });
+      if (!res.ok) {
+        setReorderError("Erro ao salvar ordem. Recarregue a página.");
+        setServicos(servicos); // revert
+      }
+    } catch {
+      setReorderError("Erro ao salvar ordem. Recarregue a página.");
+      setServicos(servicos); // revert
+    }
+  }
 
   async function fetchServicos() {
     setLoading(true);
@@ -55,6 +220,9 @@ export default function ServicosPage() {
   function startEdit(s: Servico) {
     setEditingId(s.id);
     const cat: Categoria = (s.categoria as Categoria) ?? "maquiagem";
+    let sinalOpcao: SinalOpcao = "padrao";
+    if (s.sinal_tipo === "fixo") sinalOpcao = "fixo";
+    else if (s.sinal_tipo === "percentual" && s.sinal_percentual_custom != null) sinalOpcao = "percentual";
     setForm({
       nome: s.nome,
       descricao: s.descricao ?? "",
@@ -64,6 +232,9 @@ export default function ServicosPage() {
       duracao_cabelo_min: s.duracao_cabelo_min ?? s.duracao_minutos,
       preco: s.preco,
       imagem_url: s.imagem_url ?? "",
+      sinal_opcao: sinalOpcao,
+      sinal_percentual_custom: s.sinal_percentual_custom ?? 50,
+      sinal_valor_fixo: s.sinal_valor_fixo ?? 0,
     });
     setShowForm(true);
     setError("");
@@ -118,6 +289,10 @@ export default function ServicosPage() {
         categoria: form.categoria,
         preco: form.preco,
         imagem_url: form.imagem_url || null,
+        // Sinal config
+        sinal_tipo: form.sinal_opcao === "padrao" ? "percentual" : form.sinal_opcao,
+        sinal_percentual_custom: form.sinal_opcao === "percentual" ? form.sinal_percentual_custom : null,
+        sinal_valor_fixo: form.sinal_opcao === "fixo" ? form.sinal_valor_fixo : null,
       };
 
       if (form.categoria === "combo") {
@@ -307,6 +482,65 @@ export default function ServicosPage() {
               />
             </div>
 
+            {/* Sinal config */}
+            <div className="sm:col-span-2 border-t border-[rgba(201,168,76,0.1)] pt-4">
+              <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-3">
+                Configuração de Sinal
+              </label>
+              <div className="flex gap-2 flex-wrap mb-3">
+                {(["padrao", "percentual", "fixo"] as SinalOpcao[]).map((op) => {
+                  const labels = { padrao: "Usar padrão global", percentual: "Percentual personalizado", fixo: "Valor fixo" };
+                  return (
+                    <button
+                      key={op}
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, sinal_opcao: op }))}
+                      className={`px-3 py-1.5 text-xs font-sans border transition-colors ${
+                        form.sinal_opcao === op
+                          ? "border-[#C9A84C] text-[#C9A84C] bg-[rgba(201,168,76,0.08)]"
+                          : "border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.4)] hover:border-[rgba(255,255,255,0.2)]"
+                      }`}
+                    >
+                      {labels[op]}
+                    </button>
+                  );
+                })}
+              </div>
+              {form.sinal_opcao === "percentual" && (
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={form.sinal_percentual_custom}
+                    onChange={(e) => setForm((f) => ({ ...f, sinal_percentual_custom: Number(e.target.value) }))}
+                    className="input-luxury w-28"
+                    placeholder="50"
+                  />
+                  <span className="text-[rgba(245,240,232,0.4)] text-sm font-sans">% do valor total</span>
+                </div>
+              )}
+              {form.sinal_opcao === "fixo" && (
+                <div className="flex items-center gap-3">
+                  <span className="text-[rgba(245,240,232,0.4)] text-sm font-sans">R$</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={form.sinal_valor_fixo}
+                    onChange={(e) => setForm((f) => ({ ...f, sinal_valor_fixo: Number(e.target.value) }))}
+                    className="input-luxury w-36"
+                    placeholder="0,00"
+                  />
+                </div>
+              )}
+              {form.sinal_opcao === "padrao" && (
+                <p className="text-[rgba(245,240,232,0.3)] text-xs font-sans">
+                  Usa o percentual configurado em Perfil → Configurações de Pagamento.
+                </p>
+              )}
+            </div>
+
             {/* Imagem */}
             <div className="sm:col-span-2">
               <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
@@ -361,81 +595,27 @@ export default function ServicosPage() {
         </div>
       )}
 
-      <div className="grid gap-3">
-        {servicos.map((s) => {
-          const cat: Categoria = (s.categoria as Categoria) ?? "maquiagem";
-          return (
-            <div
-              key={s.id}
-              className={`border flex overflow-hidden ${
-                s.ativo
-                  ? "border-[rgba(201,168,76,0.15)] bg-[#141414]"
-                  : "border-[rgba(255,255,255,0.05)] bg-[#111] opacity-60"
-              }`}
-            >
-              {/* Image thumbnail */}
-              <div className="w-20 h-20 shrink-0 bg-[#1a1a1a] flex items-center justify-center overflow-hidden">
-                {s.imagem_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={s.imagem_url} alt={s.nome} className="w-full h-full object-cover" />
-                ) : (
-                  <ImageIcon size={20} className="text-[rgba(201,168,76,0.2)]" strokeWidth={1} />
-                )}
-              </div>
+      {reorderError && (
+        <div className="border border-red-800 bg-red-950/20 p-3 text-red-400 text-sm font-sans mb-3">
+          {reorderError}
+        </div>
+      )}
 
-              <div className="flex-1 p-4 flex flex-col sm:flex-row sm:items-center gap-3 min-w-0">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <h4 className="font-display text-lg text-[#F5F0E8]">{s.nome}</h4>
-                    <span className={`text-[10px] font-sans border px-2 py-0.5 ${CATEGORIA_BADGE[cat]}`}>
-                      {CATEGORIA_LABEL[cat]}
-                    </span>
-                    {!s.ativo && (
-                      <span className="text-xs font-sans text-[rgba(245,240,232,0.3)] border border-[rgba(255,255,255,0.1)] px-2 py-0.5">
-                        Inativo
-                      </span>
-                    )}
-                  </div>
-                  {s.descricao && (
-                    <p className="text-[rgba(245,240,232,0.4)] text-sm font-sans mb-1 truncate">{s.descricao}</p>
-                  )}
-                  <div className="flex gap-4 text-sm font-sans text-[rgba(245,240,232,0.5)]">
-                    {cat === "combo" ? (
-                      <span>
-                        💄{s.duracao_maquiagem_min}min + 💇{s.duracao_cabelo_min}min ={" "}
-                        <span className="text-[rgba(245,240,232,0.7)]">{s.duracao_minutos}min</span>
-                      </span>
-                    ) : (
-                      <span>{formatDuration(s.duracao_minutos)}</span>
-                    )}
-                    <span className="text-[#C9A84C]">{formatCurrency(s.preco)}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => handleToggle(s)}
-                    className="px-3 py-1.5 text-xs font-sans border border-[rgba(201,168,76,0.3)] text-[rgba(245,240,232,0.6)] hover:border-[rgba(201,168,76,0.5)] transition-colors"
-                  >
-                    {s.ativo ? "Desativar" : "Ativar"}
-                  </button>
-                  <button
-                    onClick={() => startEdit(s)}
-                    className="px-3 py-1.5 text-xs font-sans border border-[rgba(201,168,76,0.3)] text-[#C9A84C] hover:bg-[rgba(201,168,76,0.05)] transition-colors"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(s.id)}
-                    className="px-3 py-1.5 text-xs font-sans border border-red-900 text-red-400 hover:bg-red-950/20 transition-colors"
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={servicos.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+          <div className="grid gap-3">
+            {servicos.map((s) => (
+              <SortableItem
+                key={s.id}
+                servico={s}
+                onEdit={startEdit}
+                onToggle={handleToggle}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }

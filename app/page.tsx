@@ -13,6 +13,7 @@ export default async function HomePage() {
     whatsapp?: string | null;
     foto_url?: string | null;
     foto_header_url?: string | null;
+    foto_header_mobile_url?: string | null;
     endereco?: string | null;
   } = {};
 
@@ -26,7 +27,7 @@ export default async function HomePage() {
         .order("ordem", { ascending: true }),
       db
         .from("admin_config")
-        .select("nome_studio, bio, instagram, whatsapp, foto_url, foto_header_url, endereco")
+        .select("nome_studio, bio, instagram, whatsapp, foto_url, foto_header_url, foto_header_mobile_url, endereco")
         .limit(1)
         .single(),
     ]);
@@ -65,16 +66,29 @@ export default async function HomePage() {
 
       {/* HERO */}
       <section className="relative min-h-screen flex items-center justify-center px-6 text-center overflow-hidden pt-20">
-        {/* Header background image */}
-        {config.foto_header_url && (
+        {/* Header background images — mobile-first, responsive */}
+        {(config.foto_header_url || config.foto_header_mobile_url) && (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={config.foto_header_url}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover object-center"
-              aria-hidden="true"
-            />
+            {/* Mobile image (shown on small screens, hidden on md+) */}
+            {(config.foto_header_mobile_url || config.foto_header_url) && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={(config.foto_header_mobile_url || config.foto_header_url)!}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover object-center md:hidden"
+                aria-hidden="true"
+              />
+            )}
+            {/* Desktop image (hidden on mobile, shown on md+) */}
+            {config.foto_header_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={config.foto_header_url}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover object-center hidden md:block"
+                aria-hidden="true"
+              />
+            )}
             {/* Dark overlay so text remains readable */}
             <div className="absolute inset-0 bg-[rgba(10,10,10,0.72)]" />
           </>

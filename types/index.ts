@@ -12,6 +12,10 @@ export interface Servico {
   categoria: "maquiagem" | "cabelo" | "combo";
   duracao_maquiagem_min: number | null;
   duracao_cabelo_min: number | null;
+  // Sinal config per service
+  sinal_tipo: "percentual" | "fixo" | null;
+  sinal_percentual_custom: number | null;
+  sinal_valor_fixo: number | null;
   created_at: string;
 }
 
@@ -97,6 +101,8 @@ export interface AdminConfig {
   whatsapp: string | null;
   endereco: string | null;
   foto_url: string | null;
+  foto_header_url: string | null;
+  foto_header_mobile_url: string | null;
   // Payment & sinal config
   chave_pix: string | null;
   tipo_chave_pix: string | null;

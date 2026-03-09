@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { nome, descricao, duracao_minutos, preco } = body;
+  const { nome, descricao, duracao_minutos, preco, categoria, duracao_maquiagem_min, duracao_cabelo_min, imagem_url, sinal_tipo, sinal_percentual_custom, sinal_valor_fixo } = body;
 
   if (!nome || !duracao_minutos || preco === undefined) {
     return NextResponse.json({ error: "Campos obrigatórios ausentes" }, { status: 400 });
@@ -52,7 +52,20 @@ export async function POST(req: NextRequest) {
   const supabase = createServerSupabaseClient();
   const { data, error } = await supabase
     .from("servicos")
-    .insert({ nome, descricao: descricao || null, duracao_minutos, preco, ativo: true })
+    .insert({
+      nome,
+      descricao: descricao || null,
+      duracao_minutos,
+      preco,
+      ativo: true,
+      categoria: categoria || "maquiagem",
+      duracao_maquiagem_min: duracao_maquiagem_min ?? null,
+      duracao_cabelo_min: duracao_cabelo_min ?? null,
+      imagem_url: imagem_url || null,
+      sinal_tipo: sinal_tipo || null,
+      sinal_percentual_custom: sinal_percentual_custom ?? null,
+      sinal_valor_fixo: sinal_valor_fixo ?? null,
+    })
     .select()
     .single();
 
