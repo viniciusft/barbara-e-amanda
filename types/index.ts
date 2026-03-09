@@ -70,11 +70,12 @@ export interface Agendamento {
   // Sinal (deposit) fields
   sinal_percentual: number | null;
   sinal_valor: number | null;
-  sinal_status: "aguardando" | "pago" | "nao_compareceu" | "dispensado" | null;
+  sinal_status: "aguardando" | "pago" | "nao_compareceu" | "dispensado" | "reembolsado" | null;
   sinal_pago_em: string | null;
   sinal_forma_pagamento: string | null;
   valor_restante: number | null;
   whatsapp_enviado_em: string | null;
+  sinal_reembolsado_em: string | null;
   servico?: Servico;
   // Computed display fields added by API
   data?: string; // YYYY-MM-DD (BRT)
