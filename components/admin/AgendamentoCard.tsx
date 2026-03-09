@@ -35,7 +35,7 @@ const PAGAMENTO_LABEL: Record<string, string> = {
   outro: "Outro",
 };
 
-const DEFAULT_TEMPLATE = `Ola {nome_cliente}! Sou {nome_secretaria} do {nome_studio}.
+const DEFAULT_SINAL_TEMPLATE = `Ola {nome_cliente}! Sou {nome_secretaria} do {nome_studio}.
 
 Sua solicitacao para *{servico}* em *{data}* as *{horario}* foi recebida!
 
@@ -50,12 +50,37 @@ Nome: {nome_recebedor}
 
 Apos o pagamento, envie o comprovante por aqui. Obrigada!`;
 
+const DEFAULT_CONFIRMACAO_TEMPLATE = `Ola {nome_cliente}! Tudo certo para o seu dia especial! 🎉
+
+Seu agendamento no *{nome_studio}* esta confirmado:
+
+📅 Data: {data}
+⏰ Horario: {horario}
+💄 Servico: {servico}
+💰 Valor: R$ {valor_total}
+
+Qualquer duvida estamos a disposicao. Ate logo!
+{nome_secretaria}`;
+
+// Shared date formatter: YYYY-MM-DD → "sábado, 23 de março de 2025"
+function formatDataLonga(data: string | undefined): string {
+  if (!data) return "";
+  const [y, m, d] = data.split("-");
+  const date = new Date(Number(y), Number(m) - 1, Number(d));
+  return date.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 function buildWhatsAppMessage(
   agendamento: Agendamento,
   config: AdminConfig | null | undefined,
   sinalPct: number
 ): string {
-  const template = config?.mensagem_whatsapp_template || DEFAULT_TEMPLATE;
+  const template = config?.mensagem_whatsapp_template || DEFAULT_SINAL_TEMPLATE;
   const valorTotal = agendamento.servico?.preco ?? 0;
   const valorSinal = Math.round((valorTotal * sinalPct) / 100 * 100) / 100;
   const valorRestante = Math.round((valorTotal - valorSinal) * 100) / 100;
@@ -79,6 +104,23 @@ function buildWhatsAppMessage(
     .replace(/\{chave_pix\}/g, config?.chave_pix || "—")
     .replace(/\{nome_recebedor\}/g, config?.nome_recebedor_pix || "—")
     .replace(/\{valor_restante\}/g, valorRestante.toFixed(2).replace(".", ","));
+}
+
+function buildConfirmacaoMessage(
+  agendamento: Agendamento,
+  config: AdminConfig | null | undefined,
+): string {
+  const template = config?.mensagem_confirmacao_template || DEFAULT_CONFIRMACAO_TEMPLATE;
+  const valorTotal = agendamento.preco_cobrado ?? agendamento.servico?.preco ?? 0;
+
+  return template
+    .replace(/\{nome_cliente\}/g, agendamento.nome_cliente)
+    .replace(/\{nome_secretaria\}/g, config?.nome_secretaria || "Secretaria")
+    .replace(/\{nome_studio\}/g, config?.nome_studio || "Studio")
+    .replace(/\{data\}/g, formatDataLonga(agendamento.data))
+    .replace(/\{horario\}/g, agendamento.hora_inicio || "")
+    .replace(/\{servico\}/g, agendamento.servico?.nome || agendamento.servico_nome)
+    .replace(/\{valor_total\}/g, valorTotal.toFixed(2).replace(".", ","));
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -122,6 +164,10 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
   const [sinalValorInput, setSinalValorInput] = useState("");
   const [sinalForma, setSinalForma] = useState("pix");
   const [savingSinal, setSavingSinal] = useState(false);
+
+  // Confirmation WhatsApp panel
+  const [showConfirmacaoPanel, setShowConfirmacaoPanel] = useState(false);
+  const [savingConfirmacao, setSavingConfirmacao] = useState(false);
 
   // Cancel dialog
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -225,6 +271,17 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
       setShowSinalForm(false);
       onStatusChange(current.id, "confirmado");
     }
+  }
+
+  async function handleAbrirWhatsAppConfirmacao() {
+    const telefone = current.telefone.replace(/\D/g, "");
+    const msg = buildConfirmacaoMessage(current, adminConfig);
+    const url = `https://wa.me/55${telefone}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+
+    setSavingConfirmacao(true);
+    await patchAndUpdate({ confirmacao_enviada_em: new Date().toISOString() });
+    setSavingConfirmacao(false);
   }
 
   function handleExecucaoSaved(updated: Agendamento) {
@@ -419,6 +476,71 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ── Enviar confirmação (status = confirmado) ── */}
+        {current.status === "confirmado" && (
+          <div className="border-t border-[rgba(201,168,76,0.08)] pt-4">
+            <SectionTitle>Mensagem de Confirmação</SectionTitle>
+
+            {!showConfirmacaoPanel ? (
+              <button
+                onClick={() => setShowConfirmacaoPanel(true)}
+                className="flex items-center gap-2 w-full px-4 py-2.5 bg-[#25D366]/10 border border-[#25D366]/40 text-[#25D366] text-sm font-sans hover:bg-[#25D366]/20 transition-colors"
+              >
+                <MessageCircle size={15} />
+                <span className="flex-1 text-left">Enviar confirmação pelo WhatsApp</span>
+                {current.confirmacao_enviada_em && (
+                  <span className="text-[10px] text-[#25D366]/60 font-sans shrink-0">
+                    Enviada em {new Date(current.confirmacao_enviada_em).toLocaleDateString("pt-BR")}
+                  </span>
+                )}
+              </button>
+            ) : (
+              <div className="border border-[rgba(37,211,102,0.25)] bg-[rgba(37,211,102,0.04)]">
+                {/* Panel header */}
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-[rgba(37,211,102,0.15)]">
+                  <span className="text-[#25D366] text-xs font-sans uppercase tracking-widest">
+                    Preview da mensagem
+                  </span>
+                  <button
+                    onClick={() => setShowConfirmacaoPanel(false)}
+                    className="text-[rgba(245,240,232,0.3)] hover:text-[rgba(245,240,232,0.6)] text-lg leading-none transition-colors"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {/* Message preview */}
+                <div className="px-4 py-3">
+                  <pre className="whitespace-pre-wrap text-[rgba(245,240,232,0.7)] text-sm font-sans leading-relaxed">
+                    {buildConfirmacaoMessage(current, adminConfig)}
+                  </pre>
+                </div>
+
+                {/* Actions */}
+                <div className="px-4 py-3 border-t border-[rgba(37,211,102,0.15)] flex items-center justify-between gap-3">
+                  {current.confirmacao_enviada_em && (
+                    <span className="text-[10px] font-sans text-[rgba(245,240,232,0.3)]">
+                      Última vez: {new Date(current.confirmacao_enviada_em).toLocaleString("pt-BR")}
+                    </span>
+                  )}
+                  <button
+                    onClick={handleAbrirWhatsAppConfirmacao}
+                    disabled={savingConfirmacao}
+                    className="ml-auto flex items-center gap-2 px-5 py-2 bg-[#25D366] text-[#0a0a0a] text-sm font-sans font-medium hover:bg-[#20bc5a] transition-colors disabled:opacity-60"
+                  >
+                    {savingConfirmacao ? (
+                      <div className="w-4 h-4 border-2 border-[#0a0a0a] border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <MessageCircle size={14} />
+                    )}
+                    Abrir WhatsApp
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

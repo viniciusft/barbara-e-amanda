@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Save, Instagram, Phone, MapPin, CreditCard, MessageCircle, RefreshCw, Image } from "lucide-react";
 import ImageUpload from "@/components/admin/ImageUpload";
 
-const DEFAULT_TEMPLATE = `Ola {nome_cliente}! Sou {nome_secretaria} do {nome_studio}.
+const DEFAULT_SINAL_TEMPLATE = `Ola {nome_cliente}! Sou {nome_secretaria} do {nome_studio}.
 
 Sua solicitacao para *{servico}* em *{data}* as *{horario}* foi recebida! Aguardamos o pagamento do sinal para confirmar.
 
@@ -17,7 +17,19 @@ Nome: {nome_recebedor}
 
 Apos o pagamento, envie o comprovante por aqui. Obrigada!`;
 
-const TEMPLATE_VARS = [
+const DEFAULT_CONFIRMACAO_TEMPLATE = `Ola {nome_cliente}! Tudo certo para o seu dia especial! 🎉
+
+Seu agendamento no *{nome_studio}* esta confirmado:
+
+📅 Data: {data}
+⏰ Horario: {horario}
+💄 Servico: {servico}
+💰 Valor: R$ {valor_total}
+
+Qualquer duvida estamos a disposicao. Ate logo!
+{nome_secretaria}`;
+
+const SINAL_VARS = [
   { v: "{nome_cliente}", desc: "Nome da cliente" },
   { v: "{nome_secretaria}", desc: "Secretaria/atendente" },
   { v: "{nome_studio}", desc: "Nome do studio" },
@@ -30,6 +42,16 @@ const TEMPLATE_VARS = [
   { v: "{valor_restante}", desc: "Valor restante" },
   { v: "{chave_pix}", desc: "Chave PIX" },
   { v: "{nome_recebedor}", desc: "Nome recebedor PIX" },
+];
+
+const CONFIRMACAO_VARS = [
+  { v: "{nome_cliente}", desc: "Nome da cliente" },
+  { v: "{nome_secretaria}", desc: "Secretaria/atendente" },
+  { v: "{nome_studio}", desc: "Nome do studio" },
+  { v: "{data}", desc: "Data (ex: sabado, 23 de marco)" },
+  { v: "{horario}", desc: "Horario do agendamento" },
+  { v: "{servico}", desc: "Nome do servico" },
+  { v: "{valor_total}", desc: "Valor total" },
 ];
 
 function buildPreview(template: string): string {
@@ -63,6 +85,7 @@ interface PerfilForm {
   sinal_percentual_padrao: string;
   nome_secretaria: string;
   mensagem_whatsapp_template: string;
+  mensagem_confirmacao_template: string;
 }
 
 const EMPTY: PerfilForm = {
@@ -79,7 +102,8 @@ const EMPTY: PerfilForm = {
   nome_recebedor_pix: "",
   sinal_percentual_padrao: "50",
   nome_secretaria: "",
-  mensagem_whatsapp_template: DEFAULT_TEMPLATE,
+  mensagem_whatsapp_template: DEFAULT_SINAL_TEMPLATE,
+  mensagem_confirmacao_template: DEFAULT_CONFIRMACAO_TEMPLATE,
 };
 
 export default function PerfilPage() {
@@ -89,6 +113,7 @@ export default function PerfilPage() {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [showPreviewConfirmacao, setShowPreviewConfirmacao] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/perfil")
@@ -109,7 +134,8 @@ export default function PerfilPage() {
             nome_recebedor_pix: data.nome_recebedor_pix ?? "",
             sinal_percentual_padrao: String(data.sinal_percentual_padrao ?? 50),
             nome_secretaria: data.nome_secretaria ?? "",
-            mensagem_whatsapp_template: data.mensagem_whatsapp_template || DEFAULT_TEMPLATE,
+            mensagem_whatsapp_template: data.mensagem_whatsapp_template || DEFAULT_SINAL_TEMPLATE,
+            mensagem_confirmacao_template: data.mensagem_confirmacao_template || DEFAULT_CONFIRMACAO_TEMPLATE,
           });
         }
       })
@@ -389,7 +415,7 @@ export default function PerfilPage() {
                     Template da Mensagem
                   </label>
                   <button
-                    onClick={() => set("mensagem_whatsapp_template", DEFAULT_TEMPLATE)}
+                    onClick={() => set("mensagem_whatsapp_template", DEFAULT_SINAL_TEMPLATE)}
                     className="flex items-center gap-1 text-[10px] font-sans text-[rgba(245,240,232,0.3)] hover:text-[rgba(245,240,232,0.6)] transition-colors"
                   >
                     <RefreshCw size={10} />
@@ -410,7 +436,7 @@ export default function PerfilPage() {
                   Variaveis disponiveis
                 </p>
                 <div className="grid grid-cols-2 gap-y-1.5 gap-x-4">
-                  {TEMPLATE_VARS.map(({ v, desc }) => (
+                  {SINAL_VARS.map(({ v, desc }) => (
                     <div key={v} className="flex gap-2 items-baseline">
                       <code className="text-[#C9A84C] text-[10px] font-mono shrink-0">{v}</code>
                       <span className="text-[rgba(245,240,232,0.3)] text-[10px] font-sans truncate">{desc}</span>
@@ -430,6 +456,71 @@ export default function PerfilPage() {
                 {showPreview && (
                   <div className="mt-3 p-4 bg-[#1a1a1a] border border-[rgba(255,255,255,0.08)] whitespace-pre-wrap text-[rgba(245,240,232,0.7)] text-sm font-sans leading-relaxed">
                     {buildPreview(form.mensagem_whatsapp_template)}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Confirmation template */}
+          <div className="border-t border-[rgba(201,168,76,0.1)] pt-8">
+            <div className="flex items-center gap-2 mb-5">
+              <MessageCircle size={16} className="text-[#C9A84C]" strokeWidth={1.5} />
+              <h3 className="font-display text-xl text-[#F5F0E8] font-light">
+                Mensagem de Confirmacao
+              </h3>
+            </div>
+            <p className="text-[rgba(245,240,232,0.4)] text-xs font-sans mb-4">
+              Enviada pelo WhatsApp quando o agendamento esta no status <span className="text-green-400">Confirmado</span>.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest">
+                    Template da Mensagem
+                  </label>
+                  <button
+                    onClick={() => set("mensagem_confirmacao_template", DEFAULT_CONFIRMACAO_TEMPLATE)}
+                    className="flex items-center gap-1 text-[10px] font-sans text-[rgba(245,240,232,0.3)] hover:text-[rgba(245,240,232,0.6)] transition-colors"
+                  >
+                    <RefreshCw size={10} />
+                    Restaurar padrao
+                  </button>
+                </div>
+                <textarea
+                  value={form.mensagem_confirmacao_template}
+                  onChange={(e) => set("mensagem_confirmacao_template", e.target.value)}
+                  className="input-luxury resize-none font-mono text-xs leading-relaxed"
+                  rows={10}
+                />
+              </div>
+
+              {/* Variable reference */}
+              <div className="border border-[rgba(201,168,76,0.12)] p-3">
+                <p className="text-[10px] font-sans text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-2.5">
+                  Variaveis disponiveis
+                </p>
+                <div className="grid grid-cols-2 gap-y-1.5 gap-x-4">
+                  {CONFIRMACAO_VARS.map(({ v, desc }) => (
+                    <div key={v} className="flex gap-2 items-baseline">
+                      <code className="text-[#C9A84C] text-[10px] font-mono shrink-0">{v}</code>
+                      <span className="text-[rgba(245,240,232,0.3)] text-[10px] font-sans truncate">{desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Preview */}
+              <div>
+                <button
+                  onClick={() => setShowPreviewConfirmacao((p) => !p)}
+                  className="text-xs font-sans text-[rgba(245,240,232,0.4)] hover:text-[rgba(245,240,232,0.7)] border border-[rgba(255,255,255,0.08)] px-3 py-1.5 transition-colors"
+                >
+                  {showPreviewConfirmacao ? "Ocultar previa" : "Ver previa com dados ficticios"}
+                </button>
+                {showPreviewConfirmacao && (
+                  <div className="mt-3 p-4 bg-[#1a1a1a] border border-[rgba(255,255,255,0.08)] whitespace-pre-wrap text-[rgba(245,240,232,0.7)] text-sm font-sans leading-relaxed">
+                    {buildPreview(form.mensagem_confirmacao_template)}
                   </div>
                 )}
               </div>
