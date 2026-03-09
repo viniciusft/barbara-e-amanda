@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Users, Search, Download, ChevronLeft, ChevronRight, Clock, X } from "lucide-react";
 import { getEtapaConfig, getEtapaProgress, ETAPA_CONFIG } from "@/lib/etapas";
+import { exportarXlsx } from "@/lib/exportar-xlsx";
 import { Agendamento, AdminConfig } from "@/types";
 import AgendamentoCard from "@/components/admin/AgendamentoCard";
 
@@ -48,25 +49,32 @@ function formatDate(iso: string) {
   });
 }
 
-function exportCSV(leads: Lead[]) {
-  const headers = ["Nome", "Telefone", "Email", "Serviço", "Etapa", "Data entrada", "Histórico"];
-  const rows = leads.map((l) => [
-    l.nome,
-    l.telefone,
-    l.email ?? "",
-    l.servico_nome ?? "",
-    getEtapaConfig(l.etapa).label,
-    formatDate(l.created_at),
-    (l.historico ?? []).map((h) => `${h.etapa}@${h.em.slice(0, 10)}`).join(" → "),
-  ]);
-  const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+function formatDatetime(iso: string) {
+  return new Date(iso).toLocaleString("pt-BR", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
+
+function exportXlsx(leads: Lead[]) {
+  const dados = leads.map((l) => ({
+    nome: l.nome,
+    telefone: l.telefone,
+    email: l.email ?? "",
+    servico_nome: l.servico_nome ?? "",
+    etapa: getEtapaConfig(l.etapa).label,
+    historico: (l.historico ?? []).map((h) => `${getEtapaConfig(h.etapa).label} (${h.em.slice(0,10)})`).join(" → "),
+    created_at: formatDatetime(l.created_at),
+  }));
+  exportarXlsx(dados, `leads-${new Date().toISOString().slice(0, 10)}`, {
+    nome:        { label: "Nome",           largura: 25 },
+    telefone:    { label: "Telefone",       largura: 18 },
+    email:       { label: "E-mail",         largura: 28 },
+    servico_nome:{ label: "Serviço",        largura: 22 },
+    etapa:       { label: "Etapa",          largura: 22 },
+    historico:   { label: "Histórico",      largura: 60 },
+    created_at:  { label: "Data de entrada",largura: 20 },
+  });
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -266,12 +274,12 @@ export default function LeadsPage() {
           </p>
         </div>
         <button
-          onClick={() => exportCSV(leads)}
+          onClick={() => exportXlsx(leads)}
           disabled={leads.length === 0}
           className="flex items-center gap-2 px-4 py-2 text-xs font-sans border border-[rgba(201,168,76,0.3)] text-[rgba(201,168,76,0.7)] hover:border-[#C9A84C] hover:text-[#C9A84C] transition-colors disabled:opacity-40"
         >
           <Download size={13} strokeWidth={1.5} />
-          Exportar CSV
+          Exportar planilha
         </button>
       </div>
 

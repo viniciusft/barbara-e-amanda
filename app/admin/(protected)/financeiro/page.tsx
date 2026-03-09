@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import MultiSelectDropdown, { SelectOption } from "@/components/admin/MultiSelectDropdown";
 import { formatCurrency } from "@/lib/utils";
+import { exportarXlsx } from "@/lib/exportar-xlsx";
 import type { Lancamento } from "@/app/api/financeiro/route";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -153,29 +154,31 @@ function sortLancamentos(rows: Lancamento[], col: SortCol, dir: SortDir) {
   });
 }
 
-function exportCSV(rows: Lancamento[]) {
-  const headers = ["Data","Cliente","Serviço","Tipo","Valor","Pagamento","Status"];
-  const csvRows = rows.map((l) => [
-    l.data ?? "",
-    l.nome_cliente,
-    l.servico_nome_atual ?? l.servico_nome,
-    TIPO_LABEL[l.tipo] ?? l.tipo,
-    l.valor != null ? String(l.valor) : "",
-    l.forma_pagamento ?? "",
-    l.status,
-  ]);
-  const csv = [headers, ...csvRows]
-    .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `financeiro_${todayStr()}.csv`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+function formatDateBR(dateStr: string | null | undefined) {
+  if (!dateStr) return "";
+  const [y, m, d] = dateStr.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+function exportXlsx(rows: Lancamento[]) {
+  const dados = rows.map((l) => ({
+    data:            formatDateBR(l.data),
+    nome_cliente:    l.nome_cliente,
+    servico_nome:    l.servico_nome_atual ?? l.servico_nome,
+    tipo:            TIPO_LABEL[l.tipo] ?? l.tipo,
+    valor:           l.valor != null ? Number(l.valor) : null,
+    forma_pagamento: l.forma_pagamento ?? "",
+    status:          l.status,
+  }));
+  exportarXlsx(dados, `financeiro-${todayStr()}`, {
+    data:            { label: "Data",           largura: 14 },
+    nome_cliente:    { label: "Cliente",         largura: 25 },
+    servico_nome:    { label: "Serviço",         largura: 22 },
+    tipo:            { label: "Tipo",            largura: 14 },
+    valor:           { label: "Valor (R$)",      largura: 14 },
+    forma_pagamento: { label: "Pagamento",       largura: 16 },
+    status:          { label: "Status",          largura: 16 },
+  });
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -301,11 +304,11 @@ export default function FinanceiroPage() {
           </button>
           {data && data.lancamentos.length > 0 && (
             <button
-              onClick={() => exportCSV(data.lancamentos)}
+              onClick={() => exportXlsx(data.lancamentos)}
               className="flex items-center gap-2 px-4 py-2 text-xs font-sans border border-[rgba(201,168,76,0.3)] text-[#C9A84C] hover:bg-[rgba(201,168,76,0.08)] transition-colors"
             >
               <Download size={13} strokeWidth={1.5} />
-              Exportar CSV
+              Exportar planilha
             </button>
           )}
         </div>
