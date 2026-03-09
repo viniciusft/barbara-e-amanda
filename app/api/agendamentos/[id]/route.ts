@@ -64,6 +64,8 @@ export async function PATCH(
     "whatsapp_enviado_em",
     "sinal_reembolsado_em",
     "sinal_reembolso_obs",
+    // Confirmation fields
+    "confirmacao_enviada_em",
   ];
 
   for (const field of allowedFields) {

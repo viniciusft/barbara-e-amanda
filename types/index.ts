@@ -80,6 +80,7 @@ export interface Agendamento {
   valor_restante: number | null;
   whatsapp_enviado_em: string | null;
   sinal_reembolsado_em: string | null;
+  confirmacao_enviada_em: string | null;
   servico?: Servico;
   // Computed display fields added by API
   data?: string; // YYYY-MM-DD (BRT)
@@ -110,6 +111,7 @@ export interface AdminConfig {
   sinal_percentual_padrao: number | null;
   nome_secretaria: string | null;
   mensagem_whatsapp_template: string | null;
+  mensagem_confirmacao_template: string | null;
   created_at: string;
   updated_at: string;
 }
