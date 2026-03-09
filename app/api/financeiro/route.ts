@@ -14,7 +14,7 @@ function getWeekMonday(dateStr: string): string {
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
@@ -33,7 +33,6 @@ export async function GET(req: NextRequest) {
     .in("status", statusFiltro)
     .order("data_hora_brt", { ascending: false });
 
-  // Filter by BRT date directly — no UTC conversion needed, view handles timezone
   if (dataInicio) query = query.gte("data_brt", dataInicio);
   if (dataFim) query = query.lte("data_brt", dataFim);
   if (servicoIds.length > 0) query = query.in("servico_id", servicoIds);
@@ -46,7 +45,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Add hora_inicio from data_hora_brt string ("2026-03-09 11:00:00" → "11:00")
   type ViewRow = Record<string, unknown>;
   const atendimentos: ViewRow[] = (rows ?? []).map((r: ViewRow) => ({
     ...r,
@@ -56,6 +54,7 @@ export async function GET(req: NextRequest) {
 
   // KPI totals — only from concluido rows
   const concluidos = atendimentos.filter((a) => a.status === "concluido");
+  const naoCompareceramRows = atendimentos.filter((a) => a.status === "nao_compareceu");
 
   const receita = concluidos.reduce(
     (sum: number, a) => sum + (Number(a.preco_cobrado) || 0),
@@ -67,7 +66,27 @@ export async function GET(req: NextRequest) {
   }, 0);
   const ticketMedio = concluidos.length > 0 ? receita / concluidos.length : 0;
 
-  // Pending execution count (confirmado + already past end time)
+  // Sinal KPI — rows where sinal_status = 'pago'
+  const sinaisQuery = supabase
+    .from("agendamentos")
+    .select("sinal_valor, sinal_forma_pagamento")
+    .eq("sinal_status", "pago");
+  if (dataInicio) {
+    // Filter by data_hora roughly
+  }
+  const { data: sinaisRows } = await sinaisQuery;
+  const totalSinais = (sinaisRows ?? []).reduce(
+    (sum: number, a) => sum + (Number(a.sinal_valor) || 0),
+    0
+  );
+
+  // Nao comparecimento — sinal retido
+  const sinaisRetidos = naoCompareceramRows.reduce(
+    (sum: number, a) => sum + (Number(a.sinal_valor) || 0),
+    0
+  );
+
+  // Pending execution count
   const now = new Date().toISOString();
   const { count: pendentesExecucao } = await supabase
     .from("agendamentos")
@@ -76,10 +95,7 @@ export async function GET(req: NextRequest) {
     .lt("data_hora_fim", now);
 
   // Per-service summary (concluido only)
-  const servicoMap: Record<
-    string,
-    { nome: string; count: number; receita: number }
-  > = {};
+  const servicoMap: Record<string, { nome: string; count: number; receita: number }> = {};
   for (const a of concluidos) {
     const sid = String(a.servico_id ?? a.servico_nome);
     const nome = String(a.servico_nome_atual ?? a.servico_nome);
@@ -99,7 +115,7 @@ export async function GET(req: NextRequest) {
   }
   const porPagamento = Object.values(pagtoMap).sort((a, b) => b.receita - a.receita);
 
-  // Determine granularity for chart
+  // Granularity
   let rangeDays = 30;
   if (dataInicio && dataFim) {
     rangeDays =
@@ -111,9 +127,8 @@ export async function GET(req: NextRequest) {
   const granularidade: "dia" | "semana" | "mes" =
     rangeDays <= 31 ? "dia" : rangeDays <= 90 ? "semana" : "mes";
 
-  // Per-period chart data (concluido only)
-  const periodoMap: Record<string, { periodo: string; receita: number; count: number }> =
-    {};
+  // Per-period (concluido only)
+  const periodoMap: Record<string, { periodo: string; receita: number; count: number }> = {};
   for (const a of concluidos) {
     const dataBrt = String(a.data_brt ?? "").slice(0, 10);
     let key = dataBrt;
@@ -135,6 +150,9 @@ export async function GET(req: NextRequest) {
       ticket_medio: ticketMedio,
       total_descontos: totalDescontos,
       pendentes_execucao: pendentesExecucao ?? 0,
+      total_sinais: totalSinais,
+      nao_compareceram: naoCompareceramRows.length,
+      sinais_retidos: sinaisRetidos,
     },
     por_servico: porServico,
     por_pagamento: porPagamento,

@@ -43,10 +43,10 @@ export default function StepConfirmacao({
           </svg>
         </div>
         <h2 className="font-display text-4xl text-[#F5F0E8] font-light mb-3">
-          Agendado com Sucesso!
+          Solicitação Enviada! ✨
         </h2>
         <p className="text-[rgba(245,240,232,0.5)] font-sans text-sm mb-8 max-w-sm mx-auto">
-          Seu agendamento foi recebido. Em breve entraremos em contato para confirmar.
+          Nossa equipe entrará em contato pelo WhatsApp para confirmar seu horário mediante o pagamento do sinal.
         </p>
 
         <div className="border border-[rgba(201,168,76,0.2)] bg-[#141414] p-6 text-left mb-8 max-w-sm mx-auto">
@@ -67,7 +67,7 @@ export default function StepConfirmacao({
         </div>
 
         <button onClick={onReset} className="btn-outline-gold">
-          Fazer Novo Agendamento
+          Fazer Nova Solicitação
         </button>
       </div>
     );
@@ -76,10 +76,10 @@ export default function StepConfirmacao({
   return (
     <div>
       <h2 className="font-display text-3xl text-[#F5F0E8] font-light mb-2">
-        Confirmar Agendamento
+        Confirmar Solicitação
       </h2>
       <p className="text-[rgba(245,240,232,0.5)] font-sans text-sm mb-8">
-        Revise os detalhes antes de confirmar
+        Revise os detalhes antes de enviar sua solicitação de agendamento
       </p>
 
       <div className="border border-[rgba(201,168,76,0.2)] bg-[#141414] p-6 space-y-5 mb-6">
@@ -164,7 +164,7 @@ export default function StepConfirmacao({
           {loading && (
             <div className="w-4 h-4 border-2 border-[#0a0a0a] border-t-transparent rounded-full animate-spin" />
           )}
-          {loading ? "Agendando..." : "Confirmar Agendamento"}
+          {loading ? "Enviando..." : "Enviar Solicitação"}
         </button>
       </div>
     </div>

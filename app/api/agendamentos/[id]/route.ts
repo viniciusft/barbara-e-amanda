@@ -5,11 +5,22 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { deleteCalendarEvent, updateCalendarEvent } from "@/lib/google-calendar";
 
 const STATUS_EMOJI: Record<string, string> = {
-  pendente: "⏳",
+  solicitacao: "⏳",
+  aguardando_sinal: "💳",
   confirmado: "✅",
   concluido: "✓",
+  nao_compareceu: "✗",
   cancelado: "✗",
 };
+
+const VALID_STATUSES = [
+  "solicitacao",
+  "aguardando_sinal",
+  "confirmado",
+  "cancelado",
+  "concluido",
+  "nao_compareceu",
+];
 
 export async function PATCH(
   req: NextRequest,
@@ -22,18 +33,19 @@ export async function PATCH(
 
   const { id } = params;
   const body = await req.json();
-  const { status, ...executionFields } = body;
+  const { status, ...rest } = body;
 
   const updatePayload: Record<string, unknown> = {};
 
   if (status !== undefined) {
-    if (!["confirmado", "cancelado", "pendente", "concluido"].includes(status)) {
+    if (!VALID_STATUSES.includes(status)) {
       return NextResponse.json({ error: "Status inválido" }, { status: 400 });
     }
     updatePayload.status = status;
   }
 
-  const allowedExecutionFields = [
+  const allowedFields = [
+    // Execution fields
     "servico_executado",
     "preco_cobrado",
     "preco_original",
@@ -42,10 +54,19 @@ export async function PATCH(
     "forma_pagamento",
     "observacoes_execucao",
     "executado_em",
+    // Sinal / payment fields
+    "sinal_percentual",
+    "sinal_valor",
+    "sinal_status",
+    "sinal_pago_em",
+    "sinal_forma_pagamento",
+    "valor_restante",
+    "whatsapp_enviado_em",
   ];
-  for (const field of allowedExecutionFields) {
-    if (field in executionFields) {
-      updatePayload[field] = executionFields[field];
+
+  for (const field of allowedFields) {
+    if (field in rest) {
+      updatePayload[field] = rest[field];
     }
   }
 
@@ -70,8 +91,8 @@ export async function PATCH(
     const novoEmoji = STATUS_EMOJI[status] ?? "⏳";
     const categoria = agendamento.categoria_servico ?? "maquiagem";
 
-    if (status === "cancelado") {
-      // Delete calendar events
+    if (status === "cancelado" || status === "nao_compareceu") {
+      // Delete calendar events on terminal negative statuses
       if (agendamento.gcal_event_id) {
         try { await deleteCalendarEvent(agendamento.gcal_event_id); } catch { /* non-fatal */ }
       }

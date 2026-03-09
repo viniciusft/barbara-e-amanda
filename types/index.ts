@@ -55,7 +55,7 @@ export interface Agendamento {
   gcal_event_id: string | null;
   gcal_event_id_cabelo: string | null;
   combo_ordem: string | null;
-  status: "pendente" | "confirmado" | "cancelado" | "concluido";
+  status: "solicitacao" | "aguardando_sinal" | "confirmado" | "cancelado" | "concluido" | "nao_compareceu";
   created_at: string;
   updated_at: string;
   // Execution fields
@@ -67,6 +67,14 @@ export interface Agendamento {
   forma_pagamento: string | null;
   observacoes_execucao: string | null;
   executado_em: string | null;
+  // Sinal (deposit) fields
+  sinal_percentual: number | null;
+  sinal_valor: number | null;
+  sinal_status: "aguardando" | "pago" | "nao_compareceu" | "dispensado" | null;
+  sinal_pago_em: string | null;
+  sinal_forma_pagamento: string | null;
+  valor_restante: number | null;
+  whatsapp_enviado_em: string | null;
   servico?: Servico;
   // Computed display fields added by API
   data?: string; // YYYY-MM-DD (BRT)
@@ -88,6 +96,13 @@ export interface AdminConfig {
   whatsapp: string | null;
   endereco: string | null;
   foto_url: string | null;
+  // Payment & sinal config
+  chave_pix: string | null;
+  tipo_chave_pix: string | null;
+  nome_recebedor_pix: string | null;
+  sinal_percentual_padrao: number | null;
+  nome_secretaria: string | null;
+  mensagem_whatsapp_template: string | null;
   created_at: string;
   updated_at: string;
 }
