@@ -44,9 +44,22 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
   }
 
   function handleExecucaoSaved(updated: Agendamento) {
-    setCurrent(updated);
+    // PATCH returns raw DB row — preserve computed fields (hora_inicio, hora_fim, data, servico)
+    const merged: Agendamento = {
+      ...current,
+      status: updated.status ?? current.status,
+      servico_executado: updated.servico_executado,
+      preco_cobrado: updated.preco_cobrado,
+      preco_original: updated.preco_original ?? current.preco_original,
+      tipo_ajuste_preco: updated.tipo_ajuste_preco,
+      motivo_ajuste: updated.motivo_ajuste,
+      forma_pagamento: updated.forma_pagamento,
+      observacoes_execucao: updated.observacoes_execucao,
+      executado_em: updated.executado_em,
+    };
+    setCurrent(merged);
     setShowExecucao(false);
-    onUpdated?.(updated);
+    onUpdated?.(merged);
   }
 
   const precoCobrado = current.preco_cobrado;
