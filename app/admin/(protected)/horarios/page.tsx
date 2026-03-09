@@ -6,18 +6,21 @@ import { getDiaSemanaLabel } from "@/lib/utils";
 import { Plus, X } from "lucide-react";
 
 type Modo = "auto" | "custom";
+type ModoHorario = "ambos" | "separado";
 
 interface HorarioLocal {
   id: string;
   dia_semana: number;
   hora_inicio: string;
   hora_fim: string;
+  hora_inicio_cabelo: string;
+  hora_fim_cabelo: string;
+  modo_horario: ModoHorario;
   ativo: boolean;
   intervalo_minutos: number;
   modo: Modo;
   customTimes: string[];
 }
-
 
 function generateSlots(inicio: string, fim: string, intervalo: number): string[] {
   const [hS, mS] = inicio.split(":").map(Number);
@@ -44,11 +47,28 @@ function fromDB(h: HorarioDisponivel): HorarioLocal {
     dia_semana: h.dia_semana,
     hora_inicio: h.hora_inicio,
     hora_fim: h.hora_fim,
+    hora_inicio_cabelo: h.hora_inicio_cabelo ?? h.hora_inicio,
+    hora_fim_cabelo: h.hora_fim_cabelo ?? h.hora_fim,
+    modo_horario: (h.modo_horario as ModoHorario) ?? "ambos",
     ativo: h.ativo,
     intervalo_minutos: h.intervalo_minutos ?? 30,
     modo: isCustom ? "custom" : "auto",
     customTimes: isCustom ? (h.horarios_customizados as string[]) : [],
   };
+}
+
+function TimeInput({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <label className="text-xs font-sans text-[rgba(245,240,232,0.4)] block mb-1">{label}</label>
+      <input
+        type="time"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="bg-transparent border border-[rgba(201,168,76,0.2)] text-[#F5F0E8] px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#C9A84C]"
+      />
+    </div>
+  );
 }
 
 export default function HorariosPage() {
@@ -73,6 +93,9 @@ export default function HorariosPage() {
           dia_semana: i,
           hora_inicio: "09:00",
           hora_fim: "18:00",
+          hora_inicio_cabelo: "09:00",
+          hora_fim_cabelo: "18:00",
+          modo_horario: "ambos" as ModoHorario,
           ativo: i >= 1 && i <= 5,
           intervalo_minutos: 30,
           modo: "auto" as Modo,
@@ -84,14 +107,10 @@ export default function HorariosPage() {
     setLoading(false);
   }
 
-  useEffect(() => {
-    fetchHorarios();
-  }, []);
+  useEffect(() => { fetchHorarios(); }, []);
 
   function update(dia: number, partial: Partial<HorarioLocal>) {
-    setHorarios((prev) =>
-      prev.map((h) => (h.dia_semana === dia ? { ...h, ...partial } : h))
-    );
+    setHorarios((prev) => prev.map((h) => h.dia_semana === dia ? { ...h, ...partial } : h));
   }
 
   function addCustomTime(dia: number) {
@@ -106,9 +125,7 @@ export default function HorariosPage() {
 
   function updateCustomTime(dia: number, idx: number, value: string) {
     const h = horarios.find((hh) => hh.dia_semana === dia)!;
-    update(dia, {
-      customTimes: h.customTimes.map((t, i) => (i === idx ? value : t)),
-    });
+    update(dia, { customTimes: h.customTimes.map((t, i) => i === idx ? value : t) });
   }
 
   async function handleSave() {
@@ -121,12 +138,12 @@ export default function HorariosPage() {
         dia_semana: h.dia_semana,
         hora_inicio: h.hora_inicio,
         hora_fim: h.hora_fim,
+        hora_inicio_cabelo: h.modo_horario === "separado" ? h.hora_inicio_cabelo : null,
+        hora_fim_cabelo: h.modo_horario === "separado" ? h.hora_fim_cabelo : null,
+        modo_horario: h.modo_horario,
         ativo: h.ativo,
         intervalo_minutos: h.intervalo_minutos,
-        horarios_customizados:
-          h.modo === "custom" && h.customTimes.length > 0
-            ? h.customTimes
-            : null,
+        horarios_customizados: h.modo === "custom" && h.customTimes.length > 0 ? h.customTimes : null,
       }));
 
       const res = await fetch("/api/horarios", {
@@ -139,11 +156,11 @@ export default function HorariosPage() {
         const err = await res.json();
         setError(err.error || "Erro ao salvar");
       } else {
-        setSuccess("Horarios salvos com sucesso!");
+        setSuccess("Horários salvos com sucesso!");
         fetchHorarios();
       }
     } catch {
-      setError("Erro ao salvar horarios");
+      setError("Erro ao salvar horários");
     } finally {
       setSaving(false);
     }
@@ -153,19 +170,17 @@ export default function HorariosPage() {
     <div className="py-6">
       <div className="mb-8">
         <h2 className="font-display text-3xl text-[#F5F0E8] font-light">
-          Horarios de Funcionamento
+          Horários de Funcionamento
         </h2>
         <p className="text-[rgba(245,240,232,0.4)] font-sans text-sm mt-1">
-          Configure os horarios e intervalos por dia da semana
+          Configure os horários e intervalos por dia da semana
         </p>
       </div>
 
       {loading && (
         <div className="flex items-center gap-3 py-12">
           <div className="w-5 h-5 border border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
-          <span className="text-[rgba(245,240,232,0.4)] font-sans text-sm">
-            Carregando...
-          </span>
+          <span className="text-[rgba(245,240,232,0.4)] font-sans text-sm">Carregando...</span>
         </div>
       )}
 
@@ -173,14 +188,9 @@ export default function HorariosPage() {
         <>
           <div className="grid gap-4 mb-6">
             {horarios.map((h) => {
-              const previewSlots =
-                h.modo === "auto"
-                  ? generateSlots(
-                      h.hora_inicio,
-                      h.hora_fim,
-                      h.intervalo_minutos
-                    )
-                  : h.customTimes.slice().sort();
+              const previewSlots = h.modo === "auto"
+                ? generateSlots(h.hora_inicio, h.hora_fim, h.intervalo_minutos)
+                : h.customTimes.slice().sort();
 
               return (
                 <div
@@ -195,25 +205,11 @@ export default function HorariosPage() {
                   <div className="flex items-center gap-4 mb-4">
                     <button
                       onClick={() => update(h.dia_semana, { ativo: !h.ativo })}
-                      className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${
-                        h.ativo
-                          ? "bg-[#C9A84C]"
-                          : "bg-[rgba(255,255,255,0.1)]"
-                      }`}
+                      className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${h.ativo ? "bg-[#C9A84C]" : "bg-[rgba(255,255,255,0.1)]"}`}
                     >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                          h.ativo ? "translate-x-5" : "translate-x-0"
-                        }`}
-                      />
+                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${h.ativo ? "translate-x-5" : "translate-x-0"}`} />
                     </button>
-                    <span
-                      className={`font-sans font-medium ${
-                        h.ativo
-                          ? "text-[#F5F0E8]"
-                          : "text-[rgba(245,240,232,0.3)]"
-                      }`}
-                    >
+                    <span className={`font-sans font-medium ${h.ativo ? "text-[#F5F0E8]" : "text-[rgba(245,240,232,0.3)]"}`}>
                       {getDiaSemanaLabel(h.dia_semana)}
                     </span>
                   </div>
@@ -223,10 +219,7 @@ export default function HorariosPage() {
                       {/* Mode toggle */}
                       <div className="flex items-center gap-6">
                         {(["auto", "custom"] as Modo[]).map((m) => (
-                          <label
-                            key={m}
-                            className="flex items-center gap-2 cursor-pointer"
-                          >
+                          <label key={m} className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="radio"
                               checked={h.modo === m}
@@ -234,7 +227,7 @@ export default function HorariosPage() {
                               className="accent-[#C9A84C]"
                             />
                             <span className="font-sans text-sm text-[rgba(245,240,232,0.7)]">
-                              {m === "auto" ? "Automatico" : "Personalizado"}
+                              {m === "auto" ? "Automático" : "Personalizado"}
                             </span>
                           </label>
                         ))}
@@ -242,64 +235,90 @@ export default function HorariosPage() {
 
                       {/* AUTO mode */}
                       {h.modo === "auto" && (
-                        <div className="flex flex-wrap items-end gap-4">
-                          <div>
-                            <label className="text-xs font-sans text-[rgba(245,240,232,0.4)] block mb-1">
-                              Inicio
-                            </label>
-                            <input
-                              type="time"
-                              value={h.hora_inicio}
-                              onChange={(e) =>
-                                update(h.dia_semana, {
-                                  hora_inicio: e.target.value,
-                                })
-                              }
-                              className="bg-transparent border border-[rgba(201,168,76,0.2)] text-[#F5F0E8] px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#C9A84C]"
-                            />
-                          </div>
-                          <span className="text-[rgba(245,240,232,0.3)] font-sans text-sm mb-2">
-                            ate
-                          </span>
-                          <div>
-                            <label className="text-xs font-sans text-[rgba(245,240,232,0.4)] block mb-1">
-                              Fim
-                            </label>
-                            <input
-                              type="time"
-                              value={h.hora_fim}
-                              onChange={(e) =>
-                                update(h.dia_semana, {
-                                  hora_fim: e.target.value,
-                                })
-                              }
-                              className="bg-transparent border border-[rgba(201,168,76,0.2)] text-[#F5F0E8] px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#C9A84C]"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-xs font-sans text-[rgba(245,240,232,0.4)] block mb-1">
-                              Intervalo (min)
-                            </label>
-                            <div className="flex items-center gap-1">
+                        <div className="space-y-4">
+                          {/* Modo horário: ambos/separado */}
+                          <div className="flex items-center gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
                               <input
-                                type="number"
-                                value={h.intervalo_minutos}
-                                min={15}
-                                max={480}
-                                onChange={(e) => {
-                                  const v = Number(e.target.value);
-                                  if (!isNaN(v))
-                                    update(h.dia_semana, { intervalo_minutos: v });
-                                }}
-                                onBlur={(e) => {
-                                  const v = Math.min(480, Math.max(15, Number(e.target.value) || 30));
-                                  update(h.dia_semana, { intervalo_minutos: v });
-                                }}
-                                className="bg-transparent border border-[rgba(201,168,76,0.2)] text-[#F5F0E8] px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#C9A84C] w-20 tabular-nums"
+                                type="radio"
+                                checked={h.modo_horario === "ambos"}
+                                onChange={() => update(h.dia_semana, { modo_horario: "ambos" })}
+                                className="accent-[#C9A84C]"
                               />
-                              <span className="text-xs font-sans text-[rgba(245,240,232,0.4)]">min</span>
-                            </div>
+                              <span className="font-sans text-sm text-[rgba(245,240,232,0.6)]">
+                                💄💇 Mesmo horário para ambas
+                              </span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                checked={h.modo_horario === "separado"}
+                                onChange={() => update(h.dia_semana, { modo_horario: "separado" })}
+                                className="accent-[#C9A84C]"
+                              />
+                              <span className="font-sans text-sm text-[rgba(245,240,232,0.6)]">
+                                Horários independentes
+                              </span>
+                            </label>
                           </div>
+
+                          {h.modo_horario === "ambos" ? (
+                            <div className="flex flex-wrap items-end gap-4">
+                              <TimeInput label="Início" value={h.hora_inicio} onChange={(v) => update(h.dia_semana, { hora_inicio: v })} />
+                              <span className="text-[rgba(245,240,232,0.3)] font-sans text-sm mb-2">até</span>
+                              <TimeInput label="Fim" value={h.hora_fim} onChange={(v) => update(h.dia_semana, { hora_fim: v })} />
+                              <div>
+                                <label className="text-xs font-sans text-[rgba(245,240,232,0.4)] block mb-1">Intervalo (min)</label>
+                                <div className="flex items-center gap-1">
+                                  <input
+                                    type="number"
+                                    value={h.intervalo_minutos}
+                                    min={15}
+                                    max={480}
+                                    onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) update(h.dia_semana, { intervalo_minutos: v }); }}
+                                    onBlur={(e) => { const v = Math.min(480, Math.max(15, Number(e.target.value) || 30)); update(h.dia_semana, { intervalo_minutos: v }); }}
+                                    className="bg-transparent border border-[rgba(201,168,76,0.2)] text-[#F5F0E8] px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#C9A84C] w-20 tabular-nums"
+                                  />
+                                  <span className="text-xs font-sans text-[rgba(245,240,232,0.4)]">min</span>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {/* Maquiagem */}
+                              <div>
+                                <p className="text-xs font-sans text-rose-400 uppercase tracking-wider mb-2">💄 Maquiagem</p>
+                                <div className="flex flex-wrap items-end gap-4">
+                                  <TimeInput label="Início" value={h.hora_inicio} onChange={(v) => update(h.dia_semana, { hora_inicio: v })} />
+                                  <span className="text-[rgba(245,240,232,0.3)] font-sans text-sm mb-2">até</span>
+                                  <TimeInput label="Fim" value={h.hora_fim} onChange={(v) => update(h.dia_semana, { hora_fim: v })} />
+                                </div>
+                              </div>
+                              {/* Cabelo */}
+                              <div>
+                                <p className="text-xs font-sans text-blue-400 uppercase tracking-wider mb-2">💇 Cabelo</p>
+                                <div className="flex flex-wrap items-end gap-4">
+                                  <TimeInput label="Início" value={h.hora_inicio_cabelo} onChange={(v) => update(h.dia_semana, { hora_inicio_cabelo: v })} />
+                                  <span className="text-[rgba(245,240,232,0.3)] font-sans text-sm mb-2">até</span>
+                                  <TimeInput label="Fim" value={h.hora_fim_cabelo} onChange={(v) => update(h.dia_semana, { hora_fim_cabelo: v })} />
+                                </div>
+                              </div>
+                              {/* Shared interval */}
+                              <div className="flex items-center gap-2">
+                                <label className="text-xs font-sans text-[rgba(245,240,232,0.4)]">Intervalo (min):</label>
+                                <input
+                                  type="number"
+                                  value={h.intervalo_minutos}
+                                  min={15}
+                                  max={480}
+                                  onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) update(h.dia_semana, { intervalo_minutos: v }); }}
+                                  onBlur={(e) => { const v = Math.min(480, Math.max(15, Number(e.target.value) || 30)); update(h.dia_semana, { intervalo_minutos: v }); }}
+                                  className="bg-transparent border border-[rgba(201,168,76,0.2)] text-[#F5F0E8] px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#C9A84C] w-20 tabular-nums"
+                                />
+                                <span className="text-xs font-sans text-[rgba(245,240,232,0.4)]">min</span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -308,26 +327,15 @@ export default function HorariosPage() {
                         <div>
                           <div className="flex flex-wrap gap-2 mb-3">
                             {h.customTimes.map((t, idx) => (
-                              <div
-                                key={idx}
-                                className="flex items-center gap-1 border border-[rgba(201,168,76,0.2)] bg-[rgba(201,168,76,0.03)]"
-                              >
+                              <div key={idx} className="flex items-center gap-1 border border-[rgba(201,168,76,0.2)] bg-[rgba(201,168,76,0.03)]">
                                 <input
                                   type="time"
                                   value={t}
-                                  onChange={(e) =>
-                                    updateCustomTime(
-                                      h.dia_semana,
-                                      idx,
-                                      e.target.value
-                                    )
-                                  }
+                                  onChange={(e) => updateCustomTime(h.dia_semana, idx, e.target.value)}
                                   className="bg-transparent text-[#F5F0E8] px-2 py-1.5 text-sm font-sans focus:outline-none"
                                 />
                                 <button
-                                  onClick={() =>
-                                    removeCustomTime(h.dia_semana, idx)
-                                  }
+                                  onClick={() => removeCustomTime(h.dia_semana, idx)}
                                   className="px-1.5 text-[rgba(245,240,232,0.3)] hover:text-red-400 transition-colors"
                                 >
                                   <X size={12} />
@@ -349,14 +357,11 @@ export default function HorariosPage() {
                       {previewSlots.length > 0 && (
                         <div>
                           <p className="text-[10px] font-sans text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-2">
-                            Preview — {previewSlots.length} horarios
+                            Preview — {previewSlots.length} horários
                           </p>
                           <div className="flex flex-wrap gap-1.5">
                             {previewSlots.slice(0, 10).map((s) => (
-                              <span
-                                key={s}
-                                className="text-xs font-sans text-[rgba(245,240,232,0.5)] border border-[rgba(201,168,76,0.12)] px-2 py-0.5"
-                              >
+                              <span key={s} className="text-xs font-sans text-[rgba(245,240,232,0.5)] border border-[rgba(201,168,76,0.12)] px-2 py-0.5">
                                 {s}
                               </span>
                             ))}
@@ -372,9 +377,7 @@ export default function HorariosPage() {
                   )}
 
                   {!h.ativo && (
-                    <span className="ml-14 text-[rgba(245,240,232,0.25)] font-sans text-sm">
-                      Fechado
-                    </span>
+                    <span className="ml-14 text-[rgba(245,240,232,0.25)] font-sans text-sm">Fechado</span>
                   )}
                 </div>
               );
@@ -382,14 +385,10 @@ export default function HorariosPage() {
           </div>
 
           {error && (
-            <div className="border border-red-800 bg-red-950/20 p-4 text-red-400 text-sm font-sans mb-4">
-              {error}
-            </div>
+            <div className="border border-red-800 bg-red-950/20 p-4 text-red-400 text-sm font-sans mb-4">{error}</div>
           )}
           {success && (
-            <div className="border border-green-800 bg-green-950/20 p-4 text-green-400 text-sm font-sans mb-4">
-              {success}
-            </div>
+            <div className="border border-green-800 bg-green-950/20 p-4 text-green-400 text-sm font-sans mb-4">{success}</div>
           )}
 
           <button
@@ -397,10 +396,8 @@ export default function HorariosPage() {
             disabled={saving}
             className="btn-gold flex items-center gap-2 px-6 py-3"
           >
-            {saving && (
-              <div className="w-4 h-4 border-2 border-[#0a0a0a] border-t-transparent rounded-full animate-spin" />
-            )}
-            {saving ? "Salvando..." : "Salvar Horarios"}
+            {saving && <div className="w-4 h-4 border-2 border-[#0a0a0a] border-t-transparent rounded-full animate-spin" />}
+            {saving ? "Salvando..." : "Salvar Horários"}
           </button>
         </>
       )}
