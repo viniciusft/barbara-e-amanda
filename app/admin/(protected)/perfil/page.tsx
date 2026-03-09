@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, Instagram, Phone, MapPin, CreditCard, MessageCircle, RefreshCw, Image } from "lucide-react";
+import { Save, Instagram, Phone, MapPin, CreditCard, MessageCircle, RefreshCw, Image, Star, Link as LinkIcon } from "lucide-react";
 import ImageUpload from "@/components/admin/ImageUpload";
 
 const DEFAULT_SINAL_TEMPLATE = `Ola {nome_cliente}! Sou {nome_secretaria} do {nome_studio}.
@@ -29,6 +29,17 @@ Seu agendamento no *{nome_studio}* esta confirmado:
 Qualquer duvida estamos a disposicao. Ate logo!
 {nome_secretaria}`;
 
+const DEFAULT_AVALIACAO_TEMPLATE = `Ola {nome_cliente}! Muito obrigada pela sua visita ao *{nome_studio}*! 😊
+
+Esperamos que tenha amado seu *{servico}*!
+
+Sua opiniao e muito importante para nos. Seria um enorme prazer se voce pudesse deixar uma avaliacao no Google:
+
+⭐ {link_google}
+
+Muito obrigada! Ate a proxima!
+{nome_secretaria}`;
+
 const SINAL_VARS = [
   { v: "{nome_cliente}", desc: "Nome da cliente" },
   { v: "{nome_secretaria}", desc: "Secretaria/atendente" },
@@ -54,6 +65,15 @@ const CONFIRMACAO_VARS = [
   { v: "{valor_total}", desc: "Valor total" },
 ];
 
+const AVALIACAO_VARS = [
+  { v: "{nome_cliente}", desc: "Nome da cliente" },
+  { v: "{nome_secretaria}", desc: "Secretaria/atendente" },
+  { v: "{nome_studio}", desc: "Nome do studio" },
+  { v: "{data}", desc: "Data do atendimento" },
+  { v: "{servico}", desc: "Nome do servico" },
+  { v: "{link_google}", desc: "URL do Google Meu Negocio" },
+];
+
 function buildPreview(template: string): string {
   return template
     .replace(/\{nome_cliente\}/g, "Ana Silva")
@@ -67,7 +87,8 @@ function buildPreview(template: string): string {
     .replace(/\{valor_sinal\}/g, "175,00")
     .replace(/\{chave_pix\}/g, "11999999999")
     .replace(/\{nome_recebedor\}/g, "Amanda Santos")
-    .replace(/\{valor_restante\}/g, "175,00");
+    .replace(/\{valor_restante\}/g, "175,00")
+    .replace(/\{link_google\}/g, "https://g.page/r/exemplo");
 }
 
 interface PerfilForm {
@@ -86,6 +107,8 @@ interface PerfilForm {
   nome_secretaria: string;
   mensagem_whatsapp_template: string;
   mensagem_confirmacao_template: string;
+  google_meu_negocio_url: string;
+  mensagem_avaliacao_template: string;
 }
 
 const EMPTY: PerfilForm = {
@@ -104,6 +127,8 @@ const EMPTY: PerfilForm = {
   nome_secretaria: "",
   mensagem_whatsapp_template: DEFAULT_SINAL_TEMPLATE,
   mensagem_confirmacao_template: DEFAULT_CONFIRMACAO_TEMPLATE,
+  google_meu_negocio_url: "",
+  mensagem_avaliacao_template: DEFAULT_AVALIACAO_TEMPLATE,
 };
 
 export default function PerfilPage() {
@@ -114,6 +139,7 @@ export default function PerfilPage() {
   const [error, setError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [showPreviewConfirmacao, setShowPreviewConfirmacao] = useState(false);
+  const [showPreviewAvaliacao, setShowPreviewAvaliacao] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/perfil")
@@ -136,6 +162,8 @@ export default function PerfilPage() {
             nome_secretaria: data.nome_secretaria ?? "",
             mensagem_whatsapp_template: data.mensagem_whatsapp_template || DEFAULT_SINAL_TEMPLATE,
             mensagem_confirmacao_template: data.mensagem_confirmacao_template || DEFAULT_CONFIRMACAO_TEMPLATE,
+            google_meu_negocio_url: data.google_meu_negocio_url ?? "",
+            mensagem_avaliacao_template: data.mensagem_avaliacao_template || DEFAULT_AVALIACAO_TEMPLATE,
           });
         }
       })
@@ -154,6 +182,7 @@ export default function PerfilPage() {
           ...form,
           foto_header_url: form.foto_header_url || null,
           foto_header_mobile_url: form.foto_header_mobile_url || null,
+          google_meu_negocio_url: form.google_meu_negocio_url || null,
           sinal_percentual_padrao: parseInt(form.sinal_percentual_padrao) || 50,
         }),
       });
@@ -521,6 +550,82 @@ export default function PerfilPage() {
                 {showPreviewConfirmacao && (
                   <div className="mt-3 p-4 bg-[#1a1a1a] border border-[rgba(255,255,255,0.08)] whitespace-pre-wrap text-[rgba(245,240,232,0.7)] text-sm font-sans leading-relaxed">
                     {buildPreview(form.mensagem_confirmacao_template)}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Google review template */}
+          <div className="border-t border-[rgba(201,168,76,0.1)] pt-8">
+            <div className="flex items-center gap-2 mb-5">
+              <Star size={16} className="text-[#C9A84C]" strokeWidth={1.5} />
+              <h3 className="font-display text-xl text-[#F5F0E8] font-light">
+                Mensagem de Avaliacao Google
+              </h3>
+            </div>
+            <p className="text-[rgba(245,240,232,0.4)] text-xs font-sans mb-4">
+              Enviada pelo WhatsApp apos o atendimento ser marcado como <span className="text-emerald-400">Concluido</span> e executado.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
+                  URL do Google Meu Negocio
+                </label>
+                <div className="relative">
+                  <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgba(245,240,232,0.3)]" />
+                  <input
+                    type="url"
+                    value={form.google_meu_negocio_url}
+                    onChange={(e) => set("google_meu_negocio_url", e.target.value)}
+                    className="input-luxury pl-9"
+                    placeholder="https://g.page/r/..."
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest">
+                    Template da Mensagem
+                  </label>
+                  <button
+                    onClick={() => set("mensagem_avaliacao_template", DEFAULT_AVALIACAO_TEMPLATE)}
+                    className="flex items-center gap-1 text-[10px] font-sans text-[rgba(245,240,232,0.3)] hover:text-[rgba(245,240,232,0.6)] transition-colors"
+                  >
+                    <RefreshCw size={10} />
+                    Restaurar padrao
+                  </button>
+                </div>
+                <textarea
+                  value={form.mensagem_avaliacao_template}
+                  onChange={(e) => set("mensagem_avaliacao_template", e.target.value)}
+                  className="input-luxury resize-none font-mono text-xs leading-relaxed"
+                  rows={10}
+                />
+              </div>
+              <div className="border border-[rgba(201,168,76,0.12)] p-3">
+                <p className="text-[10px] font-sans text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-2.5">
+                  Variaveis disponiveis
+                </p>
+                <div className="grid grid-cols-2 gap-y-1.5 gap-x-4">
+                  {AVALIACAO_VARS.map(({ v, desc }) => (
+                    <div key={v} className="flex gap-2 items-baseline">
+                      <code className="text-[#C9A84C] text-[10px] font-mono shrink-0">{v}</code>
+                      <span className="text-[rgba(245,240,232,0.3)] text-[10px] font-sans truncate">{desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <button
+                  onClick={() => setShowPreviewAvaliacao((p) => !p)}
+                  className="text-xs font-sans text-[rgba(245,240,232,0.4)] hover:text-[rgba(245,240,232,0.7)] border border-[rgba(255,255,255,0.08)] px-3 py-1.5 transition-colors"
+                >
+                  {showPreviewAvaliacao ? "Ocultar previa" : "Ver previa com dados ficticios"}
+                </button>
+                {showPreviewAvaliacao && (
+                  <div className="mt-3 p-4 bg-[#1a1a1a] border border-[rgba(255,255,255,0.08)] whitespace-pre-wrap text-[rgba(245,240,232,0.7)] text-sm font-sans leading-relaxed">
+                    {buildPreview(form.mensagem_avaliacao_template)}
                   </div>
                 )}
               </div>

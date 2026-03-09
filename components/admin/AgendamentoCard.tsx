@@ -4,9 +4,10 @@ import { useState } from "react";
 import { Agendamento, AdminConfig } from "@/types";
 import { formatCurrency, formatDuration } from "@/lib/utils";
 import { calcSinal } from "@/lib/sinal";
+import { getEtapaConfig } from "@/lib/etapas";
 import {
   ClipboardCheck, TrendingDown, TrendingUp, MessageCircle,
-  CheckCircle2, UserX, AlertTriangle,
+  CheckCircle2, UserX, AlertTriangle, Star,
 } from "lucide-react";
 import ExecucaoModal from "./ExecucaoModal";
 
@@ -17,15 +18,13 @@ interface Props {
   adminConfig?: AdminConfig | null;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  solicitacao: { label: "Solicitação", color: "text-amber-400 border-amber-700 bg-amber-950/30" },
-  aguardando_sinal: { label: "Aguardando Sinal", color: "text-orange-400 border-orange-700 bg-orange-950/30" },
-  confirmado: { label: "Confirmado", color: "text-green-400 border-green-800 bg-green-950/30" },
-  cancelado: { label: "Cancelado", color: "text-red-400 border-red-800 bg-red-950/30" },
-  concluido: { label: "Concluído", color: "text-emerald-400 border-emerald-800 bg-emerald-950/40" },
-  nao_compareceu: { label: "Não compareceu", color: "text-red-700 border-red-900 bg-red-950/40" },
-  pendente: { label: "Pendente", color: "text-yellow-400 border-yellow-800 bg-yellow-950/30" },
-};
+function syncLead(agendamentoId: string, etapa: string) {
+  fetch("/api/admin/leads/etapa", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ agendamento_id: agendamentoId, etapa }),
+  }).catch(() => {});
+}
 
 const PAGAMENTO_LABEL: Record<string, string> = {
   pix: "PIX",
@@ -60,6 +59,17 @@ Seu agendamento no *{nome_studio}* esta confirmado:
 💰 Valor: R$ {valor_total}
 
 Qualquer duvida estamos a disposicao. Ate logo!
+{nome_secretaria}`;
+
+const DEFAULT_AVALIACAO_TEMPLATE = `Ola {nome_cliente}! Muito obrigada pela sua visita ao *{nome_studio}*! 😊
+
+Esperamos que tenha amado seu *{servico}*!
+
+Sua opiniao e muito importante para nos. Seria um enorme prazer se voce pudesse deixar uma avaliacao no Google:
+
+⭐ {link_google}
+
+Muito obrigada! Ate a proxima!
 {nome_secretaria}`;
 
 // Shared date formatter: YYYY-MM-DD → "sábado, 23 de março de 2025"
@@ -104,6 +114,20 @@ function buildWhatsAppMessage(
     .replace(/\{chave_pix\}/g, config?.chave_pix || "—")
     .replace(/\{nome_recebedor\}/g, config?.nome_recebedor_pix || "—")
     .replace(/\{valor_restante\}/g, valorRestante.toFixed(2).replace(".", ","));
+}
+
+function buildAvaliacaoMessage(
+  agendamento: Agendamento,
+  config: AdminConfig | null | undefined,
+): string {
+  const template = config?.mensagem_avaliacao_template || DEFAULT_AVALIACAO_TEMPLATE;
+  return template
+    .replace(/\{nome_cliente\}/g, agendamento.nome_cliente)
+    .replace(/\{nome_secretaria\}/g, config?.nome_secretaria || "Secretaria")
+    .replace(/\{nome_studio\}/g, config?.nome_studio || "Studio")
+    .replace(/\{data\}/g, formatDataLonga(agendamento.data))
+    .replace(/\{servico\}/g, agendamento.servico?.nome || agendamento.servico_nome)
+    .replace(/\{link_google\}/g, config?.google_meu_negocio_url || "");
 }
 
 function buildConfirmacaoMessage(
@@ -169,12 +193,16 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
   const [showConfirmacaoPanel, setShowConfirmacaoPanel] = useState(false);
   const [savingConfirmacao, setSavingConfirmacao] = useState(false);
 
+  // Google review WhatsApp panel
+  const [showAvaliacaoPanel, setShowAvaliacaoPanel] = useState(false);
+  const [savingAvaliacao, setSavingAvaliacao] = useState(false);
+
   // Cancel dialog
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [reembolsoObs, setReembolsoObs] = useState("");
   const [savingCancel, setSavingCancel] = useState(false);
 
-  const statusCfg = STATUS_CONFIG[current.status] ?? STATUS_CONFIG.solicitacao;
+  const statusCfg = getEtapaConfig(current.status);
   const valorTotal = current.servico?.preco ?? 0;
   const valorSinal = Math.round((valorTotal * sinalPct) / 100 * 100) / 100;
   const valorRestante = Math.round((valorTotal - valorSinal) * 100) / 100;
@@ -213,6 +241,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
     setLoading(true);
     await patchAndUpdate({ status });
     onStatusChange(current.id, status);
+    syncLead(current.id, status);
     setLoading(false);
   }
 
@@ -252,6 +281,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
       whatsapp_enviado_em: new Date().toISOString(),
     });
     onStatusChange(current.id, "aguardando_sinal");
+    syncLead(current.id, "whatsapp_sinal_enviado");
   }
 
   async function handleConfirmSinal() {
@@ -270,6 +300,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
     if (ok) {
       setShowSinalForm(false);
       onStatusChange(current.id, "confirmado");
+      syncLead(current.id, "sinal_pago");
     }
   }
 
@@ -282,6 +313,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
     setSavingConfirmacao(true);
     await patchAndUpdate({ confirmacao_enviada_em: new Date().toISOString() });
     setSavingConfirmacao(false);
+    syncLead(current.id, "confirmacao_enviada");
   }
 
   function handleExecucaoSaved(updated: Agendamento) {
@@ -289,6 +321,19 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
     setCurrent(merged);
     setShowExecucao(false);
     onUpdated?.(merged);
+    syncLead(current.id, "concluido");
+  }
+
+  async function handleAbrirWhatsAppAvaliacao() {
+    const telefone = current.telefone.replace(/\D/g, "");
+    const msg = buildAvaliacaoMessage(current, adminConfig);
+    const url = `https://wa.me/55${telefone}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+
+    setSavingAvaliacao(true);
+    await patchAndUpdate({ avaliacao_enviada_em: new Date().toISOString() });
+    setSavingAvaliacao(false);
+    syncLead(current.id, "avaliacao_enviada");
   }
 
   // Computed display values
@@ -318,7 +363,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
               {current.servico?.nome ?? current.servico_nome}
             </p>
           </div>
-          <span className={`border px-2.5 py-1 text-xs font-sans shrink-0 mt-1 ${statusCfg.color}`}>
+          <span className={`border px-2.5 py-1 text-xs font-sans shrink-0 mt-1 ${statusCfg.badgeClass}`}>
             {statusCfg.label}
           </span>
         </div>
@@ -532,6 +577,71 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
                     className="ml-auto flex items-center gap-2 px-5 py-2 bg-[#25D366] text-[#0a0a0a] text-sm font-sans font-medium hover:bg-[#20bc5a] transition-colors disabled:opacity-60"
                   >
                     {savingConfirmacao ? (
+                      <div className="w-4 h-4 border-2 border-[#0a0a0a] border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <MessageCircle size={14} />
+                    )}
+                    Abrir WhatsApp
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Pedido de avaliação Google (status = concluido + executado) ── */}
+        {current.status === "concluido" && current.servico_executado && (
+          <div className="border-t border-[rgba(201,168,76,0.08)] pt-4">
+            <SectionTitle>Avaliação Google</SectionTitle>
+
+            {!showAvaliacaoPanel ? (
+              <button
+                onClick={() => setShowAvaliacaoPanel(true)}
+                className="flex items-center gap-2 w-full px-4 py-2.5 bg-[rgba(251,188,5,0.08)] border border-[rgba(251,188,5,0.35)] text-[#FBC005] text-sm font-sans hover:bg-[rgba(251,188,5,0.14)] transition-colors"
+              >
+                <Star size={15} strokeWidth={1.5} />
+                <span className="flex-1 text-left">Pedir avaliação no Google</span>
+                {current.avaliacao_enviada_em && (
+                  <span className="text-[10px] text-[rgba(251,188,5,0.55)] font-sans shrink-0">
+                    Enviada em {new Date(current.avaliacao_enviada_em).toLocaleDateString("pt-BR")}
+                  </span>
+                )}
+              </button>
+            ) : (
+              <div className="border border-[rgba(251,188,5,0.2)] bg-[rgba(251,188,5,0.03)]">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-[rgba(251,188,5,0.12)]">
+                  <span className="text-[#FBC005] text-xs font-sans uppercase tracking-widest">
+                    Preview da mensagem
+                  </span>
+                  <button
+                    onClick={() => setShowAvaliacaoPanel(false)}
+                    className="text-[rgba(245,240,232,0.3)] hover:text-[rgba(245,240,232,0.6)] text-lg leading-none transition-colors"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="px-4 py-3">
+                  {!adminConfig?.google_meu_negocio_url && (
+                    <p className="text-[rgba(251,188,5,0.6)] text-xs font-sans mb-3 italic">
+                      ⚠️ URL do Google Meu Negócio não configurada no perfil.
+                    </p>
+                  )}
+                  <pre className="whitespace-pre-wrap text-[rgba(245,240,232,0.7)] text-sm font-sans leading-relaxed">
+                    {buildAvaliacaoMessage(current, adminConfig)}
+                  </pre>
+                </div>
+                <div className="px-4 py-3 border-t border-[rgba(251,188,5,0.12)] flex items-center justify-between gap-3">
+                  {current.avaliacao_enviada_em && (
+                    <span className="text-[10px] font-sans text-[rgba(245,240,232,0.3)]">
+                      Última vez: {new Date(current.avaliacao_enviada_em).toLocaleString("pt-BR")}
+                    </span>
+                  )}
+                  <button
+                    onClick={handleAbrirWhatsAppAvaliacao}
+                    disabled={savingAvaliacao}
+                    className="ml-auto flex items-center gap-2 px-5 py-2 bg-[#25D366] text-[#0a0a0a] text-sm font-sans font-medium hover:bg-[#20bc5a] transition-colors disabled:opacity-60"
+                  >
+                    {savingAvaliacao ? (
                       <div className="w-4 h-4 border-2 border-[#0a0a0a] border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <MessageCircle size={14} />
