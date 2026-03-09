@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { CalendarDays, Scissors, Clock, Ban, User, LogOut, TrendingUp } from "lucide-react";
+import { CalendarDays, Scissors, Clock, Ban, User, LogOut, TrendingUp, Users } from "lucide-react";
 
 const NAV_LINKS = [
   { href: "/admin", label: "Agenda", icon: CalendarDays, exact: true },
   { href: "/admin/financeiro", label: "Financeiro", icon: TrendingUp, exact: false },
+  { href: "/admin/leads", label: "Leads", icon: Users, exact: false },
   { href: "/admin/servicos", label: "Serviços", icon: Scissors, exact: false },
   { href: "/admin/horarios", label: "Horários", icon: Clock, exact: false },
   { href: "/admin/bloqueios", label: "Bloqueios", icon: Ban, exact: false },

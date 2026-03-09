@@ -66,6 +66,8 @@ export async function PATCH(
     "sinal_reembolso_obs",
     // Confirmation fields
     "confirmacao_enviada_em",
+    // Avaliacao fields
+    "avaliacao_enviada_em",
   ];
 
   for (const field of allowedFields) {

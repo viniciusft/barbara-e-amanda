@@ -14,12 +14,12 @@ const END_HOUR = 20;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => i + START_HOUR);
 
 const STATUS_COLORS: Record<string, string> = {
-  solicitacao: "rgba(245,158,11,0.85)",
-  aguardando_sinal: "rgba(249,115,22,0.85)",
-  pendente: "rgba(201,168,76,0.85)",
-  confirmado: "rgba(76,175,80,0.85)",
-  concluido: "rgba(30,100,30,0.85)",
-  nao_compareceu: "rgba(127,29,29,0.85)",
+  solicitacao:      "rgba(107,114,128,0.85)",
+  aguardando_sinal: "rgba(217,119,6,0.85)",
+  pendente:         "rgba(201,168,76,0.85)",
+  confirmado:       "rgba(37,99,235,0.85)",
+  concluido:        "rgba(22,163,74,0.85)",
+  nao_compareceu:   "rgba(220,38,38,0.85)",
 };
 
 const CATEGORIA_BORDER: Record<string, string> = {

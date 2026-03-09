@@ -10,7 +10,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("admin_config")
       .select(
-        "nome_studio, bio, instagram, whatsapp, endereco, foto_url, foto_header_url, foto_header_mobile_url, chave_pix, tipo_chave_pix, nome_recebedor_pix, sinal_percentual_padrao, nome_secretaria, mensagem_whatsapp_template, mensagem_confirmacao_template"
+        "nome_studio, bio, instagram, whatsapp, endereco, foto_url, foto_header_url, foto_header_mobile_url, chave_pix, tipo_chave_pix, nome_recebedor_pix, sinal_percentual_padrao, nome_secretaria, mensagem_whatsapp_template, mensagem_confirmacao_template, google_meu_negocio_url, mensagem_avaliacao_template"
       )
       .limit(1)
       .single();
@@ -48,6 +48,8 @@ export async function PATCH(req: NextRequest) {
     nome_secretaria,
     mensagem_whatsapp_template,
     mensagem_confirmacao_template,
+    google_meu_negocio_url,
+    mensagem_avaliacao_template,
   } = body;
 
   const supabase = createServerSupabaseClient();
@@ -73,6 +75,8 @@ export async function PATCH(req: NextRequest) {
     nome_secretaria: nome_secretaria ?? null,
     mensagem_whatsapp_template: mensagem_whatsapp_template ?? null,
     mensagem_confirmacao_template: mensagem_confirmacao_template ?? null,
+    google_meu_negocio_url: google_meu_negocio_url ?? null,
+    mensagem_avaliacao_template: mensagem_avaliacao_template ?? null,
     updated_at: new Date().toISOString(),
   };
 

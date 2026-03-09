@@ -282,6 +282,24 @@ export async function POST(req: NextRequest) {
       console.error("[GCal] createCalendarEvent failed:", err?.message);
     }
 
+    // Create lead record
+    try {
+      const now = new Date().toISOString();
+      await supabase.from("leads").insert({
+        agendamento_id: agendamento.id,
+        nome: nome_cliente,
+        telefone: telefone_cliente,
+        email: email_cliente || null,
+        servico_id,
+        servico_nome: servico.nome,
+        etapa: "solicitacao",
+        historico: [{ etapa: "solicitacao", em: now }],
+        origem: session ? "admin" : "booking",
+        created_at: now,
+        updated_at: now,
+      });
+    } catch { /* non-fatal */ }
+
     return NextResponse.json(agendamento, { status: 201 });
   } catch (err) {
     console.error("POST /api/agendamentos error:", err);
