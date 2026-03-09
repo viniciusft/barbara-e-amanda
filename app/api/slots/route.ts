@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
   const supabase = createServerSupabaseClient();
 
-  // Fetch service with new fields
+  // Fetch service with category and durations
   const { data: servico, error: servicoError } = await supabase
     .from("servicos")
     .select("duracao_minutos, categoria, duracao_maquiagem_min, duracao_cabelo_min")
@@ -40,8 +40,9 @@ export async function GET(req: NextRequest) {
 
   const categoria: string = servico.categoria ?? "maquiagem";
   const duracaoTotal: number = servico.duracao_minutos;
-  const duracaoMaquiagemMin: number = servico.duracao_maquiagem_min ?? duracaoTotal;
-  const duracaoCabeloMin: number = servico.duracao_cabelo_min ?? duracaoTotal;
+  // For combos these must be set; fall back to half/half if null (should not happen with correct data)
+  const duracaoMaquiagemMin: number = servico.duracao_maquiagem_min ?? Math.ceil(duracaoTotal / 2);
+  const duracaoCabeloMin: number = servico.duracao_cabelo_min ?? Math.floor(duracaoTotal / 2);
 
   // Day of week
   const dateParsed = parseISO(data);
@@ -70,47 +71,57 @@ export async function GET(req: NextRequest) {
     return NextResponse.json([]);
   }
 
-  // Fetch all non-cancelled appointments for the day
+  // Fetch all non-cancelled appointments for the day, with service durations via join
   const startOfDayUTC = fromZonedTime(`${data}T00:00:00`, TZ).toISOString();
   const endOfDayUTC = fromZonedTime(`${data}T23:59:59`, TZ).toISOString();
 
   const { data: agendamentos } = await supabase
     .from("agendamentos")
-    .select("data_hora, data_hora_fim, data_hora_cabelo, categoria_servico")
+    .select(`
+      data_hora,
+      data_hora_fim,
+      data_hora_cabelo,
+      categoria_servico,
+      servico:servicos(duracao_maquiagem_min, duracao_cabelo_min, duracao_minutos)
+    `)
     .neq("status", "cancelado")
     .gte("data_hora", startOfDayUTC)
     .lte("data_hora", endOfDayUTC);
 
   const appts = agendamentos ?? [];
 
-  // Build busy blocks per track
-  // For maquiagem track: appointments where categoria_servico IN ('maquiagem', 'combo')
-  //   - maquiagem block = data_hora → data_hora_cabelo (for combo) or data_hora_fim (for single)
-  // For cabelo track: appointments where categoria_servico IN ('cabelo', 'combo')
-  //   - cabelo block = data_hora_cabelo → data_hora_fim (for combo) or data_hora → data_hora_fim (for single)
-
+  // Build busy blocks per professional track using explicit service durations.
+  // Maquiagem track: blocked from data_hora → data_hora + duracao_maquiagem_min
+  // Cabelo track: blocked from data_hora_cabelo → data_hora_cabelo + duracao_cabelo_min
+  // This works for BOTH Ordem A and Ordem B without relying on timestamp relationships.
   const maquiagemBusy: BusyBlock[] = [];
   const cabeloBusy: BusyBlock[] = [];
 
   for (const a of appts) {
     const cat = a.categoria_servico ?? "maquiagem";
     const maqStart = new Date(a.data_hora);
-    const end = new Date(a.data_hora_fim);
+    const overallEnd = new Date(a.data_hora_fim);
 
     if (cat === "maquiagem") {
-      maquiagemBusy.push({ start: maqStart, end });
+      maquiagemBusy.push({ start: maqStart, end: overallEnd });
     } else if (cat === "cabelo") {
-      cabeloBusy.push({ start: maqStart, end });
+      cabeloBusy.push({ start: maqStart, end: overallEnd });
     } else if (cat === "combo") {
-      const cabStart = a.data_hora_cabelo ? new Date(a.data_hora_cabelo) : end;
-      if (maqStart <= cabStart) {
-        // Ordem A (maquiagem first): maquiagem = [data_hora, data_hora_cabelo], cabelo = [data_hora_cabelo, fim]
-        maquiagemBusy.push({ start: maqStart, end: cabStart });
-        cabeloBusy.push({ start: cabStart, end });
-      } else {
-        // Ordem B (cabelo first): cabelo = [data_hora_cabelo, data_hora], maquiagem = [data_hora, fim]
-        cabeloBusy.push({ start: cabStart, end: maqStart });
-        maquiagemBusy.push({ start: maqStart, end });
+      // Use service's stored durations for precise block computation
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const svc = a.servico as any;
+      const maqDur: number = svc?.duracao_maquiagem_min ?? null;
+      const cabDur: number = svc?.duracao_cabelo_min ?? null;
+
+      // Maquiagem block: always starts at data_hora
+      const maqEnd = maqDur ? addMinutes(maqStart, maqDur) : overallEnd;
+      maquiagemBusy.push({ start: maqStart, end: maqEnd });
+
+      // Cabelo block: starts at data_hora_cabelo (always the explicit cabelo start)
+      if (a.data_hora_cabelo) {
+        const cabStart = new Date(a.data_hora_cabelo);
+        const cabEnd = cabDur ? addMinutes(cabStart, cabDur) : overallEnd;
+        cabeloBusy.push({ start: cabStart, end: cabEnd });
       }
     }
   }
@@ -160,7 +171,6 @@ export async function GET(req: NextRequest) {
         }
       }
     } else if (categoria === "cabelo") {
-      // Use cabelo schedule boundaries
       const cabeloSlotStart = current < cabeloDayStartUTC ? cabeloDayStartUTC : current;
       const cabeloSlotEnd = addMinutes(cabeloSlotStart, duracaoTotal);
       if (cabeloSlotEnd > cabeloDayEndUTC) break;
@@ -187,13 +197,14 @@ export async function GET(req: NextRequest) {
       if (!isBefore(current, nowUTC)) {
         const totalEnd = addMinutes(current, duracaoMaquiagemMin + duracaoCabeloMin);
 
-        // Ordem A: maquiagem first, then cabelo
+        // --- Ordem A: maquiagem first [current → current+maqDur], cabelo after [current+maqDur → current+total] ---
         const maqEndA = addMinutes(current, duracaoMaquiagemMin);
         const cabStartA = maqEndA;
         const cabEndA = addMinutes(cabStartA, duracaoCabeloMin);
         const ordenA =
-          maqEndA <= dayEndUTC &&
-          cabEndA <= cabeloDayEndUTC &&
+          maqEndA <= dayEndUTC &&                     // maquiagem fits in maquiagem schedule
+          cabStartA >= cabeloDayStartUTC &&            // cabelo block starts within cabelo schedule
+          cabEndA <= cabeloDayEndUTC &&               // cabelo fits in cabelo schedule
           !overlaps(current, maqEndA, maquiagemBusy) &&
           !overlaps(cabStartA, cabEndA, cabeloBusy);
 
@@ -206,13 +217,14 @@ export async function GET(req: NextRequest) {
             hora_cabelo: format(toZonedTime(cabStartA, TZ), "HH:mm"),
           });
         } else {
-          // Ordem B: cabelo first, then maquiagem
+          // --- Ordem B: cabelo first [current → current+cabDur], maquiagem after [current+cabDur → current+total] ---
           const cabEndB = addMinutes(current, duracaoCabeloMin);
           const maqStartB = cabEndB;
           const maqEndB = addMinutes(maqStartB, duracaoMaquiagemMin);
           const ordenB =
-            cabEndB <= cabeloDayEndUTC &&
-            maqEndB <= dayEndUTC &&
+            current >= cabeloDayStartUTC &&             // cabelo block starts within cabelo schedule
+            cabEndB <= cabeloDayEndUTC &&              // cabelo fits in cabelo schedule
+            maqEndB <= dayEndUTC &&                    // maquiagem fits in maquiagem schedule
             !overlaps(current, cabEndB, cabeloBusy) &&
             !overlaps(maqStartB, maqEndB, maquiagemBusy);
 
