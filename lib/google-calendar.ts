@@ -138,3 +138,17 @@ export async function deleteCalendarEvent(eventId: string) {
     eventId,
   });
 }
+
+export async function updateCalendarEvent(
+  eventId: string,
+  patch: { summary?: string; description?: string }
+) {
+  const auth = await getAuthenticatedClient();
+  const calendar = google.calendar({ version: "v3", auth });
+
+  await calendar.events.patch({
+    calendarId: "primary",
+    eventId,
+    requestBody: patch,
+  });
+}

@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { format, addDays, addWeeks, subWeeks, startOfWeek, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, X, Plus } from "lucide-react";
 import { Agendamento } from "@/types";
 import AgendamentoCard from "@/components/admin/AgendamentoCard";
+import NovoAgendamentoModal from "@/components/admin/NovoAgendamentoModal";
 
 const HOUR_HEIGHT = 64;
 const START_HOUR = 8;
@@ -20,6 +21,18 @@ const STATUS_COLORS: Record<string, string> = {
   confirmado: "rgba(76,175,80,0.85)",
   cancelado: "rgba(100,100,100,0.7)",
   concluido: "rgba(30,100,30,0.85)",
+};
+
+// Left border colors by category
+const CATEGORIA_BORDER: Record<string, string> = {
+  maquiagem: "#9B2335",
+  cabelo: "#2E86AB",
+  combo: "#C9A84C",
+};
+const CATEGORIA_ICON: Record<string, string> = {
+  maquiagem: "💄",
+  cabelo: "💇",
+  combo: "✨",
 };
 
 const DAY_LABELS_SHORT = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
@@ -40,6 +53,7 @@ export default function AdminDashboard() {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Agendamento | null>(null);
+  const [showNovoModal, setShowNovoModal] = useState(false);
 
   const weekDays = Array.from({ length: 7 }, (_, i) =>
     format(addDays(new Date(weekStart + "T12:00:00"), i), "yyyy-MM-dd")
@@ -106,6 +120,13 @@ export default function AdminDashboard() {
           Agenda
         </h2>
         <div className="sm:ml-auto flex items-center gap-2">
+          <button
+            onClick={() => setShowNovoModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-sans bg-[#C9A84C] text-[#0a0a0a] font-medium hover:bg-[#d4b563] transition-colors"
+          >
+            <Plus size={13} strokeWidth={2} />
+            Novo
+          </button>
           {/* Calendar jump picker */}
           <div className="relative">
             <button
@@ -348,34 +369,88 @@ export default function AdminDashboard() {
                       style={{ top: (h - START_HOUR) * HOUR_HEIGHT }}
                     />
                   ))}
-                  {dayAgendamentos.map((a) => (
-                    <button
-                      key={a.id}
-                      className="absolute left-0.5 right-0.5 rounded text-left overflow-hidden hover:brightness-125 transition-all z-10"
-                      style={{
-                        top: getTopPx(a.hora_inicio ?? "08:00"),
-                        height: getHeightPx(a.servico_duracao),
-                        backgroundColor:
-                          STATUS_COLORS[a.status] ?? STATUS_COLORS.pendente,
-                      }}
-                      onClick={() => setSelected(a)}
-                    >
-                      <div className="px-1.5 py-1">
-                        <p className="text-[10px] text-white/90 font-sans font-semibold leading-tight truncate">
-                          {a.hora_inicio}
-                        </p>
-                        <p className="text-[10px] text-white/75 font-sans truncate leading-tight">
-                          {a.nome_cliente}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
+                  {dayAgendamentos.flatMap((a) => {
+                    const cat = a.categoria_servico ?? "maquiagem";
+                    const borderColor = CATEGORIA_BORDER[cat] ?? CATEGORIA_BORDER.maquiagem;
+                    const icon = CATEGORIA_ICON[cat] ?? "💄";
+
+                    if (cat === "combo" && a.hora_inicio_cabelo) {
+                      // Render two separate blocks for combo
+                      const maqDur = a.servico?.duracao_maquiagem_min ?? Math.floor(a.servico_duracao / 2);
+                      const cabDur = a.servico?.duracao_cabelo_min ?? (a.servico_duracao - maqDur);
+                      return [
+                        <button
+                          key={`${a.id}-maq`}
+                          className="absolute left-0.5 right-0.5 text-left overflow-hidden hover:brightness-125 transition-all z-10"
+                          style={{
+                            top: getTopPx(a.hora_inicio ?? "08:00"),
+                            height: getHeightPx(maqDur),
+                            backgroundColor: STATUS_COLORS[a.status] ?? STATUS_COLORS.pendente,
+                            borderLeft: `3px solid ${CATEGORIA_BORDER.maquiagem}`,
+                          }}
+                          onClick={() => setSelected(a)}
+                        >
+                          <div className="px-1.5 py-0.5">
+                            <p className="text-[9px] text-white/90 font-sans font-semibold truncate">💄 {a.hora_inicio}</p>
+                            <p className="text-[9px] text-white/75 font-sans truncate">{a.nome_cliente}</p>
+                          </div>
+                        </button>,
+                        <button
+                          key={`${a.id}-cab`}
+                          className="absolute left-0.5 right-0.5 text-left overflow-hidden hover:brightness-125 transition-all z-10"
+                          style={{
+                            top: getTopPx(a.hora_inicio_cabelo),
+                            height: getHeightPx(cabDur),
+                            backgroundColor: STATUS_COLORS[a.status] ?? STATUS_COLORS.pendente,
+                            borderLeft: `3px solid ${CATEGORIA_BORDER.cabelo}`,
+                          }}
+                          onClick={() => setSelected(a)}
+                        >
+                          <div className="px-1.5 py-0.5">
+                            <p className="text-[9px] text-white/90 font-sans font-semibold truncate">💇 {a.hora_inicio_cabelo}</p>
+                            <p className="text-[9px] text-white/75 font-sans truncate">↑ combo</p>
+                          </div>
+                        </button>,
+                      ];
+                    }
+
+                    return [
+                      <button
+                        key={a.id}
+                        className="absolute left-0.5 right-0.5 rounded text-left overflow-hidden hover:brightness-125 transition-all z-10"
+                        style={{
+                          top: getTopPx(a.hora_inicio ?? "08:00"),
+                          height: getHeightPx(a.servico_duracao),
+                          backgroundColor: STATUS_COLORS[a.status] ?? STATUS_COLORS.pendente,
+                          borderLeft: `3px solid ${borderColor}`,
+                        }}
+                        onClick={() => setSelected(a)}
+                      >
+                        <div className="px-1.5 py-1">
+                          <p className="text-[10px] text-white/90 font-sans font-semibold leading-tight truncate">
+                            {icon} {a.hora_inicio}
+                          </p>
+                          <p className="text-[10px] text-white/75 font-sans truncate leading-tight">
+                            {a.nome_cliente}
+                          </p>
+                        </div>
+                      </button>,
+                    ];
+                  })}
                 </div>
               );
             })}
           </div>
         </div>
       </div>
+
+      {/* Novo agendamento modal */}
+      {showNovoModal && (
+        <NovoAgendamentoModal
+          onClose={() => setShowNovoModal(false)}
+          onCreated={() => { setShowNovoModal(false); fetchAgendamentos(); }}
+        />
+      )}
 
       {/* Detail modal */}
       {selected && (

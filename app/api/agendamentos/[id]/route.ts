@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase";
-import { deleteCalendarEvent } from "@/lib/google-calendar";
+import { deleteCalendarEvent, updateCalendarEvent } from "@/lib/google-calendar";
+
+const STATUS_EMOJI: Record<string, string> = {
+  pendente: "⏳",
+  confirmado: "✅",
+  concluido: "✓",
+  cancelado: "✗",
+};
 
 export async function PATCH(
   req: NextRequest,
@@ -17,7 +24,6 @@ export async function PATCH(
   const body = await req.json();
   const { status, ...executionFields } = body;
 
-  // Build update payload
   const updatePayload: Record<string, unknown> = {};
 
   if (status !== undefined) {
@@ -49,7 +55,6 @@ export async function PATCH(
 
   const supabase = createServerSupabaseClient();
 
-  // Fetch current appointment
   const { data: agendamento, error: fetchError } = await supabase
     .from("agendamentos")
     .select("*")
@@ -60,12 +65,37 @@ export async function PATCH(
     return NextResponse.json({ error: "Agendamento não encontrado" }, { status: 404 });
   }
 
-  // If cancelling, delete from Google Calendar
-  if (status === "cancelado" && agendamento.gcal_event_id) {
-    try {
-      await deleteCalendarEvent(agendamento.gcal_event_id);
-    } catch (err) {
-      console.error("Failed to delete calendar event:", err);
+  // Handle calendar updates when status changes
+  if (status !== undefined && status !== agendamento.status) {
+    const novoEmoji = STATUS_EMOJI[status] ?? "⏳";
+    const categoria = agendamento.categoria_servico ?? "maquiagem";
+
+    if (status === "cancelado") {
+      // Delete calendar events
+      if (agendamento.gcal_event_id) {
+        try { await deleteCalendarEvent(agendamento.gcal_event_id); } catch { /* non-fatal */ }
+      }
+      if (agendamento.gcal_event_id_cabelo) {
+        try { await deleteCalendarEvent(agendamento.gcal_event_id_cabelo); } catch { /* non-fatal */ }
+      }
+    } else {
+      // Update title on calendar events
+      if (agendamento.gcal_event_id) {
+        try {
+          const icon = categoria === "combo" ? "💄" : categoria === "cabelo" ? "💇" : "💄";
+          const partLabel = categoria === "combo" ? ` Maquiagem — ${agendamento.servico_nome}` : ` ${agendamento.servico_nome}`;
+          await updateCalendarEvent(agendamento.gcal_event_id, {
+            summary: `${novoEmoji} ${icon}${partLabel} — ${agendamento.nome_cliente}`,
+          });
+        } catch { /* non-fatal */ }
+      }
+      if (agendamento.gcal_event_id_cabelo) {
+        try {
+          await updateCalendarEvent(agendamento.gcal_event_id_cabelo, {
+            summary: `${novoEmoji} 💇 Cabelo — ${agendamento.servico_nome} — ${agendamento.nome_cliente}`,
+          });
+        } catch { /* non-fatal */ }
+      }
     }
   }
 
