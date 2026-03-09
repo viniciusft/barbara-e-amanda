@@ -3,28 +3,43 @@
 import { useEffect, useState } from "react";
 import { Servico } from "@/types";
 import { formatCurrency, formatDuration } from "@/lib/utils";
-import { Scissors, Clock, CheckCircle } from "lucide-react";
+import { Scissors, Clock, CheckCircle, MessageCircle } from "lucide-react";
 
 interface Props {
   selected: Servico | null;
   onSelect: (servico: Servico) => void;
 }
 
+const CASAMENTO_MSG =
+  "Ola! Gostaria de saber mais sobre os pacotes para casamento e noivas. 💍";
+
 export default function StepServicos({ selected, onSelect }: Props) {
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
 
   useEffect(() => {
-    fetch("/api/servicos")
-      .then((r) => r.json())
-      .then((d) => {
-        if (Array.isArray(d)) setServicos(d);
+    Promise.all([
+      fetch("/api/servicos").then((r) => r.json()),
+      fetch("/api/admin/perfil").then((r) => r.json()),
+    ])
+      .then(([svcs, cfg]) => {
+        if (Array.isArray(svcs)) setServicos(svcs);
         else setError("Erro ao carregar servicos");
+        if (cfg?.whatsapp) setWhatsapp(cfg.whatsapp.replace(/\D/g, ""));
       })
       .catch(() => setError("Erro ao carregar servicos"))
       .finally(() => setLoading(false));
   }, []);
+
+  function handleCasamentoClick() {
+    const number = whatsapp ? `55${whatsapp}` : "";
+    const url = number
+      ? `https://wa.me/${number}?text=${encodeURIComponent(CASAMENTO_MSG)}`
+      : `https://wa.me/?text=${encodeURIComponent(CASAMENTO_MSG)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
 
   return (
     <div>
@@ -121,6 +136,34 @@ export default function StepServicos({ selected, onSelect }: Props) {
             </button>
           );
         })}
+
+        {/* Casamento special card — opens WhatsApp directly */}
+        {!loading && !error && (
+          <button
+            onClick={handleCasamentoClick}
+            className="text-left border border-[rgba(201,168,76,0.4)] bg-[#141414] hover:border-[#C9A84C] hover:bg-[rgba(201,168,76,0.05)] transition-all duration-200 overflow-hidden relative"
+          >
+            {/* Gold top accent bar */}
+            <div className="h-[2px] w-full bg-gradient-to-r from-[rgba(201,168,76,0.0)] via-[#C9A84C] to-[rgba(201,168,76,0.0)]" />
+            <div className="p-5">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <h3 className="font-display text-xl text-[#F5F0E8] font-medium leading-tight">
+                  Casamento 💍
+                </h3>
+                <span className="shrink-0 border border-[rgba(201,168,76,0.5)] text-[#C9A84C] text-[9px] font-sans tracking-[0.15em] uppercase px-2 py-0.5">
+                  Personalizado
+                </span>
+              </div>
+              <p className="text-[rgba(245,240,232,0.5)] text-sm font-sans mb-4 leading-relaxed">
+                Pacote exclusivo para noivas e madrinhas. Entre em contato para montar o seu look perfeito.
+              </p>
+              <div className="flex items-center gap-2 text-[#C9A84C] text-xs font-sans">
+                <MessageCircle size={13} strokeWidth={1.5} />
+                Falar pelo WhatsApp
+              </div>
+            </div>
+          </button>
+        )}
       </div>
     </div>
   );
