@@ -17,7 +17,7 @@ export default async function AdminProtectedLayout({
 
   return (
     <SessionProvider session={session}>
-      <div className="min-h-screen bg-[#0a0a0a]">
+      <div className="admin-root min-h-screen bg-[#0a0a0a]">
         <AdminNav />
         {/* lg:pl-56 offsets fixed sidebar; pb-20 offsets mobile bottom nav */}
         <main className="lg:pl-56 pb-20 lg:pb-0">

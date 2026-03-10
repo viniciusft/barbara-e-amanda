@@ -13,12 +13,15 @@ const config: Config = {
         foreground: "#F5F0E8",
         gold: {
           DEFAULT: "#C9A84C",
-          light: "#E8C97A",
-          dark: "#A07830",
+          light:   "#E2C97E",
+          dark:    "#A07830",
+          muted:   "#C9A84C26",
         },
         surface: {
-          DEFAULT: "#141414",
-          elevated: "#1a1a1a",
+          DEFAULT: "#111111",
+          card:    "#1A1A1A",
+          elevated:"#222222",
+          border:  "#2A2A2A",
         },
       },
       fontFamily: {
@@ -28,6 +31,16 @@ const config: Config = {
       borderColor: {
         gold: "#C9A84C",
         "gold-dim": "rgba(201,168,76,0.3)",
+      },
+      borderRadius: {
+        card:  "16px",
+        btn:   "8px",
+        badge: "6px",
+      },
+      boxShadow: {
+        card:  "0 2px 12px rgba(0,0,0,0.4)",
+        modal: "0 8px 32px rgba(0,0,0,0.6)",
+        gold:  "0 0 0 2px rgba(201,168,76,0.4)",
       },
     },
   },
