@@ -2,11 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme CSS variables ─────────────────────────────────
+   :root = dark defaults (no data-theme set → public site stays dark)
+   [data-theme="dark"]  = explicit dark  (admin dark mode)
+   [data-theme="light"] = light mode     (admin light mode)
+──────────────────────────────────────────────────────── */
+
+:root,
+[data-theme="dark"] {
+  --surface:          #111111;
+  --surface-card:     #1A1A1A;
+  --surface-elevated: #222222;
+  --surface-border:   #2A2A2A;
+  --text-primary:     #F5F5F5;
+  --text-secondary:   #9CA3AF;
+  --text-muted:       #6B7280;
+  --gold:             #C9A84C;
+  --gold-light:       #E2C97E;
+  --gold-dark:        #A07830;
+  --gold-muted:       rgba(201,168,76,0.15);
+  --gold-muted-border:rgba(201,168,76,0.25);
+  --scrollbar-track:  #1A1A1A;
+  --scrollbar-thumb:  #2A2A2A;
+  --shadow-inset-gold:inset 2px 0 0 #C9A84C;
+}
+
+[data-theme="light"] {
+  --surface:          #F5F4F0;
+  --surface-card:     #FFFFFF;
+  --surface-elevated: #EDE9E1;
+  --surface-border:   #DDD8CE;
+  --text-primary:     #1A1A1A;
+  --text-secondary:   #4B5563;
+  --text-muted:       #9CA3AF;
+  --gold:             #A07830;
+  --gold-light:       #C9A84C;
+  --gold-dark:        #7A5E24;
+  --gold-muted:       rgba(160,120,48,0.12);
+  --gold-muted-border:rgba(160,120,48,0.30);
+  --scrollbar-track:  #EDE9E1;
+  --scrollbar-thumb:  #DDD8CE;
+  --shadow-inset-gold:inset 2px 0 0 #A07830;
+  /* Light-specific shadows */
+  --shadow-card:      0 2px 12px rgba(0,0,0,0.08);
+  --shadow-modal:     0 8px 32px rgba(0,0,0,0.18);
+}
+
 :root {
   --background: #0a0a0a;
   --foreground: #F5F0E8;
-  --gold: #C9A84C;
-  --gold-light: #E8C97A;
   --font-cormorant: "Cormorant Garamond", serif;
   --font-dm-sans: "DM Sans", sans-serif;
 }
@@ -21,16 +65,17 @@ body {
 /* ── Admin root ─────────────────────────────────────────── */
 
 .admin-root {
-  background-color: #111111;
-  color: #F5F5F5;
+  background-color: var(--surface);
+  color: var(--text-primary);
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 /* ── Scrollbar ──────────────────────────────────────────── */
 
 ::-webkit-scrollbar         { width: 6px; height: 6px; }
-::-webkit-scrollbar-track   { background: #1A1A1A; }
-::-webkit-scrollbar-thumb   { background: #2A2A2A; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #C9A84C; }
+::-webkit-scrollbar-track   { background: var(--scrollbar-track, #1A1A1A); }
+::-webkit-scrollbar-thumb   { background: var(--scrollbar-thumb, #2A2A2A); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
 /* ── Global hover transitions (color/bg only, not transform) ── */
 
@@ -47,20 +92,20 @@ select:focus,
 textarea:focus {
   outline: none;
   box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.4);
-  border-color: #C9A84C !important;
+  border-color: var(--gold) !important;
 }
 
 /* ── Botão primário padrão ──────────────────────────────── */
 
 .btn-primary {
-  background-color: #C9A84C;
+  background-color: var(--gold);
   color: #111111;
   font-weight: 600;
   border-radius: 8px;
   transition: background-color 150ms ease;
 }
-.btn-primary:hover  { background-color: #E2C97E; }
-.btn-primary:active { background-color: #A07830; }
+.btn-primary:hover  { background-color: var(--gold-light); }
+.btn-primary:active { background-color: var(--gold-dark); }
 
 
 @layer utilities {
@@ -73,23 +118,23 @@ textarea:focus {
   }
 
   .border-gold {
-    border-color: #C9A84C;
+    border-color: var(--gold);
   }
 
   .border-gold-dim {
-    border-color: rgba(201, 168, 76, 0.3);
+    border-color: var(--gold-muted-border);
   }
 
   .text-gold {
-    color: #C9A84C;
+    color: var(--gold);
   }
 
   .text-gold-light {
-    color: #E8C97A;
+    color: var(--gold-light);
   }
 
   .bg-gold {
-    background-color: #C9A84C;
+    background-color: var(--gold);
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -97,29 +142,42 @@ textarea:focus {
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
-    background: #141414;
+    background: var(--surface-elevated);
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgba(201, 168, 76, 0.4);
+    background: var(--gold-muted-border);
     border-radius: 2px;
   }
 }
 
 @layer components {
   .btn-gold {
-    @apply bg-gold text-background font-sans font-medium px-6 py-3 rounded-btn transition-all duration-200 hover:bg-gold-light disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply font-sans font-medium px-6 py-3 rounded-btn transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    background-color: var(--gold);
+    color: #111111;
   }
+  .btn-gold:hover { background-color: var(--gold-light); }
 
   .btn-outline-gold {
-    @apply border border-[#C9A84C] text-gold px-6 py-3 rounded-btn font-sans font-medium transition-all duration-200 hover:bg-[rgba(201,168,76,0.08)] disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply border px-6 py-3 rounded-btn font-sans font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    border-color: var(--gold);
+    color: var(--gold);
   }
+  .btn-outline-gold:hover { background-color: var(--gold-muted); }
 
   .card-luxury {
-    @apply bg-surface-card rounded-card border border-surface-border p-6 shadow-card;
+    @apply rounded-card border p-6;
+    background-color: var(--surface-card);
+    border-color: var(--surface-border);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
   }
 
   .input-luxury {
-    @apply bg-surface-card border border-surface-border text-foreground px-4 py-2.5 w-full rounded-btn focus:outline-none transition-colors placeholder:text-gray-500;
+    @apply px-4 py-2.5 w-full rounded-btn focus:outline-none transition-colors;
+    background-color: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    color: var(--text-primary);
   }
+  .input-luxury::placeholder { color: var(--text-muted); }
 }

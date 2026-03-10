@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import SessionProvider from "@/components/admin/SessionProvider";
 import AdminNav from "@/components/admin/AdminNav";
+import ThemeApplier from "@/components/admin/ThemeApplier";
 
 export default async function AdminProtectedLayout({
   children,
@@ -17,7 +18,8 @@ export default async function AdminProtectedLayout({
 
   return (
     <SessionProvider session={session}>
-      <div className="admin-root min-h-screen bg-[#0a0a0a]">
+      <ThemeApplier />
+      <div className="admin-root min-h-screen">
         <AdminNav />
         {/* lg:pl-56 offsets fixed sidebar; pb-20 offsets mobile bottom nav */}
         <main className="lg:pl-56 pb-20 lg:pb-0">

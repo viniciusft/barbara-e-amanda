@@ -115,6 +115,7 @@ export interface AdminConfig {
   mensagem_confirmacao_template: string | null;
   google_meu_negocio_url: string | null;
   mensagem_avaliacao_template: string | null;
+  tema: "dark" | "light" | null;
   created_at: string;
   updated_at: string;
 }

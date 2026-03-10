@@ -14,6 +14,12 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <head>
+        {/* Anti-FOUC: apply admin theme before first paint */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var p=location.pathname;if(p==='/admin'||p.startsWith('/admin/')){var t=localStorage.getItem('admin-tema')||'dark';document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
