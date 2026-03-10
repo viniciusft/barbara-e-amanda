@@ -108,18 +108,18 @@ textarea:focus {
 
 @layer components {
   .btn-gold {
-    @apply bg-gold text-background font-sans font-medium px-6 py-3 transition-all duration-200 hover:bg-gold-light disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-gold text-background font-sans font-medium px-6 py-3 rounded-btn transition-all duration-200 hover:bg-gold-light disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-outline-gold {
-    @apply border border-[#C9A84C] text-gold px-6 py-3 font-sans font-medium transition-all duration-200 hover:bg-[rgba(201,168,76,0.08)] disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply border border-[#C9A84C] text-gold px-6 py-3 rounded-btn font-sans font-medium transition-all duration-200 hover:bg-[rgba(201,168,76,0.08)] disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .card-luxury {
-    @apply bg-surface border border-[rgba(201,168,76,0.2)] p-6;
+    @apply bg-surface-card rounded-card border border-surface-border p-6 shadow-card;
   }
 
   .input-luxury {
-    @apply bg-transparent border border-[rgba(201,168,76,0.3)] text-foreground px-4 py-3 w-full focus:outline-none focus:border-[#C9A84C] transition-colors placeholder:text-[rgba(245,240,232,0.3)];
+    @apply bg-surface-card border border-surface-border text-foreground px-4 py-2.5 w-full rounded-btn focus:outline-none transition-colors placeholder:text-gray-500;
   }
 }

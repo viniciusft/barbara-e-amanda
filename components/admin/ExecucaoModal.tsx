@@ -71,9 +71,9 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-[#141414] border border-[rgba(201,168,76,0.2)] shadow-2xl">
+      <div className="w-full max-w-md bg-surface-elevated border border-surface-border rounded-card shadow-modal">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[rgba(201,168,76,0.12)]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-surface-border rounded-t-card">
           <div>
             <p className="text-[#C9A84C] text-[9px] tracking-[0.3em] uppercase font-sans mb-0.5">
               Confirmar Execução
@@ -93,7 +93,7 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
         {/* Body */}
         <div className="px-5 py-5 space-y-5">
           {/* Cliente + Serviço resumo */}
-          <div className="bg-[rgba(201,168,76,0.05)] border border-[rgba(201,168,76,0.1)] px-4 py-3">
+          <div className="bg-gold-muted border border-gold/20 px-4 py-3 rounded-btn">
             <p className="text-[#F5F0E8] font-sans text-sm font-medium">
               {agendamento.nome_cliente}
             </p>
@@ -147,7 +147,7 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
                   step={0.01}
                   value={precoCobrado}
                   onChange={(e) => setPrecoCobrado(e.target.value)}
-                  className="w-full bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] text-[#F5F0E8] font-sans text-sm px-4 py-2 pl-10 focus:outline-none focus:border-[#C9A84C]"
+                  className="w-full bg-surface-card border border-surface-border text-foreground font-sans text-sm px-4 py-2 pl-10 rounded-btn focus:outline-none"
                 />
               </div>
               {tipoAjuste === "desconto" && (
@@ -181,7 +181,7 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
                 value={motivoAjuste}
                 onChange={(e) => setMotivoAjuste(e.target.value)}
                 placeholder="Ex: cliente fidelidade, serviço adicional..."
-                className="w-full bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] text-[#F5F0E8] font-sans text-sm px-3 py-2 focus:outline-none focus:border-[#C9A84C] placeholder-[rgba(245,240,232,0.2)]"
+                className="w-full bg-surface-card border border-surface-border text-foreground font-sans text-sm px-3 py-2 rounded-btn focus:outline-none placeholder:text-gray-600"
               />
             </div>
           )}
@@ -218,7 +218,7 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
               onChange={(e) => setObservacoes(e.target.value)}
               rows={2}
               placeholder="Anotações sobre o atendimento..."
-              className="w-full bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] text-[#F5F0E8] font-sans text-sm px-3 py-2 focus:outline-none focus:border-[#C9A84C] placeholder-[rgba(245,240,232,0.2)] resize-none"
+              className="w-full bg-surface-card border border-surface-border text-foreground font-sans text-sm px-3 py-2 rounded-btn focus:outline-none placeholder:text-gray-600 resize-none"
             />
           </div>
 
@@ -231,14 +231,14 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
         <div className="flex gap-2 px-5 pb-5">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 text-sm font-sans border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.4)] hover:border-[rgba(255,255,255,0.2)] transition-colors"
+            className="flex-1 py-2.5 text-sm font-sans border border-surface-border text-gray-400 hover:border-gray-500 rounded-btn transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="flex-1 py-2.5 text-sm font-sans bg-[#C9A84C] text-[#0a0a0a] font-medium hover:bg-[#d4b563] transition-colors disabled:opacity-50"
+            className="flex-1 py-2.5 text-sm font-sans bg-gold text-[#111] font-semibold hover:bg-gold-light rounded-btn transition-colors disabled:opacity-50"
           >
             {loading ? "Salvando..." : "Registrar Execução"}
           </button>

@@ -7,20 +7,19 @@ import { Calendar, ChevronLeft, ChevronRight, X, Plus } from "lucide-react";
 import { Agendamento, AdminConfig } from "@/types";
 import AgendamentoCard from "@/components/admin/AgendamentoCard";
 import NovoAgendamentoModal from "@/components/admin/NovoAgendamentoModal";
+import { getEtapaConfig } from "@/lib/etapas";
 
 const HOUR_HEIGHT = 64;
 const START_HOUR = 8;
 const END_HOUR = 20;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => i + START_HOUR);
 
-const STATUS_COLORS: Record<string, string> = {
-  solicitacao:      "rgba(107,114,128,0.85)",
-  aguardando_sinal: "rgba(217,119,6,0.85)",
-  pendente:         "rgba(201,168,76,0.85)",
-  confirmado:       "rgba(37,99,235,0.85)",
-  concluido:        "rgba(22,163,74,0.85)",
-  nao_compareceu:   "rgba(220,38,38,0.85)",
-};
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
 const CATEGORIA_BORDER: Record<string, string> = {
   maquiagem: "#9B2335",
@@ -43,6 +42,14 @@ function getTopPx(hora: string): number {
 
 function getHeightPx(duracao: number): number {
   return Math.max((duracao / 60) * HOUR_HEIGHT, 28);
+}
+
+function getCurrentTimeTop(): number | null {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  if (h < START_HOUR || h >= END_HOUR) return null;
+  return ((h - START_HOUR) * 60 + m) / 60 * HOUR_HEIGHT;
 }
 
 interface CalBlock {
@@ -104,32 +111,57 @@ function buildBlocks(dayAgendamentos: Agendamento[]): CalBlock[] {
   });
 }
 
-function DayColumn({ dayAgendamentos, onSelect }: { dayAgendamentos: Agendamento[]; onSelect: (a: Agendamento) => void }) {
+function DayColumn({
+  dayAgendamentos,
+  onSelect,
+  isToday,
+  currentTimeTop,
+}: {
+  dayAgendamentos: Agendamento[];
+  onSelect: (a: Agendamento) => void;
+  isToday?: boolean;
+  currentTimeTop?: number | null;
+}) {
   const positioned = assignColumns(buildBlocks(dayAgendamentos));
   return (
     <div className="relative" style={{ height: HOURS.length * HOUR_HEIGHT }}>
       {HOURS.map((h) => (
-        <div key={h} className="absolute w-full border-t border-[rgba(201,168,76,0.05)]" style={{ top: (h - START_HOUR) * HOUR_HEIGHT }} />
+        <div key={h} className="absolute w-full border-t border-surface-border/30" style={{ top: (h - START_HOUR) * HOUR_HEIGHT }} />
       ))}
+      {/* Current time indicator */}
+      {isToday && currentTimeTop != null && (
+        <div
+          className="absolute left-0 right-0 z-20 flex items-center pointer-events-none"
+          style={{ top: currentTimeTop }}
+        >
+          <div className="w-2 h-2 rounded-full bg-gold shrink-0 -ml-1" />
+          <div className="flex-1 h-px bg-gold" />
+        </div>
+      )}
       {positioned.map(({ block, colIndex, numCols }) => {
+        const etapaCfg = getEtapaConfig(block.agendamento.status);
         const widthPct = 100 / numCols;
         const leftPct = colIndex * widthPct;
         const lines = block.label.split("\n");
         return (
           <button
             key={block.id}
-            className="absolute text-left overflow-hidden hover:brightness-125 transition-all z-10"
+            className="absolute text-left overflow-hidden hover:brightness-110 transition-all z-10 rounded-r-badge"
             style={{
               top: block.top, height: block.height,
               left: `calc(${leftPct}% + 1px)`, width: `calc(${widthPct}% - 2px)`,
-              backgroundColor: STATUS_COLORS[block.agendamento.status] ?? STATUS_COLORS.pendente,
-              borderLeft: `3px solid ${block.borderColor}`,
+              backgroundColor: hexToRgba(etapaCfg.hex, 0.13),
+              borderLeft: `4px solid ${etapaCfg.hex}`,
             }}
             onClick={() => onSelect(block.agendamento)}
           >
-            <div className="px-1 py-0.5">
+            <div className="px-1.5 py-0.5">
               {lines.map((line, i) => (
-                <p key={i} className={`font-sans truncate leading-tight ${i === 0 ? "text-[9px] text-white/90 font-semibold" : "text-[9px] text-white/70"}`}>{line}</p>
+                <p
+                  key={i}
+                  className={`font-sans truncate leading-tight text-[9px] ${i === 0 ? "font-semibold" : "opacity-70"}`}
+                  style={{ color: etapaCfg.hex }}
+                >{line}</p>
               ))}
             </div>
           </button>
@@ -150,8 +182,8 @@ export default function AdminDashboard() {
   const [selected, setSelected] = useState<Agendamento | null>(null);
   const [showNovoModal, setShowNovoModal] = useState(false);
   const [adminConfig, setAdminConfig] = useState<AdminConfig | null>(null);
-  // Mobile: which day is currently shown
   const [activeDay, setActiveDay] = useState(today);
+  const [currentTimeTop, setCurrentTimeTop] = useState<number | null>(getCurrentTimeTop);
 
   const weekDays = Array.from({ length: 7 }, (_, i) =>
     format(addDays(new Date(weekStart + "T12:00:00"), i), "yyyy-MM-dd")
@@ -164,6 +196,12 @@ export default function AdminDashboard() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekStart]);
+
+  // Update current time every minute
+  useEffect(() => {
+    const id = setInterval(() => setCurrentTimeTop(getCurrentTimeTop()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const fetchAgendamentos = useCallback(async () => {
     setLoading(true);
@@ -193,7 +231,6 @@ export default function AdminDashboard() {
     });
     if (!res.ok) return;
     if (status === "cancelado") {
-      // Remove immediately — API also filters them, so refetch would drop it too
       setAgendamentos((prev) => prev.filter((a) => a.id !== id));
       setSelected(null);
     } else {
@@ -209,7 +246,6 @@ export default function AdminDashboard() {
     setSelected((prev) => (prev?.id === updated.id ? updated : prev));
   }
 
-  // Week navigation
   const prevWeek = () => setWeekStart(format(subWeeks(new Date(weekStart + "T12:00:00"), 1), "yyyy-MM-dd"));
   const nextWeek = () => setWeekStart(format(addWeeks(new Date(weekStart + "T12:00:00"), 1), "yyyy-MM-dd"));
   const goToday = () => {
@@ -217,7 +253,6 @@ export default function AdminDashboard() {
     setActiveDay(today);
   };
 
-  // Mobile day navigation
   const activeDayIdx = weekDays.indexOf(activeDay);
   function prevDay() {
     if (activeDayIdx > 0) {
@@ -238,7 +273,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // Swipe support for mobile
   const touchStartX = useRef<number | null>(null);
 
   function getForDay(dateStr: string) {
@@ -252,18 +286,18 @@ export default function AdminDashboard() {
     <div className="py-6">
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-        <h2 className="font-display text-3xl text-[#F5F0E8] font-light">Agenda</h2>
+        <h2 className="font-display text-3xl text-foreground font-light">Agenda</h2>
         <div className="sm:ml-auto flex items-center gap-2">
           <button
             onClick={() => setShowNovoModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-sans bg-[#C9A84C] text-[#0a0a0a] font-medium hover:bg-[#d4b563] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-sans bg-gold text-[#111] font-semibold rounded-btn hover:bg-gold-light transition-colors"
           >
             <Plus size={13} strokeWidth={2} />
             Novo
           </button>
-          {/* Calendar date picker (all sizes) */}
+          {/* Calendar date picker */}
           <div className="relative">
-            <button type="button" className="p-1.5 text-[#C9A84C] hover:bg-[rgba(201,168,76,0.1)] rounded-sm cursor-pointer" title="Ir para data">
+            <button type="button" className="p-1.5 text-gold hover:bg-gold-muted rounded-btn cursor-pointer transition-colors" title="Ir para data">
               <Calendar size={18} strokeWidth={1.5} />
             </button>
             <input type="date" className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
@@ -276,15 +310,14 @@ export default function AdminDashboard() {
               }}
             />
           </div>
-          <button onClick={goToday} className="px-3 py-1.5 text-xs font-sans border border-[rgba(201,168,76,0.2)] text-[rgba(245,240,232,0.6)] hover:border-[rgba(201,168,76,0.5)] transition-colors">
+          <button onClick={goToday} className="px-3 py-1.5 text-xs font-sans border border-surface-border text-gray-400 rounded-btn hover:border-gold hover:text-gold transition-colors">
             Hoje
           </button>
-          {/* Week prev/next — desktop only */}
-          <button onClick={prevWeek} className="hidden md:flex p-1.5 border border-[rgba(201,168,76,0.2)] text-[rgba(245,240,232,0.5)] hover:border-[rgba(201,168,76,0.5)] transition-colors">
+          <button onClick={prevWeek} className="hidden md:flex p-1.5 border border-surface-border text-gray-400 rounded-btn hover:border-gold hover:text-gold transition-colors">
             <ChevronLeft size={16} />
           </button>
           <div className="hidden md:block relative min-w-[150px] text-center">
-            <span className="text-sm font-sans text-[rgba(245,240,232,0.6)] select-none">{weekLabel}</span>
+            <span className="text-sm font-sans text-gray-400 select-none">{weekLabel}</span>
             <input type="date" className="absolute inset-0 opacity-0 cursor-pointer w-full"
               onChange={(e) => {
                 if (e.target.value) {
@@ -293,7 +326,7 @@ export default function AdminDashboard() {
               }}
             />
           </div>
-          <button onClick={nextWeek} className="hidden md:flex p-1.5 border border-[rgba(201,168,76,0.2)] text-[rgba(245,240,232,0.5)] hover:border-[rgba(201,168,76,0.5)] transition-colors">
+          <button onClick={nextWeek} className="hidden md:flex p-1.5 border border-surface-border text-gray-400 rounded-btn hover:border-gold hover:text-gold transition-colors">
             <ChevronRight size={16} />
           </button>
         </div>
@@ -305,17 +338,17 @@ export default function AdminDashboard() {
       <div className="md:hidden">
         {/* Day navigation bar */}
         <div className="flex items-center justify-between mb-3">
-          <button onClick={prevDay} className="p-2 text-[rgba(245,240,232,0.5)] hover:text-[rgba(245,240,232,0.9)] transition-colors">
+          <button onClick={prevDay} className="p-2 text-gray-500 hover:text-gray-300 transition-colors">
             <ChevronLeft size={20} />
           </button>
-          <span className="font-sans text-sm text-[#F5F0E8] capitalize">{activeDayLabel}</span>
-          <button onClick={nextDay} className="p-2 text-[rgba(245,240,232,0.5)] hover:text-[rgba(245,240,232,0.9)] transition-colors">
+          <span className="font-sans text-sm text-foreground capitalize">{activeDayLabel}</span>
+          <button onClick={nextDay} className="p-2 text-gray-500 hover:text-gray-300 transition-colors">
             <ChevronRight size={20} />
           </button>
         </div>
 
         {/* Mini week strip */}
-        <div className="grid grid-cols-7 mb-4 border border-[rgba(201,168,76,0.1)] bg-[#141414]">
+        <div className="grid grid-cols-7 mb-4 border border-surface-border bg-surface-card rounded-card overflow-hidden">
           {weekDays.map((day, i) => {
             const isToday = day === today;
             const isActive = day === activeDay;
@@ -325,17 +358,16 @@ export default function AdminDashboard() {
                 key={day}
                 onClick={() => setActiveDay(day)}
                 className={`py-2 flex flex-col items-center gap-0.5 transition-colors ${
-                  isActive ? "bg-[rgba(201,168,76,0.12)]" : "hover:bg-[rgba(201,168,76,0.05)]"
+                  isActive ? "bg-gold-muted" : "hover:bg-surface-elevated"
                 }`}
               >
                 <span className={`text-[9px] font-sans uppercase tracking-wider ${
-                  isActive ? "text-[#C9A84C]" : isToday ? "text-[#C9A84C]/70" : "text-[rgba(245,240,232,0.3)]"
+                  isActive ? "text-gold" : isToday ? "text-gold/70" : "text-gray-600"
                 }`}>{DAY_LABELS_TINY[i]}</span>
                 <span className={`font-display text-base font-light leading-none ${
-                  isActive ? "text-[#C9A84C]" : isToday ? "text-[#F5F0E8]" : "text-[rgba(245,240,232,0.6)]"
+                  isActive ? "text-gold" : isToday ? "text-foreground" : "text-gray-500"
                 }`}>{format(new Date(day + "T12:00:00"), "d")}</span>
-                {/* Dot for days with appointments */}
-                <span className={`w-1 h-1 rounded-full ${hasAppts ? "bg-[#C9A84C]" : "bg-transparent"}`} />
+                <span className={`w-1 h-1 rounded-full ${hasAppts ? "bg-gold" : "bg-transparent"}`} />
               </button>
             );
           })}
@@ -344,12 +376,12 @@ export default function AdminDashboard() {
         {/* Single day time grid with swipe support */}
         {loading ? (
           <div className="flex items-center gap-3 py-12 justify-center">
-            <div className="w-5 h-5 border border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
-            <span className="text-[rgba(245,240,232,0.4)] font-sans text-sm">Carregando...</span>
+            <div className="w-5 h-5 border border-gold border-t-transparent rounded-full animate-spin" />
+            <span className="text-gray-500 font-sans text-sm">Carregando...</span>
           </div>
         ) : (
           <div
-            className="border border-[rgba(201,168,76,0.12)] bg-[#141414] overflow-auto"
+            className="border border-surface-border bg-surface-card rounded-card overflow-auto"
             style={{ maxHeight: "calc(100vh - 300px)" }}
             onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
             onTouchEnd={(e) => {
@@ -361,20 +393,22 @@ export default function AdminDashboard() {
           >
             <div className="flex">
               {/* Time labels */}
-              <div className="border-r border-[rgba(201,168,76,0.06)] shrink-0" style={{ width: 44 }}>
+              <div className="border-r border-surface-border shrink-0" style={{ width: 44 }}>
                 {HOURS.map((h) => (
                   <div key={h} style={{ height: HOUR_HEIGHT }} className="flex items-start justify-end pr-1.5 pt-1.5">
-                    <span className="text-[10px] text-[rgba(245,240,232,0.2)] font-sans tabular-nums">
+                    <span className="text-[10px] text-gray-600 font-sans tabular-nums">
                       {h.toString().padStart(2, "0")}:00
                     </span>
                   </div>
                 ))}
               </div>
               {/* Day column */}
-              <div className="flex-1 relative border-l border-[rgba(201,168,76,0.06)]">
+              <div className="flex-1 relative border-l border-surface-border">
                 <DayColumn
                   dayAgendamentos={getForDay(activeDay)}
                   onSelect={setSelected}
+                  isToday={activeDay === today}
+                  currentTimeTop={currentTimeTop}
                 />
               </div>
             </div>
@@ -383,7 +417,7 @@ export default function AdminDashboard() {
 
         {/* Mobile appointment list for active day */}
         {!loading && getForDay(activeDay).length === 0 && (
-          <p className="text-[rgba(245,240,232,0.3)] font-sans text-sm text-center py-6 border border-[rgba(201,168,76,0.08)] mt-3">
+          <p className="text-gray-600 font-sans text-sm text-center py-6 border border-surface-border bg-surface-card rounded-card mt-3">
             Nenhum agendamento neste dia.
           </p>
         )}
@@ -391,19 +425,23 @@ export default function AdminDashboard() {
           <div className="mt-3 space-y-2">
             {getForDay(activeDay)
               .sort((a, b) => a.data_hora.localeCompare(b.data_hora))
-              .map((a) => (
-                <button
-                  key={a.id}
-                  onClick={() => setSelected(a)}
-                  className="w-full text-left border border-[rgba(201,168,76,0.1)] bg-[#141414] p-3 hover:border-[rgba(201,168,76,0.3)] transition-colors"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-display text-[#F5F0E8] text-base leading-tight truncate">{a.nome_cliente}</p>
-                    <p className="font-sans text-xs text-[#C9A84C] shrink-0">{a.hora_inicio}</p>
-                  </div>
-                  <p className="font-sans text-xs text-[rgba(245,240,232,0.45)] truncate mt-0.5">{a.servico_nome}</p>
-                </button>
-              ))}
+              .map((a) => {
+                const etapaCfg = getEtapaConfig(a.status);
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() => setSelected(a)}
+                    className="w-full text-left border border-surface-border bg-surface-card rounded-card p-3 hover:border-gold/40 hover:bg-surface-elevated transition-colors"
+                    style={{ borderLeftColor: etapaCfg.hex, borderLeftWidth: 4 }}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-display text-foreground text-base leading-tight truncate">{a.nome_cliente}</p>
+                      <p className="font-sans text-xs text-gold shrink-0">{a.hora_inicio}</p>
+                    </div>
+                    <p className="font-sans text-xs text-gray-500 truncate mt-0.5">{a.servico_nome}</p>
+                  </button>
+                );
+              })}
           </div>
         )}
       </div>
@@ -413,44 +451,38 @@ export default function AdminDashboard() {
       ══════════════════════════════════════════ */}
       <div className="hidden md:flex gap-4" style={{ height: "calc(100vh - 220px)" }}>
         {/* Left: list panel */}
-        <div className="w-72 flex flex-col border border-[rgba(201,168,76,0.12)] bg-[#141414] overflow-hidden shrink-0">
-          <div className="px-4 py-3 border-b border-[rgba(201,168,76,0.1)] shrink-0">
-            <p className="text-xs font-sans text-[rgba(245,240,232,0.4)] uppercase tracking-widest">
+        <div className="w-72 flex flex-col border border-surface-border bg-surface-card rounded-card overflow-hidden shadow-card shrink-0">
+          <div className="px-4 py-3 border-b border-surface-border shrink-0">
+            <p className="text-xs font-sans text-gray-500 uppercase tracking-widest">
               {agendamentos.length} agendamento{agendamentos.length !== 1 ? "s" : ""}
             </p>
           </div>
           <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-2">
             {loading && (
               <div className="flex justify-center py-8">
-                <div className="w-5 h-5 border border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border border-gold border-t-transparent rounded-full animate-spin" />
               </div>
             )}
             {!loading && agendamentos.length === 0 && (
-              <p className="text-[rgba(245,240,232,0.3)] font-sans text-sm text-center py-8">Nenhum agendamento.</p>
+              <p className="text-gray-600 font-sans text-sm text-center py-8">Nenhum agendamento.</p>
             )}
             {agendamentos
               .sort((a, b) => a.data_hora.localeCompare(b.data_hora))
               .map((a) => {
-                const statusColor: Record<string, string> = {
-                  solicitacao: "border-amber-800/40 bg-amber-950/20",
-                  aguardando_sinal: "border-orange-800/40 bg-orange-950/20",
-                  pendente: "border-yellow-800/40 bg-yellow-950/20",
-                  confirmado: "border-green-800/40 bg-green-950/20",
-                  concluido: "border-blue-800/40 bg-blue-950/20",
-                  nao_compareceu: "border-red-900/40 bg-red-950/20",
-                };
+                const etapaCfg = getEtapaConfig(a.status);
                 return (
                   <button
                     key={a.id}
                     onClick={() => setSelected(a)}
-                    className={`w-full text-left border p-3 transition-all hover:border-[rgba(201,168,76,0.3)] ${statusColor[a.status] ?? "border-[rgba(255,255,255,0.05)]"} ${selected?.id === a.id ? "border-[rgba(201,168,76,0.4)]" : ""}`}
+                    className={`w-full text-left border border-surface-border bg-surface-elevated rounded-card p-3 transition-all hover:border-gold/40 ${selected?.id === a.id ? "border-gold/50 shadow-gold" : ""}`}
+                    style={{ borderLeftColor: etapaCfg.hex, borderLeftWidth: 4 }}
                   >
                     <div className="flex items-start justify-between gap-2 mb-0.5">
-                      <p className="font-display text-[#F5F0E8] text-base leading-tight truncate">{a.nome_cliente}</p>
-                      <p className="font-sans text-xs text-[#C9A84C] shrink-0">{a.hora_inicio}</p>
+                      <p className="font-display text-foreground text-base leading-tight truncate">{a.nome_cliente}</p>
+                      <p className="font-sans text-xs text-gold shrink-0">{a.hora_inicio}</p>
                     </div>
-                    <p className="font-sans text-xs text-[rgba(245,240,232,0.45)] truncate">{a.servico_nome}</p>
-                    <p className="font-sans text-[10px] text-[rgba(245,240,232,0.3)] mt-0.5">
+                    <p className="font-sans text-xs text-gray-500 truncate">{a.servico_nome}</p>
+                    <p className="font-sans text-[10px] text-gray-600 mt-0.5">
                       {a.data ? format(new Date(a.data + "T12:00:00"), "EEE dd/MM", { locale: ptBR }) : ""}
                     </p>
                   </button>
@@ -460,18 +492,18 @@ export default function AdminDashboard() {
         </div>
 
         {/* Right: 7-column calendar grid */}
-        <div className="flex-1 border border-[rgba(201,168,76,0.12)] bg-[#141414] overflow-auto scrollbar-thin">
+        <div className="flex-1 border border-surface-border bg-surface-card rounded-card overflow-auto scrollbar-thin shadow-card">
           {/* Day headers sticky */}
-          <div className="sticky top-0 z-10 bg-[#141414] grid border-b border-[rgba(201,168,76,0.1)]" style={{ gridTemplateColumns: "52px repeat(7, 1fr)" }}>
-            <div className="border-r border-[rgba(201,168,76,0.06)]" />
+          <div className="sticky top-0 z-10 bg-surface-card grid border-b border-surface-border" style={{ gridTemplateColumns: "52px repeat(7, 1fr)" }}>
+            <div className="border-r border-surface-border" />
             {weekDays.map((day, i) => {
               const isToday = day === today;
               return (
-                <div key={day} className={`text-center py-2.5 border-l border-[rgba(201,168,76,0.06)] ${isToday ? "bg-[rgba(201,168,76,0.05)]" : ""}`}>
-                  <p className={`text-[9px] font-sans uppercase tracking-widest ${isToday ? "text-[#C9A84C]" : "text-[rgba(245,240,232,0.3)]"}`}>
+                <div key={day} className={`text-center py-2.5 border-l border-surface-border ${isToday ? "bg-gold-muted" : ""}`}>
+                  <p className={`text-[9px] font-sans uppercase tracking-widest ${isToday ? "text-gold" : "text-gray-600"}`}>
                     {DAY_LABELS_SHORT[i]}
                   </p>
-                  <p className={`font-display text-xl font-light ${isToday ? "text-[#C9A84C]" : "text-[#F5F0E8]"}`}>
+                  <p className={`font-display text-xl font-light ${isToday ? "text-gold font-semibold" : "text-foreground"}`}>
                     {format(new Date(day + "T12:00:00"), "dd")}
                   </p>
                 </div>
@@ -482,10 +514,10 @@ export default function AdminDashboard() {
           {/* Time grid */}
           <div className="grid" style={{ gridTemplateColumns: "52px repeat(7, 1fr)" }}>
             {/* Time labels */}
-            <div className="border-r border-[rgba(201,168,76,0.06)]">
+            <div className="border-r border-surface-border">
               {HOURS.map((h) => (
                 <div key={h} style={{ height: HOUR_HEIGHT }} className="flex items-start justify-end pr-2 pt-1.5">
-                  <span className="text-[10px] text-[rgba(245,240,232,0.2)] font-sans tabular-nums">
+                  <span className="text-[10px] text-gray-600 font-sans tabular-nums">
                     {h.toString().padStart(2, "0")}:00
                   </span>
                 </div>
@@ -497,9 +529,14 @@ export default function AdminDashboard() {
               return (
                 <div
                   key={day}
-                  className={`border-l border-[rgba(201,168,76,0.06)] ${isToday ? "bg-[rgba(201,168,76,0.02)]" : ""}`}
+                  className={`border-l border-surface-border ${isToday ? "bg-gold-muted/30" : ""}`}
                 >
-                  <DayColumn dayAgendamentos={getForDay(day)} onSelect={setSelected} />
+                  <DayColumn
+                    dayAgendamentos={getForDay(day)}
+                    onSelect={setSelected}
+                    isToday={isToday}
+                    currentTimeTop={currentTimeTop}
+                  />
                 </div>
               );
             })}
@@ -517,15 +554,15 @@ export default function AdminDashboard() {
 
       {/* Detail modal */}
       {selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75" onClick={() => setSelected(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setSelected(null)}>
           <div
-            className="bg-[#141414] border border-[rgba(201,168,76,0.3)] max-w-2xl w-full shadow-2xl overflow-y-auto"
+            className="bg-surface-elevated border border-surface-border rounded-card shadow-modal max-w-2xl w-full overflow-y-auto"
             style={{ maxHeight: "90vh" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[rgba(201,168,76,0.15)] sticky top-0 bg-[#141414] z-10">
-              <p className="text-[#C9A84C] text-[10px] font-sans uppercase tracking-[0.3em]">Agendamento</p>
-              <button onClick={() => setSelected(null)} className="text-[rgba(245,240,232,0.4)] hover:text-[rgba(245,240,232,0.8)] transition-colors">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border sticky top-0 bg-surface-elevated z-10 rounded-t-card">
+              <p className="text-gold text-[10px] font-sans uppercase tracking-[0.3em]">Agendamento</p>
+              <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-gray-300 transition-colors">
                 <X size={18} />
               </button>
             </div>

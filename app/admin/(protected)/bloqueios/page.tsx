@@ -88,7 +88,7 @@ export default function BloqueiosPage() {
 
       {/* Form */}
       {showForm && (
-        <div className="border border-[rgba(201,168,76,0.3)] bg-[#141414] p-6 mb-6">
+        <div className="border border-surface-border bg-surface-card rounded-card p-6 mb-6">
           <h3 className="font-display text-xl text-[#F5F0E8] mb-5">
             Novo Bloqueio
           </h3>
@@ -134,7 +134,7 @@ export default function BloqueiosPage() {
           <div className="flex gap-3 mt-5">
             <button
               onClick={() => setShowForm(false)}
-              className="border border-[rgba(201,168,76,0.3)] text-[rgba(245,240,232,0.6)] px-4 py-2 text-sm font-sans"
+              className="border border-surface-border text-gray-400 px-4 py-2 text-sm font-sans rounded-btn hover:border-gray-500 transition-colors"
             >
               Cancelar
             </button>
@@ -161,7 +161,7 @@ export default function BloqueiosPage() {
       )}
 
       {!loading && bloqueios.length === 0 && (
-        <div className="border border-[rgba(201,168,76,0.1)] p-12 text-center">
+        <div className="border border-surface-border rounded-card p-12 text-center">
           <p className="text-[rgba(245,240,232,0.3)] font-sans">
             Nenhum bloqueio futuro cadastrado.
           </p>
@@ -174,11 +174,11 @@ export default function BloqueiosPage() {
           return (
             <div
               key={b.id}
-              className="border border-[rgba(201,168,76,0.15)] bg-[#141414] p-5 flex items-center justify-between gap-4"
+              className="border border-surface-border bg-surface-card rounded-card p-5 flex items-center justify-between gap-4"
             >
               <div className="flex items-center gap-5">
                 <div className="text-center shrink-0">
-                  <div className="border border-[rgba(201,168,76,0.3)] px-4 py-2">
+                  <div className="border border-gold/40 px-4 py-2 rounded-btn bg-gold-muted">
                     <p className="text-[#C9A84C] font-display text-lg leading-none">
                       {formatDateBR(b.data_inicio)}
                     </p>
