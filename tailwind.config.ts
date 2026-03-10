@@ -10,18 +10,18 @@ const config: Config = {
     extend: {
       colors: {
         background: "#0a0a0a",
-        foreground: "#F5F0E8",
+        foreground: "var(--text-primary)",
         gold: {
-          DEFAULT: "#C9A84C",
-          light:   "#E2C97E",
-          dark:    "#A07830",
-          muted:   "#C9A84C26",
+          DEFAULT: "var(--gold)",
+          light:   "var(--gold-light)",
+          dark:    "var(--gold-dark)",
+          muted:   "var(--gold-muted)",
         },
         surface: {
-          DEFAULT: "#111111",
-          card:    "#1A1A1A",
-          elevated:"#222222",
-          border:  "#2A2A2A",
+          DEFAULT:  "var(--surface)",
+          card:     "var(--surface-card)",
+          elevated: "var(--surface-elevated)",
+          border:   "var(--surface-border)",
         },
       },
       fontFamily: {
@@ -29,8 +29,8 @@ const config: Config = {
         sans: ["var(--font-dm-sans)", "sans-serif"],
       },
       borderColor: {
-        gold: "#C9A84C",
-        "gold-dim": "rgba(201,168,76,0.3)",
+        gold: "var(--gold)",
+        "gold-dim": "var(--gold-muted)",
       },
       borderRadius: {
         card:  "16px",
