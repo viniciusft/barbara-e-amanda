@@ -118,7 +118,7 @@ function HistoricoPopover({ historico }: { historico: HistoricoEntry[] | null })
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-6 z-50 bg-[#1a1a1a] border border-[rgba(201,168,76,0.2)] shadow-2xl p-3 w-64">
+          <div className="absolute left-0 top-6 z-50 bg-surface-elevated border border-surface-border shadow-modal rounded-card p-3 w-64">
             <div className="space-y-2">
               {historico.map((h, i) => {
                 const cfg = getEtapaConfig(h.etapa);
@@ -173,8 +173,8 @@ function AgendamentoDrawer({
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/70" onClick={onClose} />
-      <div className="w-full max-w-xl bg-[#111111] border-l border-[rgba(201,168,76,0.15)] h-full overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[rgba(201,168,76,0.1)]">
+      <div className="w-full max-w-xl bg-surface border-l border-surface-border h-full overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border">
           <p className="text-[#C9A84C] text-xs font-sans uppercase tracking-widest">Agendamento</p>
           <button onClick={onClose} className="text-[rgba(245,240,232,0.4)] hover:text-[rgba(245,240,232,0.7)] transition-colors">
             <X size={18} strokeWidth={1.5} />
@@ -363,14 +363,14 @@ export default function LeadsPage() {
           <span className="text-[rgba(245,240,232,0.4)] font-sans text-sm">Carregando...</span>
         </div>
       ) : leads.length === 0 ? (
-        <div className="border border-[rgba(255,255,255,0.06)] p-12 text-center">
+        <div className="border border-surface-border rounded-card p-12 text-center">
           <Users size={32} className="text-[rgba(201,168,76,0.2)] mx-auto mb-3" strokeWidth={1} />
           <p className="text-[rgba(245,240,232,0.3)] font-sans text-sm">Nenhum lead encontrado.</p>
         </div>
       ) : (
-        <div className="border border-[rgba(201,168,76,0.1)] overflow-hidden">
+        <div className="border border-surface-border rounded-card overflow-hidden">
           {/* Table header */}
-          <div className="hidden md:grid grid-cols-[2fr_1fr_1.5fr_1.5fr_1fr_1fr] gap-4 px-4 py-2.5 bg-[rgba(201,168,76,0.04)] border-b border-[rgba(201,168,76,0.1)]">
+          <div className="hidden md:grid grid-cols-[2fr_1fr_1.5fr_1.5fr_1fr_1fr] gap-4 px-4 py-2.5 bg-surface-card border-b border-surface-border">
             {["Cliente", "Serviço", "Etapa", "Progresso", "Entrada", "Histórico"].map((h) => (
               <p key={h} className="text-[10px] font-sans text-[rgba(245,240,232,0.35)] uppercase tracking-widest">
                 {h}
@@ -379,7 +379,7 @@ export default function LeadsPage() {
           </div>
 
           {/* Rows */}
-          <div className="divide-y divide-[rgba(255,255,255,0.04)]">
+          <div className="divide-y divide-surface-border">
             {leads.map((lead) => {
               const cfg = getEtapaConfig(lead.etapa);
               return (
@@ -388,7 +388,7 @@ export default function LeadsPage() {
                   onClick={() => lead.agendamento_id && setDrawerAgendamentoId(lead.agendamento_id)}
                   className={`grid grid-cols-1 md:grid-cols-[2fr_1fr_1.5fr_1.5fr_1fr_1fr] gap-4 px-4 py-3 transition-colors ${
                     lead.agendamento_id
-                      ? "cursor-pointer hover:bg-[rgba(255,255,255,0.02)]"
+                      ? "cursor-pointer hover:bg-surface-elevated"
                       : ""
                   }`}
                 >
@@ -441,14 +441,14 @@ export default function LeadsPage() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="p-1.5 border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.4)] hover:border-[rgba(255,255,255,0.2)] disabled:opacity-30 transition-colors"
+              className="p-1.5 border border-surface-border text-gray-400 rounded-btn hover:border-gold hover:text-gold disabled:opacity-30 transition-colors"
             >
               <ChevronLeft size={14} />
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="p-1.5 border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.4)] hover:border-[rgba(255,255,255,0.2)] disabled:opacity-30 transition-colors"
+              className="p-1.5 border border-surface-border text-gray-400 rounded-btn hover:border-gold hover:text-gold disabled:opacity-30 transition-colors"
             >
               <ChevronRight size={14} />
             </button>

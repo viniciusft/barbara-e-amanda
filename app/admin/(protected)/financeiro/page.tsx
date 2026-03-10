@@ -315,7 +315,7 @@ export default function FinanceiroPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-[#0f0f0f] border border-[rgba(201,168,76,0.1)] p-5 space-y-4">
+      <div className="bg-surface-card border border-surface-border rounded-card p-5 space-y-4">
         <div className="flex flex-wrap gap-2">
           {[
             { label: "Hoje", action: () => { const t = todayStr(); setDataInicio(t); setDataFim(t); } },
@@ -325,7 +325,7 @@ export default function FinanceiroPage() {
             { label: "Este ano", action: () => { const year = new Date().getFullYear(); setDataInicio(`${year}-01-01`); setDataFim(`${year}-12-31`); } },
           ].map(({ label, action }) => (
             <button key={label} onClick={action}
-              className="px-3 py-1 text-xs font-sans border border-[rgba(255,255,255,0.08)] text-[rgba(245,240,232,0.45)] hover:border-[#C9A84C] hover:text-[#C9A84C] transition-colors">
+              className="px-3 py-1 text-xs font-sans border border-surface-border text-gray-500 rounded-btn hover:border-gold hover:text-gold transition-colors">
               {label}
             </button>
           ))}
@@ -334,12 +334,12 @@ export default function FinanceiroPage() {
           <div>
             <p className="text-[rgba(245,240,232,0.35)] text-[10px] font-sans uppercase tracking-wider mb-1.5">De</p>
             <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)}
-              className="bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.7)] text-sm font-sans px-3 py-1.5 focus:outline-none focus:border-[#C9A84C]" />
+              className="bg-surface-card border border-surface-border text-foreground text-sm font-sans px-3 py-1.5 rounded-btn focus:outline-none" />
           </div>
           <div>
             <p className="text-[rgba(245,240,232,0.35)] text-[10px] font-sans uppercase tracking-wider mb-1.5">Até</p>
             <input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)}
-              className="bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.7)] text-sm font-sans px-3 py-1.5 focus:outline-none focus:border-[#C9A84C]" />
+              className="bg-surface-card border border-surface-border text-foreground text-sm font-sans px-3 py-1.5 rounded-btn focus:outline-none" />
           </div>
           <MultiSelectDropdown label="Serviços" options={servicoOptions} selected={selectedServicos} onChange={setSelectedServicos} allLabel="Todos os serviços" />
           <MultiSelectDropdown label="Pagamento" options={PAGAMENTO_OPTIONS} selected={selectedFormas} onChange={setSelectedFormas} allLabel="Todas as formas" />
@@ -383,7 +383,7 @@ export default function FinanceiroPage() {
       {!loading && (porPeriodo.length > 0 || porServico.length > 0) && (
         <div className="grid lg:grid-cols-5 gap-4">
           {/* Stacked bar chart */}
-          <div className="lg:col-span-3 bg-[#0f0f0f] border border-[rgba(201,168,76,0.1)] p-5">
+          <div className="lg:col-span-3 bg-surface-card border border-surface-border rounded-card p-5">
             <h2 className="font-display text-base text-[#F5F0E8] font-light mb-1">
               Receita por {granularidade === "dia" ? "dia" : granularidade === "semana" ? "semana" : "mês"}
             </h2>
@@ -426,7 +426,7 @@ export default function FinanceiroPage() {
           </div>
 
           {/* Donut por servico */}
-          <div className="lg:col-span-2 bg-[#0f0f0f] border border-[rgba(201,168,76,0.1)] p-5">
+          <div className="lg:col-span-2 bg-surface-card border border-surface-border rounded-card p-5">
             <h2 className="font-display text-base text-[#F5F0E8] font-light mb-4">Por serviço</h2>
             {porServico.length === 0 ? (
               <div className="flex items-center justify-center h-40 text-[rgba(245,240,232,0.2)] text-sm font-sans">Sem dados</div>
@@ -473,7 +473,7 @@ export default function FinanceiroPage() {
             const Icon = PAGAMENTO_ICONS[p.forma] ?? MoreHorizontal;
             const pct = totalReceita > 0 ? ((p.receita / totalReceita) * 100).toFixed(0) : "0";
             return (
-              <div key={p.forma} className="bg-[#0f0f0f] border border-[rgba(201,168,76,0.08)] px-4 py-3">
+              <div key={p.forma} className="bg-surface-card border border-surface-border rounded-card px-4 py-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Icon size={14} className="text-[#C9A84C]" strokeWidth={1.5} />
                   <span className="text-[rgba(245,240,232,0.5)] text-xs font-sans uppercase tracking-wider">{PAGAMENTO_LABELS[p.forma] ?? p.forma}</span>
@@ -487,7 +487,7 @@ export default function FinanceiroPage() {
       )}
 
       {/* Table */}
-      <div className="bg-[#0f0f0f] border border-[rgba(201,168,76,0.1)] p-5">
+      <div className="bg-surface-card border border-surface-border rounded-card p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-base text-[#F5F0E8] font-light">Lançamentos</h2>
           {!loading && <span className="text-[rgba(245,240,232,0.3)] text-xs font-sans">{sortedRows.length} lançamentos</span>}
@@ -502,7 +502,7 @@ export default function FinanceiroPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm font-sans min-w-[600px]">
                 <thead>
-                  <tr className="border-b border-[rgba(255,255,255,0.06)]">
+                  <tr className="bg-surface-elevated border-b border-surface-border">
                     {([
                       { key: "data" as SortCol, label: "Data" },
                       { key: "cliente" as SortCol, label: "Cliente" },
@@ -523,7 +523,7 @@ export default function FinanceiroPage() {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[rgba(255,255,255,0.03)]">
+                <tbody className="divide-y divide-surface-border">
                   {pageRows.map((l) => {
                     const agIdx = agendamentoIds.indexOf(l.agendamento_id);
                     const isEvenGroup = agIdx % 2 === 0;
@@ -538,7 +538,7 @@ export default function FinanceiroPage() {
                       : "bg-[rgba(255,255,255,0.01)]";
 
                     return (
-                      <tr key={l.key} className={`hover:bg-[rgba(255,255,255,0.015)] transition-colors ${rowBg}`}>
+                      <tr key={l.key} className={`hover:bg-surface-elevated transition-colors ${rowBg}`}>
                         <td className="py-2.5 pr-3 text-[rgba(245,240,232,0.45)] whitespace-nowrap text-xs">
                           {formatShortDate(l.data)}
                         </td>
@@ -581,15 +581,15 @@ export default function FinanceiroPage() {
             </div>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-[rgba(255,255,255,0.05)]">
-                <span className="text-[rgba(245,240,232,0.3)] text-xs font-sans">Página {page} de {totalPages}</span>
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-surface-border">
+                <span className="text-gray-600 text-xs font-sans">Página {page} de {totalPages}</span>
                 <div className="flex gap-1">
                   <button onClick={() => setPage((p) => Math.max(1, p-1))} disabled={page === 1}
-                    className="p-1.5 border border-[rgba(255,255,255,0.08)] text-[rgba(245,240,232,0.4)] hover:text-[rgba(245,240,232,0.7)] disabled:opacity-30 transition-colors">
+                    className="p-1.5 border border-surface-border text-gray-400 rounded-btn hover:border-gold hover:text-gold disabled:opacity-30 transition-colors">
                     <ChevronLeft size={14} />
                   </button>
                   <button onClick={() => setPage((p) => Math.min(totalPages, p+1))} disabled={page === totalPages}
-                    className="p-1.5 border border-[rgba(255,255,255,0.08)] text-[rgba(245,240,232,0.4)] hover:text-[rgba(245,240,232,0.7)] disabled:opacity-30 transition-colors">
+                    className="p-1.5 border border-surface-border text-gray-400 rounded-btn hover:border-gold hover:text-gold disabled:opacity-30 transition-colors">
                     <ChevronRight size={14} />
                   </button>
                 </div>
@@ -608,12 +608,14 @@ function KPICard({ icon, label, value, loading, highlight }: {
   icon: React.ReactNode; label: string; value: string; loading: boolean; highlight?: boolean;
 }) {
   return (
-    <div className={`bg-[#0f0f0f] border p-5 ${highlight ? "border-yellow-800/60 bg-yellow-950/10" : "border-[rgba(201,168,76,0.1)]"}`}>
-      <div className="flex items-center gap-2 mb-3">
-        {icon}
-        <span className="text-[rgba(245,240,232,0.35)] text-[10px] font-sans uppercase tracking-wider">{label}</span>
+    <div className={`border rounded-card p-5 shadow-card ${highlight ? "border-yellow-800/60 bg-yellow-950/10" : "bg-surface-card border-surface-border"}`}>
+      <div className="flex items-start gap-3 mb-3">
+        <div className="bg-surface-elevated p-2 rounded-btn shrink-0">
+          {icon}
+        </div>
+        <span className="text-gray-500 text-[10px] font-sans uppercase tracking-wider mt-1.5">{label}</span>
       </div>
-      <p className={`font-display text-2xl font-light ${loading ? "text-[rgba(245,240,232,0.15)]" : highlight ? "text-yellow-400" : "text-[#F5F0E8]"}`}>
+      <p className={`font-display text-2xl font-light ${loading ? "text-gray-700" : highlight ? "text-yellow-400" : "text-foreground"}`}>
         {loading ? "..." : value}
       </p>
     </div>

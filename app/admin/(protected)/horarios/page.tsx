@@ -65,7 +65,7 @@ function TimeInput({ label, value, onChange }: { label: string; value: string; o
         type="time"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-transparent border border-[rgba(201,168,76,0.2)] text-[#F5F0E8] px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#C9A84C]"
+        className="bg-surface-card border border-surface-border text-foreground px-3 py-2 text-sm font-sans rounded-btn focus:outline-none"
       />
     </div>
   );
@@ -195,10 +195,10 @@ export default function HorariosPage() {
               return (
                 <div
                   key={h.dia_semana}
-                  className={`border p-5 transition-colors ${
+                  className={`border rounded-card p-5 transition-colors ${
                     h.ativo
-                      ? "border-[rgba(201,168,76,0.2)] bg-[#141414]"
-                      : "border-[rgba(255,255,255,0.05)] bg-[#111]"
+                      ? "border-surface-border bg-surface-card"
+                      : "border-surface-border bg-surface opacity-60"
                   }`}
                 >
                   {/* Day header */}
@@ -277,7 +277,7 @@ export default function HorariosPage() {
                                     max={480}
                                     onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) update(h.dia_semana, { intervalo_minutos: v }); }}
                                     onBlur={(e) => { const v = Math.min(480, Math.max(15, Number(e.target.value) || 30)); update(h.dia_semana, { intervalo_minutos: v }); }}
-                                    className="bg-transparent border border-[rgba(201,168,76,0.2)] text-[#F5F0E8] px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#C9A84C] w-20 tabular-nums"
+                                    className="bg-surface-card border border-surface-border text-foreground px-3 py-2 text-sm font-sans rounded-btn focus:outline-none w-20 tabular-nums"
                                   />
                                   <span className="text-xs font-sans text-[rgba(245,240,232,0.4)]">min</span>
                                 </div>
@@ -313,7 +313,7 @@ export default function HorariosPage() {
                                   max={480}
                                   onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) update(h.dia_semana, { intervalo_minutos: v }); }}
                                   onBlur={(e) => { const v = Math.min(480, Math.max(15, Number(e.target.value) || 30)); update(h.dia_semana, { intervalo_minutos: v }); }}
-                                  className="bg-transparent border border-[rgba(201,168,76,0.2)] text-[#F5F0E8] px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#C9A84C] w-20 tabular-nums"
+                                  className="bg-surface-card border border-surface-border text-foreground px-3 py-2 text-sm font-sans rounded-btn focus:outline-none w-20 tabular-nums"
                                 />
                                 <span className="text-xs font-sans text-[rgba(245,240,232,0.4)]">min</span>
                               </div>
@@ -327,7 +327,7 @@ export default function HorariosPage() {
                         <div>
                           <div className="flex flex-wrap gap-2 mb-3">
                             {h.customTimes.map((t, idx) => (
-                              <div key={idx} className="flex items-center gap-1 border border-[rgba(201,168,76,0.2)] bg-[rgba(201,168,76,0.03)]">
+                              <div key={idx} className="flex items-center gap-1 border border-surface-border bg-surface-elevated rounded-btn">
                                 <input
                                   type="time"
                                   value={t}
@@ -361,7 +361,7 @@ export default function HorariosPage() {
                           </p>
                           <div className="flex flex-wrap gap-1.5">
                             {previewSlots.slice(0, 10).map((s) => (
-                              <span key={s} className="text-xs font-sans text-[rgba(245,240,232,0.5)] border border-[rgba(201,168,76,0.12)] px-2 py-0.5">
+                              <span key={s} className="text-xs font-sans text-gray-400 border border-surface-border rounded-badge px-2 py-0.5">
                                 {s}
                               </span>
                             ))}

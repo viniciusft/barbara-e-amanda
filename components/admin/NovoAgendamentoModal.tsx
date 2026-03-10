@@ -101,11 +101,11 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
       onClick={onClose}
     >
       <div
-        className="bg-[#141414] border border-[rgba(201,168,76,0.25)] max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto"
+        className="bg-surface-elevated border border-surface-border rounded-card shadow-modal max-w-md w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[rgba(201,168,76,0.12)]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border rounded-t-card">
           <div>
             <p className="text-[#C9A84C] text-[9px] tracking-[0.35em] uppercase font-sans mb-0.5">
               Admin
@@ -132,7 +132,7 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
             <select
               value={servicoId}
               onChange={(e) => setServicoId(e.target.value)}
-              className="w-full bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.8)] font-sans text-sm px-3 py-2 focus:outline-none focus:border-[#C9A84C]"
+              className="w-full bg-surface-card border border-surface-border text-foreground font-sans text-sm px-3 py-2 rounded-btn focus:outline-none"
             >
               <option value="">Selecione um serviço...</option>
               {servicos.map((s) => (
@@ -160,7 +160,7 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
               value={data}
               min={today}
               onChange={(e) => setData(e.target.value)}
-              className="w-full bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.8)] font-sans text-sm px-3 py-2 focus:outline-none focus:border-[#C9A84C]"
+              className="w-full bg-surface-card border border-surface-border text-foreground font-sans text-sm px-3 py-2 rounded-btn focus:outline-none"
             />
           </div>
 
@@ -222,7 +222,7 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
               value={nomeCliente}
               onChange={(e) => setNomeCliente(e.target.value)}
               placeholder="Nome completo"
-              className="w-full bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.8)] font-sans text-sm px-3 py-2 focus:outline-none focus:border-[#C9A84C] placeholder-[rgba(245,240,232,0.2)]"
+              className="w-full bg-surface-card border border-surface-border text-foreground font-sans text-sm px-3 py-2 rounded-btn focus:outline-none placeholder:text-gray-600"
             />
           </div>
 
@@ -235,7 +235,7 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
               value={telefone}
               onChange={(e) => setTelefone(e.target.value)}
               placeholder="(11) 99999-9999"
-              className="w-full bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.8)] font-sans text-sm px-3 py-2 focus:outline-none focus:border-[#C9A84C] placeholder-[rgba(245,240,232,0.2)]"
+              className="w-full bg-surface-card border border-surface-border text-foreground font-sans text-sm px-3 py-2 rounded-btn focus:outline-none placeholder:text-gray-600"
             />
           </div>
 
@@ -248,7 +248,7 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
               onChange={(e) => setObservacoes(e.target.value)}
               rows={2}
               placeholder="Observações opcionais..."
-              className="w-full bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.8)] font-sans text-sm px-3 py-2 focus:outline-none focus:border-[#C9A84C] placeholder-[rgba(245,240,232,0.2)] resize-none"
+              className="w-full bg-surface-card border border-surface-border text-foreground font-sans text-sm px-3 py-2 rounded-btn focus:outline-none placeholder:text-gray-600 resize-none"
             />
           </div>
 
@@ -285,14 +285,14 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
         <div className="flex gap-2 px-6 pb-6">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 text-sm font-sans border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.4)] hover:border-[rgba(255,255,255,0.2)] transition-colors"
+            className="flex-1 py-2.5 text-sm font-sans border border-surface-border text-gray-400 hover:border-gray-500 rounded-btn transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="flex-1 py-2.5 text-sm font-sans bg-[#C9A84C] text-[#0a0a0a] font-medium hover:bg-[#d4b563] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 py-2.5 text-sm font-sans bg-gold text-[#111] font-semibold hover:bg-gold-light rounded-btn transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {saving && <Loader2 size={14} className="animate-spin" />}
             {saving ? "Criando..." : "Criar Agendamento"}
