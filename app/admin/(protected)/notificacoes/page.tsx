@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, CheckCheck } from "lucide-react";
-import { Notificacao, NotificacaoTipo } from "@/types";
+import { Notificacao } from "@/types";
 
 const TIPOS: { value: string; label: string }[] = [
   { value: "", label: "Todas" },

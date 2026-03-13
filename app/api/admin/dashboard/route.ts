@@ -25,7 +25,7 @@ export async function GET() {
   const [dayStart, dayEnd] = dayUTCRange(todayStr);
 
   const monthStr = todayStr.slice(0, 7); // YYYY-MM
-  const [monthStart, monthEnd] = dayUTCRange(`${monthStr}-01`);
+  const [monthStart] = dayUTCRange(`${monthStr}-01`);
   const nextMonthStr =
     Number(monthStr.slice(5)) === 12
       ? `${Number(monthStr.slice(0, 4)) + 1}-01-01`

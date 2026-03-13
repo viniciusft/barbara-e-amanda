@@ -238,7 +238,7 @@ export default function PerfilPage() {
             {/* Header / hero background images */}
             <div className="border-t border-[var(--gold-muted-border)] pt-5 space-y-5">
               <div className="flex items-center gap-2">
-                <Image size={14} className="text-gold" strokeWidth={1.5} />
+                <Image size={14} className="text-gold" strokeWidth={1.5} alt="" />
                 <span className="text-xs font-sans text-foreground/50 uppercase tracking-widest">
                   Imagens de Fundo do Hero
                 </span>

@@ -7,9 +7,7 @@ import {
   CalendarDays,
   TrendingUp,
   Clock,
-  Bell,
   Users,
-  Plus,
   ChevronRight,
 } from "lucide-react";
 import { Notificacao } from "@/types";
