@@ -10,7 +10,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("admin_config")
       .select(
-        "nome_studio, bio, instagram, whatsapp, endereco, foto_url, foto_header_url, foto_header_mobile_url, chave_pix, tipo_chave_pix, nome_recebedor_pix, nome_secretaria, mensagem_whatsapp_template, mensagem_confirmacao_template, google_meu_negocio_url, mensagem_avaliacao_template, tema"
+        "nome_studio, bio, instagram, whatsapp, endereco, foto_url, foto_header_url, foto_header_mobile_url, chave_pix, tipo_chave_pix, nome_recebedor_pix, nome_secretaria, mensagem_whatsapp_template, mensagem_confirmacao_template, google_meu_negocio_url, mensagem_avaliacao_template, tema, titulo_casamento, descricao_casamento, mensagem_casamento, titulo_destination_beauty, descricao_destination_beauty, mensagem_destination_beauty, mensagem_horario_personalizado"
       )
       .order("created_at", { ascending: true })
       .limit(1)
@@ -51,6 +51,13 @@ export async function PATCH(req: NextRequest) {
     google_meu_negocio_url,
     mensagem_avaliacao_template,
     tema,
+    titulo_casamento,
+    descricao_casamento,
+    mensagem_casamento,
+    titulo_destination_beauty,
+    descricao_destination_beauty,
+    mensagem_destination_beauty,
+    mensagem_horario_personalizado,
   } = body;
 
   const supabase = createServerSupabaseClient();
@@ -81,6 +88,15 @@ export async function PATCH(req: NextRequest) {
     tema: tema ?? "dark",
     updated_at: new Date().toISOString(),
   };
+
+  // Only update special service fields if explicitly provided
+  if (titulo_casamento !== undefined) updates.titulo_casamento = titulo_casamento ?? null;
+  if (descricao_casamento !== undefined) updates.descricao_casamento = descricao_casamento ?? null;
+  if (mensagem_casamento !== undefined) updates.mensagem_casamento = mensagem_casamento ?? null;
+  if (titulo_destination_beauty !== undefined) updates.titulo_destination_beauty = titulo_destination_beauty ?? null;
+  if (descricao_destination_beauty !== undefined) updates.descricao_destination_beauty = descricao_destination_beauty ?? null;
+  if (mensagem_destination_beauty !== undefined) updates.mensagem_destination_beauty = mensagem_destination_beauty ?? null;
+  if (mensagem_horario_personalizado !== undefined) updates.mensagem_horario_personalizado = mensagem_horario_personalizado ?? null;
 
   let result;
   if (existing) {

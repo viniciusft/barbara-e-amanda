@@ -118,6 +118,14 @@ export interface AdminConfig {
   google_meu_negocio_url: string | null;
   mensagem_avaliacao_template: string | null;
   tema: "dark" | "light" | null;
+  // Serviços especiais
+  titulo_casamento: string | null;
+  descricao_casamento: string | null;
+  mensagem_casamento: string | null;
+  titulo_destination_beauty: string | null;
+  descricao_destination_beauty: string | null;
+  mensagem_destination_beauty: string | null;
+  mensagem_horario_personalizado: string | null;
   created_at: string;
   updated_at: string;
 }

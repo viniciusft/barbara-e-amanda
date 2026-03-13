@@ -23,7 +23,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 type Categoria = "maquiagem" | "cabelo" | "combo";
-type SinalOpcao = "padrao" | "percentual" | "fixo";
+type SinalOpcao = "percentual" | "fixo";
 
 const EMPTY_FORM = {
   nome: "",
@@ -35,7 +35,7 @@ const EMPTY_FORM = {
   preco: 0,
   imagem_url: "",
   // Sinal config
-  sinal_opcao: "padrao" as SinalOpcao,
+  sinal_opcao: "percentual" as SinalOpcao,
   sinal_percentual_custom: 50,
   sinal_valor_fixo: 0,
 };
@@ -160,6 +160,26 @@ function SortableItem({ servico: s, onEdit, onToggle, onDelete }: SortableItemPr
   );
 }
 
+const DEFAULT_MSG_CASAMENTO = "Olá! Gostaria de saber mais sobre os pacotes para casamento e noivas. 💍";
+const DEFAULT_MSG_DESTINATION = "Olá! Gostaria de saber mais sobre o serviço de Destination Beauty — atendimento no local de minha preferência. Podem me ajudar? ✨";
+
+type EspecialKey = "casamento" | "destination_beauty";
+
+const ESPECIAL_DEFAULTS: Record<EspecialKey, { titulo: string; descricao: string; mensagem: string }> = {
+  casamento: {
+    titulo: "Casamento 💍",
+    descricao: "Pacote exclusivo para noivas e madrinhas. Entre em contato para montar o seu look perfeito.",
+    mensagem: DEFAULT_MSG_CASAMENTO,
+  },
+  destination_beauty: {
+    titulo: "Destination Beauty ✈️",
+    descricao: "Levamos a experiência de maquiagem e penteado até você. Ideal para eventos, ensaios, casamentos ou qualquer ocasião especial no local de sua preferência.",
+    mensagem: DEFAULT_MSG_DESTINATION,
+  },
+};
+
+interface EspecialForm { titulo: string; descricao: string; mensagem: string }
+
 export default function ServicosPage() {
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [loading, setLoading] = useState(true);
@@ -169,6 +189,16 @@ export default function ServicosPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [reorderError, setReorderError] = useState("");
+
+  // Special services
+  const [especiais, setEspeciais] = useState<Record<EspecialKey, EspecialForm>>({
+    casamento: { ...ESPECIAL_DEFAULTS.casamento },
+    destination_beauty: { ...ESPECIAL_DEFAULTS.destination_beauty },
+  });
+  const [editingEspecial, setEditingEspecial] = useState<EspecialKey | null>(null);
+  const [especialForm, setEspecialForm] = useState<EspecialForm>({ titulo: "", descricao: "", mensagem: "" });
+  const [savingEspecial, setSavingEspecial] = useState(false);
+  const [errorEspecial, setErrorEspecial] = useState("");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -215,14 +245,68 @@ export default function ServicosPage() {
 
   useEffect(() => {
     fetchServicos();
+    fetch("/api/admin/perfil", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((cfg) => {
+        if (!cfg) return;
+        setEspeciais({
+          casamento: {
+            titulo: cfg.titulo_casamento ?? ESPECIAL_DEFAULTS.casamento.titulo,
+            descricao: cfg.descricao_casamento ?? ESPECIAL_DEFAULTS.casamento.descricao,
+            mensagem: cfg.mensagem_casamento ?? ESPECIAL_DEFAULTS.casamento.mensagem,
+          },
+          destination_beauty: {
+            titulo: cfg.titulo_destination_beauty ?? ESPECIAL_DEFAULTS.destination_beauty.titulo,
+            descricao: cfg.descricao_destination_beauty ?? ESPECIAL_DEFAULTS.destination_beauty.descricao,
+            mensagem: cfg.mensagem_destination_beauty ?? ESPECIAL_DEFAULTS.destination_beauty.mensagem,
+          },
+        });
+      });
   }, []);
+
+  function startEditEspecial(key: EspecialKey) {
+    setEditingEspecial(key);
+    setEspecialForm({ ...especiais[key] });
+    setErrorEspecial("");
+  }
+
+  async function saveEspecial() {
+    if (!editingEspecial) return;
+    setSavingEspecial(true);
+    setErrorEspecial("");
+    try {
+      const fieldMap: Record<EspecialKey, Record<string, string>> = {
+        casamento: {
+          titulo_casamento: especialForm.titulo,
+          descricao_casamento: especialForm.descricao,
+          mensagem_casamento: especialForm.mensagem,
+        },
+        destination_beauty: {
+          titulo_destination_beauty: especialForm.titulo,
+          descricao_destination_beauty: especialForm.descricao,
+          mensagem_destination_beauty: especialForm.mensagem,
+        },
+      };
+      const res = await fetch("/api/admin/perfil", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fieldMap[editingEspecial]),
+      });
+      if (!res.ok) { setErrorEspecial("Erro ao salvar"); return; }
+      setEspeciais((prev) => ({ ...prev, [editingEspecial]: { ...especialForm } }));
+      setEditingEspecial(null);
+    } catch {
+      setErrorEspecial("Erro ao salvar");
+    } finally {
+      setSavingEspecial(false);
+    }
+  }
 
   function startEdit(s: Servico) {
     setEditingId(s.id);
     const cat: Categoria = (s.categoria as Categoria) ?? "maquiagem";
-    let sinalOpcao: SinalOpcao = "padrao";
+    let sinalOpcao: SinalOpcao = "percentual";
     if (s.sinal_tipo === "fixo") sinalOpcao = "fixo";
-    else if (s.sinal_tipo === "percentual" && s.sinal_percentual_custom != null) sinalOpcao = "percentual";
     setForm({
       nome: s.nome,
       descricao: s.descricao ?? "",
@@ -290,7 +374,7 @@ export default function ServicosPage() {
         preco: form.preco,
         imagem_url: form.imagem_url || null,
         // Sinal config
-        sinal_tipo: form.sinal_opcao === "padrao" ? "percentual" : form.sinal_opcao,
+        sinal_tipo: form.sinal_opcao,
         sinal_percentual_custom: form.sinal_opcao === "percentual" ? form.sinal_percentual_custom : null,
         sinal_valor_fixo: form.sinal_opcao === "fixo" ? form.sinal_valor_fixo : null,
       };
@@ -488,8 +572,8 @@ export default function ServicosPage() {
                 Configuração de Sinal
               </label>
               <div className="flex gap-2 flex-wrap mb-3">
-                {(["padrao", "percentual", "fixo"] as SinalOpcao[]).map((op) => {
-                  const labels = { padrao: "Usar padrão global", percentual: "Percentual personalizado", fixo: "Valor fixo" };
+                {(["percentual", "fixo"] as SinalOpcao[]).map((op) => {
+                  const labels: Record<SinalOpcao, string> = { percentual: "Percentual personalizado", fixo: "Valor fixo" };
                   return (
                     <button
                       key={op}
@@ -533,11 +617,6 @@ export default function ServicosPage() {
                     placeholder="0,00"
                   />
                 </div>
-              )}
-              {form.sinal_opcao === "padrao" && (
-                <p className="text-foreground/30 text-xs font-sans">
-                  Usa o percentual configurado em Perfil → Configurações de Pagamento.
-                </p>
               )}
             </div>
 
@@ -616,6 +695,99 @@ export default function ServicosPage() {
           </div>
         </SortableContext>
       </DndContext>
+
+      {/* ── Serviços Especiais ─────────────────────────────────────────────── */}
+      <div className="mt-10">
+        <div className="mb-5">
+          <h3 className="font-display text-xl text-foreground font-light">Serviços Especiais</h3>
+          <p className="text-foreground/40 font-sans text-xs mt-1">
+            Contatos diretos via WhatsApp — sem agendamento online.
+          </p>
+        </div>
+
+        {/* Edit form */}
+        {editingEspecial && (
+          <div className="border border-[var(--gold-muted-border)] bg-surface-card p-6 mb-6">
+            <h4 className="font-display text-lg text-foreground mb-4">
+              Editar: {ESPECIAL_DEFAULTS[editingEspecial].titulo}
+            </h4>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">Título</label>
+                <input
+                  type="text"
+                  value={especialForm.titulo}
+                  onChange={(e) => setEspecialForm((f) => ({ ...f, titulo: e.target.value }))}
+                  className="input-luxury"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">Descrição</label>
+                <textarea
+                  value={especialForm.descricao}
+                  onChange={(e) => setEspecialForm((f) => ({ ...f, descricao: e.target.value }))}
+                  className="input-luxury resize-none"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">Mensagem WhatsApp</label>
+                <textarea
+                  value={especialForm.mensagem}
+                  onChange={(e) => setEspecialForm((f) => ({ ...f, mensagem: e.target.value }))}
+                  className="input-luxury resize-none font-mono text-xs"
+                  rows={3}
+                />
+              </div>
+            </div>
+            {errorEspecial && <p className="text-red-400 text-sm font-sans mt-3">{errorEspecial}</p>}
+            <div className="flex gap-3 mt-5">
+              <button
+                onClick={() => setEditingEspecial(null)}
+                className="border border-[var(--gold-muted-border)] text-foreground/60 px-4 py-2 text-sm font-sans"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={saveEspecial}
+                disabled={savingEspecial}
+                className="btn-gold px-6 py-2 text-sm flex items-center gap-2"
+              >
+                {savingEspecial && <div className="w-3 h-3 border border-[#0a0a0a] border-t-transparent rounded-full animate-spin" />}
+                {savingEspecial ? "Salvando..." : "Salvar"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="grid gap-3">
+          {(["casamento", "destination_beauty"] as EspecialKey[]).map((key) => (
+            <div key={key} className="border border-[var(--gold-muted-border)] bg-surface-card flex overflow-hidden">
+              {/* Gold accent bar */}
+              <div className="w-1 shrink-0 bg-gradient-to-b from-[rgba(201,168,76,0.0)] via-[#C9A84C] to-[rgba(201,168,76,0.0)]" />
+              <div className="flex-1 p-4 flex flex-col sm:flex-row sm:items-center gap-3 min-w-0">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h4 className="font-display text-lg text-foreground">{especiais[key].titulo}</h4>
+                    <span className="text-[10px] font-sans border border-[rgba(201,168,76,0.5)] text-gold px-2 py-0.5 uppercase tracking-wider">
+                      Contato direto
+                    </span>
+                  </div>
+                  <p className="text-foreground/40 text-sm font-sans truncate">{especiais[key].descricao}</p>
+                </div>
+                <div className="shrink-0">
+                  <button
+                    onClick={() => startEditEspecial(key)}
+                    className="px-3 py-1.5 text-xs font-sans border border-[var(--gold-muted-border)] text-gold hover:bg-[rgba(201,168,76,0.05)] transition-colors"
+                  >
+                    Editar
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

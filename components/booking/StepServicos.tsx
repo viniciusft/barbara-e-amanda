@@ -3,45 +3,39 @@
 import { useEffect, useState } from "react";
 import { Servico } from "@/types";
 import { formatCurrency, formatDuration } from "@/lib/utils";
-import { Scissors, Clock, CheckCircle, MessageCircle } from "lucide-react";
+import { Scissors, Clock, CheckCircle, MessageCircle, Plane } from "lucide-react";
+import { PublicConfig } from "./BookingWizard";
 
 interface Props {
   selected: Servico | null;
+  config: PublicConfig;
   onSelect: (servico: Servico) => void;
 }
-
-const CASAMENTO_MSG =
-  "Ola! Gostaria de saber mais sobre os pacotes para casamento e noivas. 💍";
 
 const SUPORTE_MSG =
   "Ola! Tenho uma duvida sobre os agendamentos, podem me ajudar?";
 
-export default function StepServicos({ selected, onSelect }: Props) {
+export default function StepServicos({ selected, config, onSelect }: Props) {
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/servicos").then((r) => r.json()),
-      fetch("/api/admin/perfil").then((r) => r.json()),
-    ])
-      .then(([svcs, cfg]) => {
+    fetch("/api/servicos")
+      .then((r) => r.json())
+      .then((svcs) => {
         if (Array.isArray(svcs)) setServicos(svcs);
         else setError("Erro ao carregar servicos");
-        if (cfg?.whatsapp) setWhatsapp(cfg.whatsapp.replace(/\D/g, ""));
       })
       .catch(() => setError("Erro ao carregar servicos"))
       .finally(() => setLoading(false));
   }, []);
 
-  function handleCasamentoClick() {
-    const number = whatsapp ? `55${whatsapp}` : "";
-    const url = number
-      ? `https://wa.me/${number}?text=${encodeURIComponent(CASAMENTO_MSG)}`
-      : `https://wa.me/?text=${encodeURIComponent(CASAMENTO_MSG)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+  function waUrl(msg: string) {
+    const number = config.whatsapp ? `55${config.whatsapp}` : "";
+    return number
+      ? `https://wa.me/${number}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
   }
 
   return (
@@ -140,33 +134,64 @@ export default function StepServicos({ selected, onSelect }: Props) {
           );
         })}
 
-        {/* ── Casamento special card — opens WhatsApp directly ── */}
+        {/* ── Casamento special card ── */}
         {!loading && !error && (
-          <button
-            onClick={handleCasamentoClick}
-            className="text-left border border-[rgba(201,168,76,0.4)] bg-[#141414] hover:border-[#C9A84C] hover:bg-[rgba(201,168,76,0.05)] transition-all duration-200 overflow-hidden relative"
+          <a
+            href={waUrl(config.mensagem_casamento)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-left border border-[rgba(201,168,76,0.4)] bg-[#141414] hover:border-[#C9A84C] hover:bg-[rgba(201,168,76,0.05)] transition-all duration-200 overflow-hidden relative block"
           >
-            {/* Gold top accent bar */}
             <div className="h-[2px] w-full bg-gradient-to-r from-[rgba(201,168,76,0.0)] via-[#C9A84C] to-[rgba(201,168,76,0.0)]" />
             <div className="p-5">
               <div className="flex items-start justify-between gap-3 mb-2">
                 <h3 className="font-display text-xl text-[#F5F0E8] font-medium leading-tight">
-                  Casamento 💍
+                  {config.titulo_casamento}
                 </h3>
                 <span className="shrink-0 border border-[rgba(201,168,76,0.5)] text-[#C9A84C] text-[9px] font-sans tracking-[0.15em] uppercase px-2 py-0.5">
                   Personalizado
                 </span>
               </div>
               <p className="text-[rgba(245,240,232,0.5)] text-sm font-sans mb-4 leading-relaxed">
-                Pacote exclusivo para noivas e madrinhas. Entre em contato para montar o seu look perfeito.
+                {config.descricao_casamento}
               </p>
               <div className="flex items-center gap-2 text-[#C9A84C] text-xs font-sans">
                 <MessageCircle size={13} strokeWidth={1.5} />
                 Falar pelo WhatsApp
               </div>
             </div>
-          </button>
+          </a>
         )}
+
+        {/* ── Destination Beauty special card ── */}
+        {!loading && !error && (
+          <a
+            href={waUrl(config.mensagem_destination_beauty)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-left border border-[rgba(201,168,76,0.4)] bg-[#141414] hover:border-[#C9A84C] hover:bg-[rgba(201,168,76,0.05)] transition-all duration-200 overflow-hidden relative block"
+          >
+            <div className="h-[2px] w-full bg-gradient-to-r from-[rgba(201,168,76,0.0)] via-[#C9A84C] to-[rgba(201,168,76,0.0)]" />
+            <div className="p-5">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <h3 className="font-display text-xl text-[#F5F0E8] font-medium leading-tight">
+                  {config.titulo_destination_beauty}
+                </h3>
+                <span className="shrink-0 border border-[rgba(201,168,76,0.5)] text-[#C9A84C] text-[9px] font-sans tracking-[0.15em] uppercase px-2 py-0.5">
+                  Especial
+                </span>
+              </div>
+              <p className="text-[rgba(245,240,232,0.5)] text-sm font-sans mb-4 leading-relaxed">
+                {config.descricao_destination_beauty}
+              </p>
+              <div className="flex items-center gap-2 text-[#C9A84C] text-xs font-sans">
+                <Plane size={13} strokeWidth={1.5} />
+                Falar pelo WhatsApp
+              </div>
+            </div>
+          </a>
+        )}
+
         {/* ── Suporte / "Falar com a equipe" ── */}
         {!loading && !error && (
           <div className="mt-2 pt-5 border-t border-[rgba(255,255,255,0.06)] flex flex-col items-center gap-3">
@@ -174,11 +199,7 @@ export default function StepServicos({ selected, onSelect }: Props) {
               Duvidas sobre seu agendamento?
             </p>
             <a
-              href={
-                whatsapp
-                  ? `https://wa.me/55${whatsapp}?text=${encodeURIComponent(SUPORTE_MSG)}`
-                  : `https://wa.me/?text=${encodeURIComponent(SUPORTE_MSG)}`
-              }
+              href={waUrl(SUPORTE_MSG)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-[#25D366] hover:text-[#20bc5a] transition-colors text-sm font-sans"
