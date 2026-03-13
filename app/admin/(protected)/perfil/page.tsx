@@ -108,6 +108,7 @@ interface PerfilForm {
   mensagem_confirmacao_template: string;
   google_meu_negocio_url: string;
   mensagem_avaliacao_template: string;
+  mensagem_horario_personalizado: string;
 }
 
 const EMPTY: PerfilForm = {
@@ -127,6 +128,7 @@ const EMPTY: PerfilForm = {
   mensagem_confirmacao_template: DEFAULT_CONFIRMACAO_TEMPLATE,
   google_meu_negocio_url: "",
   mensagem_avaliacao_template: DEFAULT_AVALIACAO_TEMPLATE,
+  mensagem_horario_personalizado: "Olá! Não encontrei um horário disponível que se encaixe na minha agenda. Gostaria de solicitar um horário personalizado. Podem me ajudar? 😊",
 };
 
 export default function PerfilPage() {
@@ -161,6 +163,7 @@ export default function PerfilPage() {
             mensagem_confirmacao_template: data.mensagem_confirmacao_template || DEFAULT_CONFIRMACAO_TEMPLATE,
             google_meu_negocio_url: data.google_meu_negocio_url ?? "",
             mensagem_avaliacao_template: data.mensagem_avaliacao_template || DEFAULT_AVALIACAO_TEMPLATE,
+            mensagem_horario_personalizado: data.mensagem_horario_personalizado ?? "Olá! Não encontrei um horário disponível que se encaixe na minha agenda. Gostaria de solicitar um horário personalizado. Podem me ajudar? 😊",
           });
         }
       })
@@ -605,6 +608,43 @@ export default function PerfilPage() {
                     {buildPreview(form.mensagem_avaliacao_template)}
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+
+          {/* Horário personalizado template */}
+          <div className="border-t border-[var(--gold-muted-border)] pt-8">
+            <div className="flex items-center gap-2 mb-5">
+              <MessageCircle size={16} className="text-gold" strokeWidth={1.5} />
+              <h3 className="font-display text-xl text-foreground font-light">
+                Mensagem — Solicitar Horário Personalizado
+              </h3>
+            </div>
+            <p className="text-foreground/40 text-xs font-sans mb-4">
+              Enviada pelo WhatsApp quando a cliente clica em &quot;Solicitar horário personalizado&quot; na tela de agendamento.
+            </p>
+            <div className="space-y-4">
+              <textarea
+                value={form.mensagem_horario_personalizado}
+                onChange={(e) => set("mensagem_horario_personalizado", e.target.value)}
+                className="input-luxury resize-none font-mono text-xs leading-relaxed"
+                rows={4}
+              />
+              <div className="border border-[var(--gold-muted-border)] p-3">
+                <p className="text-[10px] font-sans text-foreground/35 uppercase tracking-widest mb-2.5">
+                  Variaveis disponiveis
+                </p>
+                <div className="grid grid-cols-2 gap-y-1.5 gap-x-4">
+                  {[
+                    { v: "{nome_studio}", desc: "Nome do studio" },
+                    { v: "{nome_secretaria}", desc: "Secretaria/atendente" },
+                  ].map(({ v, desc }) => (
+                    <div key={v} className="flex gap-2 items-baseline">
+                      <code className="text-gold text-[10px] font-mono shrink-0">{v}</code>
+                      <span className="text-foreground/30 text-[10px] font-sans truncate">{desc}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

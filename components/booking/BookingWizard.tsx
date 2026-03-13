@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Servico, SlotDisponivel } from "@/types";
 import StepServicos from "./StepServicos";
 import StepAgenda from "./StepAgenda";
@@ -16,6 +16,28 @@ export interface BookingData {
   email: string;
   observacoes: string;
 }
+
+export interface PublicConfig {
+  whatsapp: string;
+  mensagem_casamento: string;
+  mensagem_destination_beauty: string;
+  mensagem_horario_personalizado: string;
+  titulo_casamento: string;
+  descricao_casamento: string;
+  titulo_destination_beauty: string;
+  descricao_destination_beauty: string;
+}
+
+const DEFAULT_CONFIG: PublicConfig = {
+  whatsapp: "",
+  mensagem_casamento: "Olá! Gostaria de saber mais sobre os pacotes para casamento e noivas. 💍",
+  mensagem_destination_beauty: "Olá! Gostaria de saber mais sobre o serviço de Destination Beauty — atendimento no local de minha preferência. Podem me ajudar? ✨",
+  mensagem_horario_personalizado: "Olá! Não encontrei um horário disponível que se encaixe na minha agenda. Gostaria de solicitar um horário personalizado. Podem me ajudar? 😊",
+  titulo_casamento: "Casamento 💍",
+  descricao_casamento: "Pacote exclusivo para noivas e madrinhas. Entre em contato para montar o seu look perfeito.",
+  titulo_destination_beauty: "Destination Beauty ✈️",
+  descricao_destination_beauty: "Levamos a experiência de maquiagem e penteado até você. Ideal para eventos, ensaios, casamentos ou qualquer ocasião especial no local de sua preferência.",
+};
 
 const INITIAL_DATA: BookingData = {
   servico: null,
@@ -34,6 +56,26 @@ export default function BookingWizard() {
   const [data, setData] = useState<BookingData>(INITIAL_DATA);
   const [booked, setBooked] = useState(false);
   const [slotTakenMsg, setSlotTakenMsg] = useState("");
+  const [config, setConfig] = useState<PublicConfig>(DEFAULT_CONFIG);
+
+  useEffect(() => {
+    fetch("/api/admin/perfil")
+      .then((r) => r.json())
+      .then((cfg) => {
+        if (!cfg) return;
+        setConfig({
+          whatsapp: cfg.whatsapp?.replace(/\D/g, "") ?? "",
+          mensagem_casamento: cfg.mensagem_casamento ?? DEFAULT_CONFIG.mensagem_casamento,
+          mensagem_destination_beauty: cfg.mensagem_destination_beauty ?? DEFAULT_CONFIG.mensagem_destination_beauty,
+          mensagem_horario_personalizado: cfg.mensagem_horario_personalizado ?? DEFAULT_CONFIG.mensagem_horario_personalizado,
+          titulo_casamento: cfg.titulo_casamento ?? DEFAULT_CONFIG.titulo_casamento,
+          descricao_casamento: cfg.descricao_casamento ?? DEFAULT_CONFIG.descricao_casamento,
+          titulo_destination_beauty: cfg.titulo_destination_beauty ?? DEFAULT_CONFIG.titulo_destination_beauty,
+          descricao_destination_beauty: cfg.descricao_destination_beauty ?? DEFAULT_CONFIG.descricao_destination_beauty,
+        });
+      })
+      .catch(() => {});
+  }, []);
 
   function updateData(partial: Partial<BookingData>) {
     setData((prev) => ({ ...prev, ...partial }));
@@ -122,6 +164,7 @@ export default function BookingWizard() {
           {step === 0 && (
             <StepServicos
               selected={data.servico}
+              config={config}
               onSelect={(servico) => {
                 updateData({ servico, slot: null, data: "" });
                 goNext();
@@ -139,6 +182,7 @@ export default function BookingWizard() {
                 servico={data.servico!}
                 selectedData={data.data}
                 selectedSlot={data.slot}
+                config={config}
                 onSelect={(date, slot) => {
                   updateData({ data: date, slot });
                   setSlotTakenMsg("");
@@ -184,7 +228,6 @@ export default function BookingWizard() {
                 });
                 if (!res.ok) {
                   if (res.status === 409) {
-                    // Slot was taken between selection and confirmation — go back silently
                     updateData({ slot: null });
                     setSlotTakenMsg("Este horário acabou de ser reservado. Por favor selecione outro horário disponível.");
                     setStep(1);

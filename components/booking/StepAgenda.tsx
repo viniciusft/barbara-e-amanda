@@ -17,13 +17,15 @@ import {
   parseISO,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
 import { Servico, SlotDisponivel, HorarioDisponivel, Bloqueio } from "@/types";
+import { PublicConfig } from "./BookingWizard";
 
 interface Props {
   servico: Servico;
   selectedData: string;
   selectedSlot: SlotDisponivel | null;
+  config: PublicConfig;
   onSelect: (data: string, slot: SlotDisponivel) => void;
   onBack: () => void;
 }
@@ -34,6 +36,7 @@ export default function StepAgenda({
   servico,
   selectedData,
   selectedSlot,
+  config,
   onSelect,
   onBack,
 }: Props) {
@@ -331,8 +334,30 @@ export default function StepAgenda({
         </div>
       )}
 
+      {/* Horário personalizado */}
+      {!loadingCalendar && (
+        <div className="mt-8 pt-6 border-t border-[rgba(255,255,255,0.06)] text-center">
+          <p className="text-[rgba(245,240,232,0.35)] text-xs font-sans mb-3">
+            Não encontrou um horário disponível?
+          </p>
+          <a
+            href={
+              config.whatsapp
+                ? `https://wa.me/55${config.whatsapp}?text=${encodeURIComponent(config.mensagem_horario_personalizado)}`
+                : `https://wa.me/?text=${encodeURIComponent(config.mensagem_horario_personalizado)}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-[rgba(245,240,232,0.5)] hover:text-[rgba(245,240,232,0.8)] border border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)] px-4 py-2.5 text-sm font-sans transition-colors"
+          >
+            <MessageCircle size={14} strokeWidth={1.5} />
+            Solicitar horário personalizado
+          </a>
+        </div>
+      )}
+
       {/* Nav */}
-      <div className="flex gap-3 mt-8">
+      <div className="flex gap-3 mt-6">
         <button
           onClick={onBack}
           className="border border-[rgba(201,168,76,0.3)] text-[rgba(245,240,232,0.6)] px-6 py-3 font-sans text-sm hover:border-[rgba(201,168,76,0.5)] transition-colors"
