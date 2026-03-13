@@ -48,12 +48,23 @@ export async function GET(req: NextRequest) {
   const dateParsed = parseISO(data);
   const diaSemana = dateParsed.getDay();
 
-  // Get schedule for this day
+  // Determine which categoria values are valid for this service
+  const categoriasValidas =
+    categoria === "maquiagem"
+      ? ["maquiagem", "ambos"]
+      : categoria === "cabelo"
+      ? ["cabelo", "ambos"]
+      : ["ambos"]; // combo: only days that serve both
+
+  // Get schedule for this day (filtered by categoria)
   const { data: horario } = await supabase
     .from("horarios_disponiveis")
     .select("*")
     .eq("dia_semana", diaSemana)
     .eq("ativo", true)
+    .in("categoria", categoriasValidas)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .single();
 
   if (!horario) {

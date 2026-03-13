@@ -18,24 +18,43 @@ export async function GET() {
   return NextResponse.json(data);
 }
 
-// PATCH /api/horarios — admin only (upsert)
+// PATCH /api/horarios — admin only
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const body = await req.json();
+  const body: Record<string, unknown>[] = await req.json();
   const supabase = createServerSupabaseClient();
 
-  const { data, error } = await supabase
-    .from("horarios_disponiveis")
-    .upsert(body, { onConflict: "id" })
-    .select();
+  // Split into new rows (no id) and existing rows (have id)
+  const toInsert = body.filter((h) => !h.id);
+  const toUpdate = body.filter((h) => !!h.id);
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  const results: unknown[] = [];
+
+  if (toInsert.length > 0) {
+    const { data, error } = await supabase
+      .from("horarios_disponiveis")
+      .insert(toInsert)
+      .select();
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    results.push(...(data ?? []));
   }
 
-  return NextResponse.json(data);
+  if (toUpdate.length > 0) {
+    const { data, error } = await supabase
+      .from("horarios_disponiveis")
+      .upsert(toUpdate, { onConflict: "id" })
+      .select();
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    results.push(...(data ?? []));
+  }
+
+  return NextResponse.json(results);
 }

@@ -31,6 +31,8 @@ export interface HorarioDisponivel {
   hora_inicio_cabelo: string | null; // HH:MM — used when modo_horario = 'separado'
   hora_fim_cabelo: string | null;
   modo_horario: "ambos" | "separado";
+  // Which service category this schedule applies to
+  categoria: "maquiagem" | "cabelo" | "ambos";
   created_at?: string;
 }
 

@@ -103,7 +103,6 @@ interface PerfilForm {
   chave_pix: string;
   tipo_chave_pix: string;
   nome_recebedor_pix: string;
-  sinal_percentual_padrao: string;
   nome_secretaria: string;
   mensagem_whatsapp_template: string;
   mensagem_confirmacao_template: string;
@@ -123,7 +122,6 @@ const EMPTY: PerfilForm = {
   chave_pix: "",
   tipo_chave_pix: "celular",
   nome_recebedor_pix: "",
-  sinal_percentual_padrao: "50",
   nome_secretaria: "",
   mensagem_whatsapp_template: DEFAULT_SINAL_TEMPLATE,
   mensagem_confirmacao_template: DEFAULT_CONFIRMACAO_TEMPLATE,
@@ -142,7 +140,7 @@ export default function PerfilPage() {
   const [showPreviewAvaliacao, setShowPreviewAvaliacao] = useState(false);
 
   useEffect(() => {
-    fetch("/api/admin/perfil")
+    fetch("/api/admin/perfil", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         if (data) {
@@ -158,7 +156,6 @@ export default function PerfilPage() {
             chave_pix: data.chave_pix ?? "",
             tipo_chave_pix: data.tipo_chave_pix ?? "celular",
             nome_recebedor_pix: data.nome_recebedor_pix ?? "",
-            sinal_percentual_padrao: String(data.sinal_percentual_padrao ?? 50),
             nome_secretaria: data.nome_secretaria ?? "",
             mensagem_whatsapp_template: data.mensagem_whatsapp_template || DEFAULT_SINAL_TEMPLATE,
             mensagem_confirmacao_template: data.mensagem_confirmacao_template || DEFAULT_CONFIRMACAO_TEMPLATE,
@@ -183,7 +180,6 @@ export default function PerfilPage() {
           foto_header_url: form.foto_header_url || null,
           foto_header_mobile_url: form.foto_header_mobile_url || null,
           google_meu_negocio_url: form.google_meu_negocio_url || null,
-          sinal_percentual_padrao: parseInt(form.sinal_percentual_padrao) || 50,
         }),
       });
       if (!res.ok) {
@@ -395,36 +391,17 @@ export default function PerfilPage() {
                   placeholder="Amanda Santos"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
-                    Nome da Secretaria
-                  </label>
-                  <input
-                    type="text"
-                    value={form.nome_secretaria}
-                    onChange={(e) => set("nome_secretaria", e.target.value)}
-                    className="input-luxury"
-                    placeholder="Barbara"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
-                    Percentual padrao do sinal
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={form.sinal_percentual_padrao}
-                      onChange={(e) => set("sinal_percentual_padrao", e.target.value)}
-                      className="input-luxury pr-8"
-                      placeholder="50"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/30 text-sm">%</span>
-                  </div>
-                </div>
+              <div>
+                <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
+                  Nome da Secretaria
+                </label>
+                <input
+                  type="text"
+                  value={form.nome_secretaria}
+                  onChange={(e) => set("nome_secretaria", e.target.value)}
+                  className="input-luxury"
+                  placeholder="Barbara"
+                />
               </div>
             </div>
           </div>
