@@ -88,11 +88,11 @@ function formatDataLonga(data: string | undefined): string {
 function buildWhatsAppMessage(
   agendamento: Agendamento,
   config: AdminConfig | null | undefined,
-  sinalPct: number
+  sinalPct: number,
+  valorSinal: number
 ): string {
   const template = config?.mensagem_whatsapp_template || DEFAULT_SINAL_TEMPLATE;
   const valorTotal = agendamento.servico?.preco ?? 0;
-  const valorSinal = Math.round((valorTotal * sinalPct) / 100 * 100) / 100;
   const valorRestante = Math.round((valorTotal - valorSinal) * 100) / 100;
 
   let dataFormatada = agendamento.data ?? "";
@@ -177,12 +177,16 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
 
   // Sinal section state — initialize using per-service config if available
   const valorTotalInit = agendamento.servico?.preco ?? 0;
-  const { sinalPct: defaultSinalPct } = calcSinal(
+  const { sinalPct: defaultSinalPct, valorSinal: defaultValorSinal, isFixo: defaultIsFixo } = calcSinal(
     valorTotalInit,
     agendamento,
     agendamento.servico
   );
   const [sinalPct, setSinalPct] = useState<number>(defaultSinalPct);
+  // isFixo tracks whether the sinal was set as a fixed amount (not percentage-derived).
+  // When true, valorSinal comes from defaultValorSinal to avoid rounding errors from pct conversion.
+  const [isFixo, setIsFixo] = useState<boolean>(defaultIsFixo);
+  const [fixoValor] = useState<number>(defaultValorSinal);
   const [showSinalForm, setShowSinalForm] = useState(false);
   const [sinalValorInput, setSinalValorInput] = useState("");
   const [sinalForma, setSinalForma] = useState("pix");
@@ -203,7 +207,10 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
 
   const statusCfg = getEtapaConfig(current.status);
   const valorTotal = current.servico?.preco ?? 0;
-  const valorSinal = Math.round((valorTotal * sinalPct) / 100 * 100) / 100;
+  // Use the fixed amount directly when isFixo=true to avoid rounding errors from pct round-trip
+  const valorSinal = isFixo
+    ? fixoValor
+    : Math.round((valorTotal * sinalPct) / 100 * 100) / 100;
   const valorRestante = Math.round((valorTotal - valorSinal) * 100) / 100;
 
   const isPast = current.data_hora_fim ? new Date(current.data_hora_fim) < new Date() : false;
@@ -270,7 +277,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
 
   async function handleWhatsApp() {
     const telefone = current.telefone.replace(/\D/g, "");
-    const msg = buildWhatsAppMessage(current, adminConfig, sinalPct);
+    const msg = buildWhatsAppMessage(current, adminConfig, sinalPct, valorSinal);
     const url = `https://wa.me/55${telefone}?text=${encodeURIComponent(msg)}`;
     window.open(url, "_blank");
 
@@ -397,7 +404,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
                   type="range"
                   min={10} max={100} step={5}
                   value={sinalPct}
-                  onChange={(e) => setSinalPct(Number(e.target.value))}
+                  onChange={(e) => { setIsFixo(false); setSinalPct(Number(e.target.value)); }}
                   className="flex-1 accent-[#C9A84C]"
                 />
                 <span className="text-gold text-sm font-sans font-medium w-10 text-right shrink-0">
