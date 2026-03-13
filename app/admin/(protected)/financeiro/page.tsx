@@ -74,7 +74,7 @@ const TIPO_LABEL: Record<string, string> = {
 };
 
 const TIPO_COLOR: Record<string, string> = {
-  sinal: "text-[#C9A84C] border-[rgba(201,168,76,0.4)] bg-[rgba(201,168,76,0.08)]",
+  sinal: "text-gold border-[var(--gold-muted-border)] bg-[var(--gold-muted)]",
   restante: "text-emerald-400 border-emerald-800 bg-emerald-950/20",
   sinal_retido: "text-red-700 border-red-900 bg-red-950/30",
   sinal_reembolsado: "text-blue-400 border-blue-800 bg-blue-950/20",
@@ -288,16 +288,16 @@ export default function FinanceiroPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <TrendingUp size={22} className="text-[#C9A84C]" strokeWidth={1.5} />
+          <TrendingUp size={22} className="text-gold" strokeWidth={1.5} />
           <div>
-            <p className="text-[#C9A84C] text-[9px] tracking-[0.4em] uppercase font-sans">Admin</p>
-            <h1 className="font-display text-2xl text-[#F5F0E8] font-light">Financeiro</h1>
+            <p className="text-gold text-[9px] tracking-[0.4em] uppercase font-sans">Admin</p>
+            <h1 className="font-display text-2xl text-foreground font-light">Financeiro</h1>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={fetchData}
-            className="p-2 text-[rgba(245,240,232,0.3)] hover:text-[rgba(245,240,232,0.7)] border border-[rgba(255,255,255,0.07)] hover:border-[rgba(255,255,255,0.15)] transition-colors"
+            className="p-2 text-foreground/30 hover:text-foreground/70 border border-surface-border hover:border-foreground/20 transition-colors"
             title="Recarregar"
           >
             <RefreshCw size={14} strokeWidth={1.5} />
@@ -305,7 +305,7 @@ export default function FinanceiroPage() {
           {data && data.lancamentos.length > 0 && (
             <button
               onClick={() => exportXlsx(data.lancamentos)}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-sans border border-[rgba(201,168,76,0.3)] text-[#C9A84C] hover:bg-[rgba(201,168,76,0.08)] transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-xs font-sans border border-[rgba(201,168,76,0.3)] text-gold hover:bg-[rgba(201,168,76,0.08)] transition-colors"
             >
               <Download size={13} strokeWidth={1.5} />
               Exportar planilha
@@ -332,12 +332,12 @@ export default function FinanceiroPage() {
         </div>
         <div className="flex flex-wrap gap-4 items-end">
           <div>
-            <p className="text-[rgba(245,240,232,0.35)] text-[10px] font-sans uppercase tracking-wider mb-1.5">De</p>
+            <p className="text-foreground/35 text-[10px] font-sans uppercase tracking-wider mb-1.5">De</p>
             <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)}
               className="bg-surface-card border border-surface-border text-foreground text-sm font-sans px-3 py-1.5 rounded-btn focus:outline-none" />
           </div>
           <div>
-            <p className="text-[rgba(245,240,232,0.35)] text-[10px] font-sans uppercase tracking-wider mb-1.5">Até</p>
+            <p className="text-foreground/35 text-[10px] font-sans uppercase tracking-wider mb-1.5">Até</p>
             <input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)}
               className="bg-surface-card border border-surface-border text-foreground text-sm font-sans px-3 py-1.5 rounded-btn focus:outline-none" />
           </div>
@@ -346,7 +346,7 @@ export default function FinanceiroPage() {
           <MultiSelectDropdown label="Status" options={STATUS_OPTIONS} selected={selectedStatus} onChange={setSelectedStatus} allLabel="Todos" />
           <div className="flex items-end">
             <button onClick={resetFilters}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-sans text-[rgba(245,240,232,0.35)] hover:text-[rgba(245,240,232,0.6)] border border-[rgba(255,255,255,0.07)] hover:border-[rgba(255,255,255,0.15)] transition-colors">
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-sans text-foreground/35 hover:text-foreground/60 border border-surface-border hover:border-foreground/20 transition-colors">
               <RotateCcw size={12} strokeWidth={1.5} />
               Limpar
             </button>
@@ -362,19 +362,19 @@ export default function FinanceiroPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        <KPICard icon={<DollarSign size={17} className="text-[#C9A84C]" strokeWidth={1.5} />}
+        <KPICard icon={<DollarSign size={17} className="text-gold" strokeWidth={1.5} />}
           label="Receita Total" value={totais ? formatCurrency(totais.receita) : "—"} loading={loading} />
-        <KPICard icon={<TrendingUp size={17} className="text-[#C9A84C]" strokeWidth={1.5} />}
+        <KPICard icon={<TrendingUp size={17} className="text-gold" strokeWidth={1.5} />}
           label="Ticket Médio" value={totais ? formatCurrency(totais.ticket_medio) : "—"} loading={loading} />
-        <KPICard icon={<Users size={17} className="text-[#C9A84C]" strokeWidth={1.5} />}
+        <KPICard icon={<Users size={17} className="text-gold" strokeWidth={1.5} />}
           label="Execuções" value={totais ? String(totais.count) : "—"} loading={loading} />
-        <KPICard icon={<Zap size={17} className="text-[#C9A84C]" strokeWidth={1.5} />}
+        <KPICard icon={<Zap size={17} className="text-gold" strokeWidth={1.5} />}
           label="Sinais Recebidos" value={totais ? formatCurrency(totais.receita_sinal) : "—"} loading={loading} />
-        <KPICard icon={<AlertCircle size={17} className="text-[#C9A84C]" strokeWidth={1.5} />}
+        <KPICard icon={<AlertCircle size={17} className="text-gold" strokeWidth={1.5} />}
           label="Não compareceram"
           value={totais ? `${totais.nao_compareceram}x · ${formatCurrency(totais.sinais_retidos)}` : "—"}
           loading={loading} highlight={!!totais && totais.nao_compareceram > 0} />
-        <KPICard icon={<TrendingDown size={17} className="text-[#C9A84C]" strokeWidth={1.5} />}
+        <KPICard icon={<TrendingDown size={17} className="text-gold" strokeWidth={1.5} />}
           label="Descontos" value={totais ? formatCurrency(totais.total_descontos) : "—"}
           loading={loading} highlight={!!totais && totais.total_descontos > 0} />
       </div>
@@ -384,28 +384,28 @@ export default function FinanceiroPage() {
         <div className="grid lg:grid-cols-5 gap-4">
           {/* Stacked bar chart */}
           <div className="lg:col-span-3 bg-surface-card border border-surface-border rounded-card p-5">
-            <h2 className="font-display text-base text-[#F5F0E8] font-light mb-1">
+            <h2 className="font-display text-base text-foreground font-light mb-1">
               Receita por {granularidade === "dia" ? "dia" : granularidade === "semana" ? "semana" : "mês"}
             </h2>
             <div className="flex items-center gap-4 mb-3">
-              <span className="flex items-center gap-1.5 text-[10px] font-sans text-[rgba(245,240,232,0.4)]">
+              <span className="flex items-center gap-1.5 text-[10px] font-sans text-foreground/40">
                 <span className="w-2.5 h-2.5 inline-block" style={{ backgroundColor: "#C9A84C" }} />Sinal
               </span>
-              <span className="flex items-center gap-1.5 text-[10px] font-sans text-[rgba(245,240,232,0.4)]">
+              <span className="flex items-center gap-1.5 text-[10px] font-sans text-foreground/40">
                 <span className="w-2.5 h-2.5 inline-block" style={{ backgroundColor: "#6B8C6E" }} />Restante
               </span>
             </div>
             {porPeriodo.length === 0 ? (
-              <div className="flex items-center justify-center h-40 text-[rgba(245,240,232,0.2)] text-sm font-sans">Nenhum dado no período</div>
+              <div className="flex items-center justify-center h-40 text-foreground/20 text-sm font-sans">Nenhum dado no período</div>
             ) : (
               <div className="h-52">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={porPeriodo} margin={{ top: 0, right: 4, bottom: 0, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
                     <XAxis dataKey="periodo" tickFormatter={(v) => formatPeriodLabel(String(v), granularidade)}
-                      tick={{ fill: "rgba(245,240,232,0.35)", fontSize: 11, fontFamily: "sans-serif" }} axisLine={false} tickLine={false} />
+                      tick={{ fill: "var(--text-muted)", fontSize: 11, fontFamily: "sans-serif" }} axisLine={false} tickLine={false} />
                     <YAxis tickFormatter={(v) => `R$${Number(v).toFixed(0)}`}
-                      tick={{ fill: "rgba(245,240,232,0.35)", fontSize: 11, fontFamily: "sans-serif" }} axisLine={false} tickLine={false} width={60} />
+                      tick={{ fill: "var(--text-muted)", fontSize: 11, fontFamily: "sans-serif" }} axisLine={false} tickLine={false} width={60} />
                     <RechartsTooltip
                       formatter={(value, name) => [
                         formatCurrency(Number(value)),
@@ -414,7 +414,7 @@ export default function FinanceiroPage() {
                       labelFormatter={(v) => formatPeriodLabel(String(v), granularidade)}
                       contentStyle={chartTooltipStyle}
                       itemStyle={{ color: "#C9A84C" }}
-                      labelStyle={{ color: "rgba(245,240,232,0.6)" }}
+                      labelStyle={{ color: "var(--text-secondary)" }}
                       cursor={{ fill: "rgba(201,168,76,0.05)" }}
                     />
                     <Bar dataKey="receita_sinal" stackId="a" fill="#C9A84C" radius={[0,0,0,0]} />
@@ -427,9 +427,9 @@ export default function FinanceiroPage() {
 
           {/* Donut por servico */}
           <div className="lg:col-span-2 bg-surface-card border border-surface-border rounded-card p-5">
-            <h2 className="font-display text-base text-[#F5F0E8] font-light mb-4">Por serviço</h2>
+            <h2 className="font-display text-base text-foreground font-light mb-4">Por serviço</h2>
             {porServico.length === 0 ? (
-              <div className="flex items-center justify-center h-40 text-[rgba(245,240,232,0.2)] text-sm font-sans">Sem dados</div>
+              <div className="flex items-center justify-center h-40 text-foreground/20 text-sm font-sans">Sem dados</div>
             ) : (
               <>
                 <div className="h-36">
@@ -454,9 +454,9 @@ export default function FinanceiroPage() {
                   {porServico.map((s, i) => (
                     <div key={s.nome} className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                      <span className="text-[rgba(245,240,232,0.6)] text-xs font-sans flex-1 truncate">{s.nome}</span>
-                      <span className="text-[rgba(245,240,232,0.4)] text-xs font-sans">{totalReceita > 0 ? `${((s.receita/totalReceita)*100).toFixed(0)}%` : "—"}</span>
-                      <span className="text-[#C9A84C] text-xs font-sans shrink-0">{formatCurrency(s.receita)}</span>
+                      <span className="text-foreground/60 text-xs font-sans flex-1 truncate">{s.nome}</span>
+                      <span className="text-foreground/40 text-xs font-sans">{totalReceita > 0 ? `${((s.receita/totalReceita)*100).toFixed(0)}%` : "—"}</span>
+                      <span className="text-gold text-xs font-sans shrink-0">{formatCurrency(s.receita)}</span>
                     </div>
                   ))}
                 </div>
@@ -475,11 +475,11 @@ export default function FinanceiroPage() {
             return (
               <div key={p.forma} className="bg-surface-card border border-surface-border rounded-card px-4 py-3">
                 <div className="flex items-center gap-2 mb-2">
-                  <Icon size={14} className="text-[#C9A84C]" strokeWidth={1.5} />
-                  <span className="text-[rgba(245,240,232,0.5)] text-xs font-sans uppercase tracking-wider">{PAGAMENTO_LABELS[p.forma] ?? p.forma}</span>
+                  <Icon size={14} className="text-gold" strokeWidth={1.5} />
+                  <span className="text-foreground/50 text-xs font-sans uppercase tracking-wider">{PAGAMENTO_LABELS[p.forma] ?? p.forma}</span>
                 </div>
-                <p className="font-display text-lg text-[#F5F0E8] font-light">{formatCurrency(p.receita)}</p>
-                <p className="text-[rgba(245,240,232,0.3)] text-xs font-sans mt-0.5">{p.count}x · {pct}%</p>
+                <p className="font-display text-lg text-foreground font-light">{formatCurrency(p.receita)}</p>
+                <p className="text-foreground/30 text-xs font-sans mt-0.5">{p.count}x · {pct}%</p>
               </div>
             );
           })}
@@ -489,14 +489,14 @@ export default function FinanceiroPage() {
       {/* Table */}
       <div className="bg-surface-card border border-surface-border rounded-card p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-base text-[#F5F0E8] font-light">Lançamentos</h2>
-          {!loading && <span className="text-[rgba(245,240,232,0.3)] text-xs font-sans">{sortedRows.length} lançamentos</span>}
+          <h2 className="font-display text-base text-foreground font-light">Lançamentos</h2>
+          {!loading && <span className="text-foreground/30 text-xs font-sans">{sortedRows.length} lançamentos</span>}
         </div>
 
         {loading ? (
-          <div className="py-12 text-center text-[rgba(245,240,232,0.2)] text-sm font-sans">Carregando...</div>
+          <div className="py-12 text-center text-foreground/20 text-sm font-sans">Carregando...</div>
         ) : sortedRows.length === 0 ? (
-          <div className="py-12 text-center text-[rgba(245,240,232,0.2)] text-sm font-sans">Nenhum lançamento no período</div>
+          <div className="py-12 text-center text-foreground/20 text-sm font-sans">Nenhum lançamento no período</div>
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -512,7 +512,7 @@ export default function FinanceiroPage() {
                       { key: "pagamento" as SortCol, label: "Pagamento" },
                     ] as const).map((col) => (
                       <th key={col.key} onClick={() => handleSort(col.key)}
-                        className="text-left text-[rgba(245,240,232,0.3)] text-xs uppercase tracking-wider pb-2 pr-3 font-normal cursor-pointer select-none hover:text-[rgba(245,240,232,0.55)] transition-colors">
+                        className="text-left text-foreground/30 text-xs uppercase tracking-wider pb-2 pr-3 font-normal cursor-pointer select-none hover:text-foreground/55 transition-colors">
                         <span className="flex items-center gap-1">
                           {col.label}
                           {sortCol === col.key ? (
@@ -539,13 +539,13 @@ export default function FinanceiroPage() {
 
                     return (
                       <tr key={l.key} className={`hover:bg-surface-elevated transition-colors ${rowBg}`}>
-                        <td className="py-2.5 pr-3 text-[rgba(245,240,232,0.45)] whitespace-nowrap text-xs">
+                        <td className="py-2.5 pr-3 text-foreground/45 whitespace-nowrap text-xs">
                           {formatShortDate(l.data)}
                         </td>
-                        <td className="py-2.5 pr-3 text-[rgba(245,240,232,0.8)] max-w-[130px] truncate">
+                        <td className="py-2.5 pr-3 text-foreground/80 max-w-[130px] truncate">
                           {l.nome_cliente}
                         </td>
-                        <td className="py-2.5 pr-3 text-[rgba(245,240,232,0.5)] max-w-[150px] truncate text-xs">
+                        <td className="py-2.5 pr-3 text-foreground/50 max-w-[150px] truncate text-xs">
                           {l.servico_nome_atual ?? l.servico_nome}
                         </td>
                         <td className="py-2.5 pr-3">
@@ -553,10 +553,10 @@ export default function FinanceiroPage() {
                             {TIPO_LABEL[l.tipo] ?? l.tipo}
                           </span>
                         </td>
-                        <td className={`py-2.5 pr-3 font-medium text-sm ${isReembolsado ? "text-[rgba(245,240,232,0.3)] line-through" : l.tipo === "restante" ? "text-emerald-400" : "text-[#C9A84C]"}`}>
+                        <td className={`py-2.5 pr-3 font-medium text-sm ${isReembolsado ? "text-foreground/30 line-through" : l.tipo === "restante" ? "text-emerald-400" : "text-gold"}`}>
                           {isReembolsado ? "—" : formatCurrency(l.valor)}
                         </td>
-                        <td className="py-2.5 text-[rgba(245,240,232,0.45)] text-xs capitalize">
+                        <td className="py-2.5 text-foreground/45 text-xs capitalize">
                           {l.forma_pagamento ? (PAGAMENTO_LABELS[l.forma_pagamento] ?? l.forma_pagamento) : "—"}
                         </td>
                       </tr>
@@ -564,14 +564,14 @@ export default function FinanceiroPage() {
                   })}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t border-[rgba(201,168,76,0.15)]">
-                    <td colSpan={3} className="pt-3 text-[rgba(245,240,232,0.35)] text-xs font-sans uppercase tracking-wider">
+                  <tr className="border-t border-[var(--gold-muted-border)]">
+                    <td colSpan={3} className="pt-3 text-foreground/35 text-xs font-sans uppercase tracking-wider">
                       {totais?.count ?? 0} execuções · {totais?.nao_compareceram ?? 0} não compareceram
                     </td>
-                    <td className="pt-3 text-[rgba(245,240,232,0.3)] text-xs font-sans">
+                    <td className="pt-3 text-foreground/30 text-xs font-sans">
                       {totais ? `${formatCurrency(totais.receita_sinal)} sinal` : ""}
                     </td>
-                    <td className="pt-3 text-[#C9A84C] font-medium text-sm">
+                    <td className="pt-3 text-gold font-medium text-sm">
                       {totais ? formatCurrency(totais.receita) : "—"}
                     </td>
                     <td />

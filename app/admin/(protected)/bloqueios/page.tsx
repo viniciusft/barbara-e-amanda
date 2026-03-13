@@ -68,10 +68,10 @@ export default function BloqueiosPage() {
     <div className="py-6">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="font-display text-3xl text-[#F5F0E8] font-light">
+          <h2 className="font-display text-3xl text-foreground font-light">
             Bloqueios
           </h2>
-          <p className="text-[rgba(245,240,232,0.4)] font-sans text-sm mt-1">
+          <p className="text-foreground/40 font-sans text-sm mt-1">
             Folgas, férias e feriados
           </p>
         </div>
@@ -89,13 +89,13 @@ export default function BloqueiosPage() {
       {/* Form */}
       {showForm && (
         <div className="border border-surface-border bg-surface-card rounded-card p-6 mb-6">
-          <h3 className="font-display text-xl text-[#F5F0E8] mb-5">
+          <h3 className="font-display text-xl text-foreground mb-5">
             Novo Bloqueio
           </h3>
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
-                Data início <span className="text-[#C9A84C]">*</span>
+              <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
+                Data início <span className="text-gold">*</span>
               </label>
               <input
                 type="date"
@@ -105,8 +105,8 @@ export default function BloqueiosPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
-                Data fim <span className="text-[#C9A84C]">*</span>
+              <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
+                Data fim <span className="text-gold">*</span>
               </label>
               <input
                 type="date"
@@ -116,8 +116,8 @@ export default function BloqueiosPage() {
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
-                Motivo <span className="text-[rgba(245,240,232,0.3)]">(opcional)</span>
+              <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
+                Motivo <span className="text-foreground/30">(opcional)</span>
               </label>
               <input
                 type="text"
@@ -156,13 +156,13 @@ export default function BloqueiosPage() {
       {loading && (
         <div className="flex items-center gap-3 py-12">
           <div className="w-5 h-5 border border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
-          <span className="text-[rgba(245,240,232,0.4)] font-sans text-sm">Carregando...</span>
+          <span className="text-foreground/40 font-sans text-sm">Carregando...</span>
         </div>
       )}
 
       {!loading && bloqueios.length === 0 && (
         <div className="border border-surface-border rounded-card p-12 text-center">
-          <p className="text-[rgba(245,240,232,0.3)] font-sans">
+          <p className="text-foreground/30 font-sans">
             Nenhum bloqueio futuro cadastrado.
           </p>
         </div>
@@ -179,13 +179,13 @@ export default function BloqueiosPage() {
               <div className="flex items-center gap-5">
                 <div className="text-center shrink-0">
                   <div className="border border-gold/40 px-4 py-2 rounded-btn bg-gold-muted">
-                    <p className="text-[#C9A84C] font-display text-lg leading-none">
+                    <p className="text-gold font-display text-lg leading-none">
                       {formatDateBR(b.data_inicio)}
                     </p>
                     {!isSingleDay && (
                       <>
-                        <p className="text-[rgba(245,240,232,0.3)] text-xs font-sans my-0.5">até</p>
-                        <p className="text-[#C9A84C] font-display text-lg leading-none">
+                        <p className="text-foreground/30 text-xs font-sans my-0.5">até</p>
+                        <p className="text-gold font-display text-lg leading-none">
                           {formatDateBR(b.data_fim)}
                         </p>
                       </>
@@ -194,13 +194,13 @@ export default function BloqueiosPage() {
                 </div>
                 <div>
                   {b.motivo ? (
-                    <p className="text-[#F5F0E8] font-sans">{b.motivo}</p>
+                    <p className="text-foreground font-sans">{b.motivo}</p>
                   ) : (
-                    <p className="text-[rgba(245,240,232,0.4)] font-sans text-sm italic">
+                    <p className="text-foreground/40 font-sans text-sm italic">
                       Sem motivo informado
                     </p>
                   )}
-                  <p className="text-[rgba(245,240,232,0.3)] text-xs font-sans mt-1">
+                  <p className="text-foreground/30 text-xs font-sans mt-1">
                     {isSingleDay
                       ? "Bloqueio de 1 dia"
                       : `Bloqueio de ${

@@ -49,7 +49,7 @@ const CATEGORIA_LABEL: Record<Categoria, string> = {
 const CATEGORIA_BADGE: Record<Categoria, string> = {
   maquiagem: "text-rose-400 border-rose-800 bg-rose-950/20",
   cabelo: "text-blue-400 border-blue-800 bg-blue-950/20",
-  combo: "text-[#C9A84C] border-[rgba(201,168,76,0.4)] bg-[rgba(201,168,76,0.08)]",
+  combo: "text-gold border-[var(--gold-muted-border)] bg-[var(--gold-muted)]",
 };
 
 // ── Sortable item component ───────────────────────────────────────────────────
@@ -79,10 +79,10 @@ function SortableItem({ servico: s, onEdit, onToggle, onDelete }: SortableItemPr
       style={style}
       className={`border flex overflow-hidden ${
         isDragging
-          ? "border-[#C9A84C] bg-[rgba(201,168,76,0.08)] shadow-lg shadow-[rgba(201,168,76,0.15)]"
+          ? "border-gold bg-[var(--gold-muted)] shadow-lg shadow-[rgba(201,168,76,0.15)]"
           : s.ativo
-          ? "border-[rgba(201,168,76,0.15)] bg-[#141414]"
-          : "border-[rgba(255,255,255,0.05)] bg-[#111] opacity-60"
+          ? "border-[var(--gold-muted-border)] bg-surface-card"
+          : "border-surface-border bg-[#111] opacity-60"
       }`}
     >
       {/* Drag handle */}
@@ -90,7 +90,7 @@ function SortableItem({ servico: s, onEdit, onToggle, onDelete }: SortableItemPr
         ref={setActivatorNodeRef}
         {...attributes}
         {...listeners}
-        className="w-8 shrink-0 flex items-center justify-center cursor-grab active:cursor-grabbing touch-none text-[rgba(201,168,76,0.25)] hover:text-[rgba(201,168,76,0.6)] transition-colors border-r border-[rgba(201,168,76,0.08)]"
+        className="w-8 shrink-0 flex items-center justify-center cursor-grab active:cursor-grabbing touch-none text-[rgba(201,168,76,0.25)] hover:text-[rgba(201,168,76,0.6)] transition-colors border-r border-[var(--gold-muted-border)]"
         aria-label="Arrastar para reordenar"
         style={{ minHeight: 44 }}
       >
@@ -98,7 +98,7 @@ function SortableItem({ servico: s, onEdit, onToggle, onDelete }: SortableItemPr
       </button>
 
       {/* Image thumbnail */}
-      <div className="w-20 h-20 shrink-0 bg-[#1a1a1a] flex items-center justify-center overflow-hidden">
+      <div className="w-20 h-20 shrink-0 bg-surface-elevated flex items-center justify-center overflow-hidden">
         {s.imagem_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={s.imagem_url} alt={s.nome} className="w-full h-full object-cover" />
@@ -110,41 +110,41 @@ function SortableItem({ servico: s, onEdit, onToggle, onDelete }: SortableItemPr
       <div className="flex-1 p-4 flex flex-col sm:flex-row sm:items-center gap-3 min-w-0">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <h4 className="font-display text-lg text-[#F5F0E8]">{s.nome}</h4>
+            <h4 className="font-display text-lg text-foreground">{s.nome}</h4>
             <span className={`text-[10px] font-sans border px-2 py-0.5 ${CATEGORIA_BADGE[cat]}`}>
               {CATEGORIA_LABEL[cat]}
             </span>
             {!s.ativo && (
-              <span className="text-xs font-sans text-[rgba(245,240,232,0.3)] border border-[rgba(255,255,255,0.1)] px-2 py-0.5">
+              <span className="text-xs font-sans text-foreground/30 border border-surface-border px-2 py-0.5">
                 Inativo
               </span>
             )}
           </div>
           {s.descricao && (
-            <p className="text-[rgba(245,240,232,0.4)] text-sm font-sans mb-1 truncate">{s.descricao}</p>
+            <p className="text-foreground/40 text-sm font-sans mb-1 truncate">{s.descricao}</p>
           )}
-          <div className="flex gap-4 text-sm font-sans text-[rgba(245,240,232,0.5)]">
+          <div className="flex gap-4 text-sm font-sans text-foreground/50">
             {cat === "combo" ? (
               <span>
                 💄{s.duracao_maquiagem_min}min + 💇{s.duracao_cabelo_min}min ={" "}
-                <span className="text-[rgba(245,240,232,0.7)]">{s.duracao_minutos}min</span>
+                <span className="text-foreground/70">{s.duracao_minutos}min</span>
               </span>
             ) : (
               <span>{formatDuration(s.duracao_minutos)}</span>
             )}
-            <span className="text-[#C9A84C]">{formatCurrency(s.preco)}</span>
+            <span className="text-gold">{formatCurrency(s.preco)}</span>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => onToggle(s)}
-            className="px-3 py-1.5 text-xs font-sans border border-[rgba(201,168,76,0.3)] text-[rgba(245,240,232,0.6)] hover:border-[rgba(201,168,76,0.5)] transition-colors"
+            className="px-3 py-1.5 text-xs font-sans border border-[var(--gold-muted-border)] text-foreground/60 hover:border-[rgba(201,168,76,0.5)] transition-colors"
           >
             {s.ativo ? "Desativar" : "Ativar"}
           </button>
           <button
             onClick={() => onEdit(s)}
-            className="px-3 py-1.5 text-xs font-sans border border-[rgba(201,168,76,0.3)] text-[#C9A84C] hover:bg-[rgba(201,168,76,0.05)] transition-colors"
+            className="px-3 py-1.5 text-xs font-sans border border-[var(--gold-muted-border)] text-gold hover:bg-[rgba(201,168,76,0.05)] transition-colors"
           >
             Editar
           </button>
@@ -346,10 +346,10 @@ export default function ServicosPage() {
     <div className="py-6">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="font-display text-3xl text-[#F5F0E8] font-light">
+          <h2 className="font-display text-3xl text-foreground font-light">
             Serviços
           </h2>
-          <p className="text-[rgba(245,240,232,0.4)] font-sans text-sm mt-1">
+          <p className="text-foreground/40 font-sans text-sm mt-1">
             Gerencie os serviços oferecidos
           </p>
         </div>
@@ -360,15 +360,15 @@ export default function ServicosPage() {
 
       {/* Form */}
       {showForm && (
-        <div className="border border-[rgba(201,168,76,0.3)] bg-[#141414] p-6 mb-6">
-          <h3 className="font-display text-xl text-[#F5F0E8] mb-5">
+        <div className="border border-[var(--gold-muted-border)] bg-surface-card p-6 mb-6">
+          <h3 className="font-display text-xl text-foreground mb-5">
             {editingId ? "Editar Serviço" : "Novo Serviço"}
           </h3>
           <div className="grid sm:grid-cols-2 gap-4">
             {/* Nome */}
             <div className="sm:col-span-2">
-              <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
-                Nome <span className="text-[#C9A84C]">*</span>
+              <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
+                Nome <span className="text-gold">*</span>
               </label>
               <input
                 type="text"
@@ -381,7 +381,7 @@ export default function ServicosPage() {
 
             {/* Descrição */}
             <div className="sm:col-span-2">
-              <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
+              <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
                 Descrição
               </label>
               <textarea
@@ -395,8 +395,8 @@ export default function ServicosPage() {
 
             {/* Categoria */}
             <div className="sm:col-span-2">
-              <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
-                Categoria <span className="text-[#C9A84C]">*</span>
+              <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
+                Categoria <span className="text-gold">*</span>
               </label>
               <div className="flex gap-2">
                 {(["maquiagem", "cabelo", "combo"] as Categoria[]).map((cat) => (
@@ -406,7 +406,7 @@ export default function ServicosPage() {
                     className={`px-4 py-2 text-sm font-sans border transition-colors ${
                       form.categoria === cat
                         ? CATEGORIA_BADGE[cat]
-                        : "border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.4)] hover:border-[rgba(255,255,255,0.2)]"
+                        : "border-surface-border text-foreground/40 hover:border-foreground/20"
                     }`}
                   >
                     {CATEGORIA_LABEL[cat]}
@@ -419,8 +419,8 @@ export default function ServicosPage() {
             {form.categoria === "combo" ? (
               <>
                 <div>
-                  <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
-                    💄 Duração Maquiagem (min) <span className="text-[#C9A84C]">*</span>
+                  <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
+                    💄 Duração Maquiagem (min) <span className="text-gold">*</span>
                   </label>
                   <input
                     type="number"
@@ -432,8 +432,8 @@ export default function ServicosPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
-                    💇 Duração Cabelo (min) <span className="text-[#C9A84C]">*</span>
+                  <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
+                    💇 Duração Cabelo (min) <span className="text-gold">*</span>
                   </label>
                   <input
                     type="number"
@@ -445,16 +445,16 @@ export default function ServicosPage() {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <p className="text-[rgba(245,240,232,0.4)] text-sm font-sans">
-                    ✨ Duração total: <span className="text-[#C9A84C] font-medium">{form.duracao_maquiagem_min + form.duracao_cabelo_min} min</span>
-                    <span className="text-[rgba(245,240,232,0.3)] ml-2">({form.duracao_maquiagem_min}min maquiagem + {form.duracao_cabelo_min}min cabelo)</span>
+                  <p className="text-foreground/40 text-sm font-sans">
+                    ✨ Duração total: <span className="text-gold font-medium">{form.duracao_maquiagem_min + form.duracao_cabelo_min} min</span>
+                    <span className="text-foreground/30 ml-2">({form.duracao_maquiagem_min}min maquiagem + {form.duracao_cabelo_min}min cabelo)</span>
                   </p>
                 </div>
               </>
             ) : (
               <div>
-                <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
-                  Duração (minutos) <span className="text-[#C9A84C]">*</span>
+                <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
+                  Duração (minutos) <span className="text-gold">*</span>
                 </label>
                 <input
                   type="number"
@@ -469,8 +469,8 @@ export default function ServicosPage() {
 
             {/* Preço */}
             <div>
-              <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
-                Preço (R$) <span className="text-[#C9A84C]">*</span>
+              <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
+                Preço (R$) <span className="text-gold">*</span>
               </label>
               <input
                 type="number"
@@ -483,8 +483,8 @@ export default function ServicosPage() {
             </div>
 
             {/* Sinal config */}
-            <div className="sm:col-span-2 border-t border-[rgba(201,168,76,0.1)] pt-4">
-              <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-3">
+            <div className="sm:col-span-2 border-t border-[var(--gold-muted-border)] pt-4">
+              <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-3">
                 Configuração de Sinal
               </label>
               <div className="flex gap-2 flex-wrap mb-3">
@@ -497,8 +497,8 @@ export default function ServicosPage() {
                       onClick={() => setForm((f) => ({ ...f, sinal_opcao: op }))}
                       className={`px-3 py-1.5 text-xs font-sans border transition-colors ${
                         form.sinal_opcao === op
-                          ? "border-[#C9A84C] text-[#C9A84C] bg-[rgba(201,168,76,0.08)]"
-                          : "border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.4)] hover:border-[rgba(255,255,255,0.2)]"
+                          ? "border-gold text-gold bg-[var(--gold-muted)]"
+                          : "border-surface-border text-foreground/40 hover:border-foreground/20"
                       }`}
                     >
                       {labels[op]}
@@ -517,12 +517,12 @@ export default function ServicosPage() {
                     className="input-luxury w-28"
                     placeholder="50"
                   />
-                  <span className="text-[rgba(245,240,232,0.4)] text-sm font-sans">% do valor total</span>
+                  <span className="text-foreground/40 text-sm font-sans">% do valor total</span>
                 </div>
               )}
               {form.sinal_opcao === "fixo" && (
                 <div className="flex items-center gap-3">
-                  <span className="text-[rgba(245,240,232,0.4)] text-sm font-sans">R$</span>
+                  <span className="text-foreground/40 text-sm font-sans">R$</span>
                   <input
                     type="number"
                     min={0}
@@ -535,7 +535,7 @@ export default function ServicosPage() {
                 </div>
               )}
               {form.sinal_opcao === "padrao" && (
-                <p className="text-[rgba(245,240,232,0.3)] text-xs font-sans">
+                <p className="text-foreground/30 text-xs font-sans">
                   Usa o percentual configurado em Perfil → Configurações de Pagamento.
                 </p>
               )}
@@ -543,14 +543,14 @@ export default function ServicosPage() {
 
             {/* Imagem */}
             <div className="sm:col-span-2">
-              <label className="block text-xs font-sans text-[rgba(245,240,232,0.5)] uppercase tracking-widest mb-2">
+              <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
                 Imagem
               </label>
               <ImageUpload
                 value={form.imagem_url}
                 onChange={(url) => setForm({ ...form, imagem_url: url })}
               />
-              <p className="text-[11px] font-sans text-[rgba(245,240,232,0.35)] mt-2 leading-relaxed">
+              <p className="text-[11px] font-sans text-foreground/35 mt-2 leading-relaxed">
                 Tamanho recomendado: 1536 x 2752px (proporção 9:16 — retrato vertical).
                 Formatos aceitos: JPG, PNG, WebP. Tamanho máximo: 5MB.
               </p>
@@ -563,7 +563,7 @@ export default function ServicosPage() {
           <div className="flex gap-3 mt-5">
             <button
               onClick={() => setShowForm(false)}
-              className="border border-[rgba(201,168,76,0.3)] text-[rgba(245,240,232,0.6)] px-4 py-2 text-sm font-sans"
+              className="border border-[var(--gold-muted-border)] text-foreground/60 px-4 py-2 text-sm font-sans"
             >
               Cancelar
             </button>
@@ -584,14 +584,14 @@ export default function ServicosPage() {
       {/* List */}
       {loading && (
         <div className="flex items-center gap-3 py-12">
-          <div className="w-5 h-5 border border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
-          <span className="text-[rgba(245,240,232,0.4)] font-sans text-sm">Carregando...</span>
+          <div className="w-5 h-5 border border-gold border-t-transparent rounded-full animate-spin" />
+          <span className="text-foreground/40 font-sans text-sm">Carregando...</span>
         </div>
       )}
 
       {!loading && servicos.length === 0 && (
-        <div className="border border-[rgba(201,168,76,0.1)] p-12 text-center">
-          <p className="text-[rgba(245,240,232,0.3)] font-sans">Nenhum serviço cadastrado.</p>
+        <div className="border border-[var(--gold-muted-border)] p-12 text-center">
+          <p className="text-foreground/30 font-sans">Nenhum serviço cadastrado.</p>
         </div>
       )}
 

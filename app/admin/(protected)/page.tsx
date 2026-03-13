@@ -338,11 +338,11 @@ export default function AdminDashboard() {
       <div className="md:hidden">
         {/* Day navigation bar */}
         <div className="flex items-center justify-between mb-3">
-          <button onClick={prevDay} className="p-2 text-gray-500 hover:text-gray-300 transition-colors">
+          <button onClick={prevDay} className="p-2 text-gray-500 hover:text-foreground transition-colors">
             <ChevronLeft size={20} />
           </button>
           <span className="font-sans text-sm text-foreground capitalize">{activeDayLabel}</span>
-          <button onClick={nextDay} className="p-2 text-gray-500 hover:text-gray-300 transition-colors">
+          <button onClick={nextDay} className="p-2 text-gray-500 hover:text-foreground transition-colors">
             <ChevronRight size={20} />
           </button>
         </div>
@@ -562,7 +562,7 @@ export default function AdminDashboard() {
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border sticky top-0 bg-surface-elevated z-10 rounded-t-card">
               <p className="text-gold text-[10px] font-sans uppercase tracking-[0.3em]">Agendamento</p>
-              <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-gray-300 transition-colors">
+              <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-foreground transition-colors">
                 <X size={18} />
               </button>
             </div>

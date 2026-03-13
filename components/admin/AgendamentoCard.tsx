@@ -149,7 +149,7 @@ function buildConfirmacaoMessage(
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[#C9A84C] text-[10px] tracking-[0.3em] uppercase font-sans mb-3">
+    <p className="text-gold text-[10px] tracking-[0.3em] uppercase font-sans mb-3">
       {children}
     </p>
   );
@@ -160,10 +160,10 @@ function InfoGrid({ items }: { items: { label: string; value: React.ReactNode }[
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3">
       {items.map(({ label, value }) => (
         <div key={label}>
-          <p className="text-[10px] font-sans text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-0.5">
+          <p className="text-[10px] font-sans text-foreground/35 uppercase tracking-widest mb-0.5">
             {label}
           </p>
-          <div className="text-sm font-sans text-[rgba(245,240,232,0.85)]">{value}</div>
+          <div className="text-sm font-sans text-foreground/85">{value}</div>
         </div>
       ))}
     </div>
@@ -356,10 +356,10 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
         {/* ── Header: name + service + status ── */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="font-display text-2xl text-[#F5F0E8] font-light leading-tight">
+            <h3 className="font-display text-2xl text-foreground font-light leading-tight">
               {current.nome_cliente}
             </h3>
-            <p className="text-[#C9A84C] text-sm font-sans mt-0.5">
+            <p className="text-gold text-sm font-sans mt-0.5">
               {current.servico?.nome ?? current.servico_nome}
             </p>
           </div>
@@ -369,18 +369,18 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
         </div>
 
         {/* ── Appointment info ── */}
-        <div className="border-t border-[rgba(201,168,76,0.08)] pt-4">
+        <div className="border-t border-[var(--gold-muted-border)] pt-4">
           <SectionTitle>Agendamento</SectionTitle>
           <InfoGrid items={[
             { label: "Data", value: dataDisplay || "—" },
             { label: "Horário", value: current.hora_inicio ? `${current.hora_inicio} – ${current.hora_fim ?? ""}` : "—" },
             { label: "Duração", value: current.servico ? formatDuration(current.servico.duracao_minutos) : `${current.servico_duracao}min` },
             { label: "Valor", value: current.servico ? formatCurrency(current.servico.preco) : "—" },
-            { label: "Telefone", value: <a href={`tel:${current.telefone}`} className="hover:text-[#C9A84C] transition-colors">{current.telefone}</a> },
+            { label: "Telefone", value: <a href={`tel:${current.telefone}`} className="hover:text-gold transition-colors">{current.telefone}</a> },
             ...(current.email ? [{ label: "Email", value: current.email }] : []),
           ]} />
           {current.observacoes && (
-            <p className="mt-3 text-sm font-sans text-[rgba(245,240,232,0.4)] italic border-l-2 border-[rgba(201,168,76,0.2)] pl-3">
+            <p className="mt-3 text-sm font-sans text-foreground/40 italic border-l-2 border-[var(--gold-muted-border)] pl-3">
               {current.observacoes}
             </p>
           )}
@@ -388,7 +388,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
 
         {/* ── Sinal & Pagamento (solicitacao / aguardando_sinal) ── */}
         {(current.status === "solicitacao" || current.status === "aguardando_sinal") && valorTotal > 0 && (
-          <div className="border-t border-[rgba(201,168,76,0.08)] pt-4">
+          <div className="border-t border-[var(--gold-muted-border)] pt-4">
             <SectionTitle>Sinal & Pagamento</SectionTitle>
 
             {/* Percentage slider */}
@@ -401,11 +401,11 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
                   onChange={(e) => setSinalPct(Number(e.target.value))}
                   className="flex-1 accent-[#C9A84C]"
                 />
-                <span className="text-[#C9A84C] text-sm font-sans font-medium w-10 text-right shrink-0">
+                <span className="text-gold text-sm font-sans font-medium w-10 text-right shrink-0">
                   {sinalPct}%
                 </span>
               </div>
-              <div className="grid grid-cols-3 text-[rgba(245,240,232,0.4)] text-xs font-sans mt-1.5">
+              <div className="grid grid-cols-3 text-foreground/40 text-xs font-sans mt-1.5">
                 <span>Total: {formatCurrency(valorTotal)}</span>
                 <span className="text-center">Sinal: {formatCurrency(valorSinal)}</span>
                 <span className="text-right">Restante: {formatCurrency(valorRestante)}</span>
@@ -446,24 +446,24 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
                     Confirmar sinal recebido
                   </button>
                 ) : (
-                  <div className="p-3 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] space-y-2.5">
-                    <p className="text-[rgba(245,240,232,0.5)] text-xs font-sans uppercase tracking-wider">Sinal recebido</p>
+                  <div className="p-3 bg-surface-elevated border border-surface-border space-y-2.5">
+                    <p className="text-foreground/50 text-xs font-sans uppercase tracking-wider">Sinal recebido</p>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[rgba(245,240,232,0.35)] text-[10px] font-sans block mb-1">Valor (R$)</label>
+                        <label className="text-foreground/35 text-[10px] font-sans block mb-1">Valor (R$)</label>
                         <input
                           type="text"
                           value={sinalValorInput}
                           onChange={(e) => setSinalValorInput(e.target.value)}
-                          className="w-full bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.8)] text-sm font-sans px-2.5 py-1.5 focus:outline-none focus:border-[#C9A84C]"
+                          className="w-full bg-surface-elevated border border-surface-border text-foreground/80 text-sm font-sans px-2.5 py-1.5 focus:outline-none focus:border-gold"
                         />
                       </div>
                       <div>
-                        <label className="text-[rgba(245,240,232,0.35)] text-[10px] font-sans block mb-1">Forma</label>
+                        <label className="text-foreground/35 text-[10px] font-sans block mb-1">Forma</label>
                         <select
                           value={sinalForma}
                           onChange={(e) => setSinalForma(e.target.value)}
-                          className="w-full bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.8)] text-sm font-sans px-2.5 py-1.5 focus:outline-none focus:border-[#C9A84C]"
+                          className="w-full bg-surface-elevated border border-surface-border text-foreground/80 text-sm font-sans px-2.5 py-1.5 focus:outline-none focus:border-gold"
                         >
                           <option value="pix">PIX</option>
                           <option value="dinheiro">Dinheiro</option>
@@ -475,7 +475,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
                     <div className="flex gap-2">
                       <button
                         onClick={() => setShowSinalForm(false)}
-                        className="flex-1 py-1.5 text-xs font-sans border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.4)] hover:border-[rgba(255,255,255,0.2)] transition-colors"
+                        className="flex-1 py-1.5 text-xs font-sans border border-surface-border text-foreground/40 hover:border-foreground/20 transition-colors"
                       >
                         Cancelar
                       </button>
@@ -496,26 +496,26 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
 
         {/* ── Sinal info when confirmed (with sinal pago) ── */}
         {current.status === "confirmado" && hasSinalPago && (
-          <div className="border-t border-[rgba(201,168,76,0.08)] pt-4">
+          <div className="border-t border-[var(--gold-muted-border)] pt-4">
             <SectionTitle>Sinal Recebido</SectionTitle>
             <div className="p-3 bg-green-950/20 border border-green-800/40 text-sm font-sans space-y-1">
               <p className="text-green-400 font-medium">Sinal confirmado ✓</p>
               {current.sinal_valor !== null && current.sinal_valor !== undefined && (
                 <div className="grid grid-cols-3 gap-4 mt-2">
                   <div>
-                    <p className="text-[10px] text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-0.5">Valor sinal</p>
-                    <p className="text-[rgba(245,240,232,0.8)]">{formatCurrency(Number(current.sinal_valor))}</p>
+                    <p className="text-[10px] text-foreground/35 uppercase tracking-widest mb-0.5">Valor sinal</p>
+                    <p className="text-foreground/80">{formatCurrency(Number(current.sinal_valor))}</p>
                   </div>
                   {current.sinal_forma_pagamento && (
                     <div>
-                      <p className="text-[10px] text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-0.5">Via</p>
-                      <p className="text-[rgba(245,240,232,0.8)]">{PAGAMENTO_LABEL[current.sinal_forma_pagamento] ?? current.sinal_forma_pagamento}</p>
+                      <p className="text-[10px] text-foreground/35 uppercase tracking-widest mb-0.5">Via</p>
+                      <p className="text-foreground/80">{PAGAMENTO_LABEL[current.sinal_forma_pagamento] ?? current.sinal_forma_pagamento}</p>
                     </div>
                   )}
                   {current.valor_restante !== null && current.valor_restante !== undefined && (
                     <div>
-                      <p className="text-[10px] text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-0.5">Restante</p>
-                      <p className="text-[rgba(245,240,232,0.8)]">{formatCurrency(Number(current.valor_restante))}</p>
+                      <p className="text-[10px] text-foreground/35 uppercase tracking-widest mb-0.5">Restante</p>
+                      <p className="text-foreground/80">{formatCurrency(Number(current.valor_restante))}</p>
                     </div>
                   )}
                 </div>
@@ -526,7 +526,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
 
         {/* ── Enviar confirmação (status = confirmado) ── */}
         {current.status === "confirmado" && (
-          <div className="border-t border-[rgba(201,168,76,0.08)] pt-4">
+          <div className="border-t border-[var(--gold-muted-border)] pt-4">
             <SectionTitle>Mensagem de Confirmação</SectionTitle>
 
             {!showConfirmacaoPanel ? (
@@ -551,7 +551,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
                   </span>
                   <button
                     onClick={() => setShowConfirmacaoPanel(false)}
-                    className="text-[rgba(245,240,232,0.3)] hover:text-[rgba(245,240,232,0.6)] text-lg leading-none transition-colors"
+                    className="text-foreground/30 hover:text-foreground/60 text-lg leading-none transition-colors"
                   >
                     ×
                   </button>
@@ -559,7 +559,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
 
                 {/* Message preview */}
                 <div className="px-4 py-3">
-                  <pre className="whitespace-pre-wrap text-[rgba(245,240,232,0.7)] text-sm font-sans leading-relaxed">
+                  <pre className="whitespace-pre-wrap text-foreground/70 text-sm font-sans leading-relaxed">
                     {buildConfirmacaoMessage(current, adminConfig)}
                   </pre>
                 </div>
@@ -567,7 +567,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
                 {/* Actions */}
                 <div className="px-4 py-3 border-t border-[rgba(37,211,102,0.15)] flex items-center justify-between gap-3">
                   {current.confirmacao_enviada_em && (
-                    <span className="text-[10px] font-sans text-[rgba(245,240,232,0.3)]">
+                    <span className="text-[10px] font-sans text-foreground/30">
                       Última vez: {new Date(current.confirmacao_enviada_em).toLocaleString("pt-BR")}
                     </span>
                   )}
@@ -591,7 +591,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
 
         {/* ── Pedido de avaliação Google (status = concluido + executado) ── */}
         {current.status === "concluido" && current.servico_executado && (
-          <div className="border-t border-[rgba(201,168,76,0.08)] pt-4">
+          <div className="border-t border-[var(--gold-muted-border)] pt-4">
             <SectionTitle>Avaliação Google</SectionTitle>
 
             {!showAvaliacaoPanel ? (
@@ -615,7 +615,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
                   </span>
                   <button
                     onClick={() => setShowAvaliacaoPanel(false)}
-                    className="text-[rgba(245,240,232,0.3)] hover:text-[rgba(245,240,232,0.6)] text-lg leading-none transition-colors"
+                    className="text-foreground/30 hover:text-foreground/60 text-lg leading-none transition-colors"
                   >
                     ×
                   </button>
@@ -626,13 +626,13 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
                       ⚠️ URL do Google Meu Negócio não configurada no perfil.
                     </p>
                   )}
-                  <pre className="whitespace-pre-wrap text-[rgba(245,240,232,0.7)] text-sm font-sans leading-relaxed">
+                  <pre className="whitespace-pre-wrap text-foreground/70 text-sm font-sans leading-relaxed">
                     {buildAvaliacaoMessage(current, adminConfig)}
                   </pre>
                 </div>
                 <div className="px-4 py-3 border-t border-[rgba(251,188,5,0.12)] flex items-center justify-between gap-3">
                   {current.avaliacao_enviada_em && (
-                    <span className="text-[10px] font-sans text-[rgba(245,240,232,0.3)]">
+                    <span className="text-[10px] font-sans text-foreground/30">
                       Última vez: {new Date(current.avaliacao_enviada_em).toLocaleString("pt-BR")}
                     </span>
                   )}
@@ -656,18 +656,18 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
 
         {/* ── Execution info (concluido) ── */}
         {current.status === "concluido" && (
-          <div className="border-t border-[rgba(201,168,76,0.08)] pt-4">
+          <div className="border-t border-[var(--gold-muted-border)] pt-4">
             <SectionTitle>Execução</SectionTitle>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {precoCobrado !== null && precoCobrado !== undefined && (
                 <div>
-                  <p className="text-[10px] text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-0.5">Cobrado</p>
+                  <p className="text-[10px] text-foreground/35 uppercase tracking-widest mb-0.5">Cobrado</p>
                   <p className="text-emerald-400 font-medium">{formatCurrency(precoCobrado)}</p>
                 </div>
               )}
               {tipoAjuste && (
                 <div>
-                  <p className="text-[10px] text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-0.5">Ajuste</p>
+                  <p className="text-[10px] text-foreground/35 uppercase tracking-widest mb-0.5">Ajuste</p>
                   <span className={`flex items-center gap-1 text-xs font-sans border px-2 py-0.5 w-fit ${tipoAjuste === "desconto" ? "text-yellow-400 border-yellow-800 bg-yellow-950/30" : "text-blue-400 border-blue-800 bg-blue-950/30"}`}>
                     {tipoAjuste === "desconto" ? <TrendingDown size={11} /> : <TrendingUp size={11} />}
                     {tipoAjuste === "desconto" ? "Desconto" : "Acréscimo"}
@@ -679,24 +679,24 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
               )}
               {current.forma_pagamento && (
                 <div>
-                  <p className="text-[10px] text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-0.5">Pagamento</p>
-                  <p className="text-[rgba(245,240,232,0.8)] text-sm">{PAGAMENTO_LABEL[current.forma_pagamento] ?? current.forma_pagamento}</p>
+                  <p className="text-[10px] text-foreground/35 uppercase tracking-widest mb-0.5">Pagamento</p>
+                  <p className="text-foreground/80 text-sm">{PAGAMENTO_LABEL[current.forma_pagamento] ?? current.forma_pagamento}</p>
                 </div>
               )}
             </div>
             {current.motivo_ajuste && (
-              <p className="mt-2 text-[rgba(245,240,232,0.4)] text-xs font-sans italic">{current.motivo_ajuste}</p>
+              <p className="mt-2 text-foreground/40 text-xs font-sans italic">{current.motivo_ajuste}</p>
             )}
             {hasSinalPago && current.sinal_valor !== null && current.sinal_valor !== undefined && (
-              <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-[rgba(255,255,255,0.05)] pt-3">
+              <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-surface-border pt-3">
                 <div>
-                  <p className="text-[10px] text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-0.5">Sinal pago</p>
-                  <p className="text-[rgba(245,240,232,0.7)] text-sm">{formatCurrency(Number(current.sinal_valor))}</p>
+                  <p className="text-[10px] text-foreground/35 uppercase tracking-widest mb-0.5">Sinal pago</p>
+                  <p className="text-foreground/70 text-sm">{formatCurrency(Number(current.sinal_valor))}</p>
                 </div>
                 {current.valor_restante !== null && current.valor_restante !== undefined && (
                   <div>
-                    <p className="text-[10px] text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-0.5">Restante cobrado</p>
-                    <p className="text-[rgba(245,240,232,0.7)] text-sm">{formatCurrency(Number(current.valor_restante))}</p>
+                    <p className="text-[10px] text-foreground/35 uppercase tracking-widest mb-0.5">Restante cobrado</p>
+                    <p className="text-foreground/70 text-sm">{formatCurrency(Number(current.valor_restante))}</p>
                   </div>
                 )}
               </div>
@@ -706,7 +706,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
 
         {/* ── Action buttons ── */}
         {!terminalStatus && (
-          <div className="border-t border-[rgba(201,168,76,0.08)] pt-4 flex flex-wrap gap-2">
+          <div className="border-t border-[var(--gold-muted-border)] pt-4 flex flex-wrap gap-2">
             {/* Confirm directly (bypass WhatsApp flow) */}
             {(current.status === "solicitacao" || current.status === "aguardando_sinal") && (
               <button
@@ -722,7 +722,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
             {current.status === "confirmado" && (
               <button
                 onClick={() => setShowExecucao(true)}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-sans border border-[#C9A84C] text-[#C9A84C] hover:bg-[rgba(201,168,76,0.1)] transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-sans border border-gold text-gold hover:bg-[var(--gold-muted)] transition-colors"
               >
                 <ClipboardCheck size={13} />
                 Registrar execução
@@ -756,21 +756,21 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
       {/* ── Cancel + Sinal Reembolso Dialog ── */}
       {showCancelDialog && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80">
-          <div className="bg-[#1a1a1a] border border-red-800/60 max-w-md w-full p-6 shadow-2xl">
+          <div className="bg-surface-elevated border border-red-800/60 max-w-md w-full p-6 shadow-2xl">
             <div className="flex items-start gap-3 mb-5">
               <AlertTriangle size={20} className="text-red-400 shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-display text-lg text-[#F5F0E8] font-light">Cancelar agendamento</h4>
-                <p className="text-[rgba(245,240,232,0.5)] text-sm font-sans mt-1">
+                <h4 className="font-display text-lg text-foreground font-light">Cancelar agendamento</h4>
+                <p className="text-foreground/50 text-sm font-sans mt-1">
                   Este agendamento tem um sinal pago de{" "}
-                  <span className="text-[#C9A84C]">{formatCurrency(Number(current.sinal_valor))}</span>.
+                  <span className="text-gold">{formatCurrency(Number(current.sinal_valor))}</span>.
                   O sinal foi reembolsado para a cliente?
                 </p>
               </div>
             </div>
 
             <div className="mb-4">
-              <label className="block text-[10px] font-sans text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-1.5">
+              <label className="block text-[10px] font-sans text-foreground/35 uppercase tracking-widest mb-1.5">
                 Motivo do cancelamento (opcional)
               </label>
               <input
@@ -778,7 +778,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
                 value={reembolsoObs}
                 onChange={(e) => setReembolsoObs(e.target.value)}
                 placeholder="Ex: cliente desmarcou, emergência..."
-                className="w-full bg-[#0f0f0f] border border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.8)] text-sm font-sans px-3 py-2 focus:outline-none focus:border-[rgba(201,168,76,0.4)]"
+                className="w-full bg-surface border border-surface-border text-foreground/80 text-sm font-sans px-3 py-2 focus:outline-none focus:border-gold"
               />
             </div>
 
@@ -800,7 +800,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
               <button
                 onClick={() => setShowCancelDialog(false)}
                 disabled={savingCancel}
-                className="w-full px-4 py-2.5 text-sm font-sans border border-[rgba(255,255,255,0.08)] text-[rgba(245,240,232,0.4)] hover:border-[rgba(255,255,255,0.15)] transition-colors"
+                className="w-full px-4 py-2.5 text-sm font-sans border border-surface-border text-foreground/40 hover:border-surface-border transition-colors"
               >
                 Voltar
               </button>

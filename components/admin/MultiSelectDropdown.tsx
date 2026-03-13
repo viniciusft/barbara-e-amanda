@@ -55,16 +55,16 @@ export default function MultiSelectDropdown({
 
   return (
     <div className="relative" ref={ref}>
-      <p className="text-[rgba(245,240,232,0.35)] text-[10px] font-sans uppercase tracking-wider mb-1.5">
+      <p className="text-foreground/35 text-[10px] font-sans uppercase tracking-wider mb-1.5">
         {label}
       </p>
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-2 bg-[#1a1a1a] border text-sm font-sans px-3 py-1.5 min-w-[160px] focus:outline-none transition-colors ${
+        className={`flex items-center gap-2 bg-surface-elevated border text-sm font-sans px-3 py-1.5 min-w-[160px] focus:outline-none transition-colors ${
           open
-            ? "border-[#C9A84C] text-[rgba(245,240,232,0.8)]"
-            : "border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.6)] hover:border-[rgba(255,255,255,0.2)]"
-        } ${!isAll ? "border-[rgba(201,168,76,0.4)] text-[#C9A84C]" : ""}`}
+            ? "border-gold text-foreground/80"
+            : "border-surface-border text-foreground/60 hover:border-foreground/20"
+        } ${!isAll ? "border-[var(--gold-muted-border)] text-gold" : ""}`}
       >
         <span className="flex-1 text-left truncate">{displayLabel}</span>
         <ChevronDown
@@ -75,13 +75,13 @@ export default function MultiSelectDropdown({
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-1 z-50 bg-[#1c1c1c] border border-[rgba(255,255,255,0.1)] min-w-[200px] shadow-2xl">
+        <div className="absolute top-full left-0 mt-1 z-50 bg-surface-card border border-surface-border min-w-[200px] shadow-2xl">
           <button
             onClick={() => onChange([])}
-            className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-sans text-left border-b border-[rgba(255,255,255,0.06)] transition-colors ${
+            className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-sans text-left border-b border-surface-border transition-colors ${
               isAll
-                ? "text-[#C9A84C] bg-[rgba(201,168,76,0.06)]"
-                : "text-[rgba(245,240,232,0.45)] hover:text-[rgba(245,240,232,0.75)] hover:bg-[rgba(255,255,255,0.03)]"
+                ? "text-gold bg-[var(--gold-muted)]"
+                : "text-foreground/45 hover:text-foreground/75 hover:bg-surface-elevated"
             }`}
           >
             <span className="w-[13px] flex items-center">
@@ -97,8 +97,8 @@ export default function MultiSelectDropdown({
                 onClick={() => toggle(opt.value)}
                 className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-sans text-left transition-colors ${
                   active
-                    ? "text-[#C9A84C] bg-[rgba(201,168,76,0.06)]"
-                    : "text-[rgba(245,240,232,0.6)] hover:text-[rgba(245,240,232,0.8)] hover:bg-[rgba(255,255,255,0.03)]"
+                    ? "text-gold bg-[var(--gold-muted)]"
+                    : "text-foreground/60 hover:text-foreground/80 hover:bg-surface-elevated"
                 }`}
               >
                 <span className="w-[13px] flex items-center">
