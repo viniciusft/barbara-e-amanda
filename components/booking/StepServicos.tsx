@@ -15,6 +15,14 @@ interface Props {
 const SUPORTE_MSG =
   "Ola! Tenho uma duvida sobre os agendamentos, podem me ajudar?";
 
+function registrarContato(tipo: "casamento" | "destination_beauty" | "duvida") {
+  fetch("/api/contatos", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tipo }),
+  }).catch(() => {}); // fire-and-forget, non-critical
+}
+
 export default function StepServicos({ selected, config, onSelect }: Props) {
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [loading, setLoading] = useState(true);
@@ -140,6 +148,7 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
             href={waUrl(config.mensagem_casamento)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => registrarContato("casamento")}
             className="text-left border border-[rgba(201,168,76,0.4)] bg-[#141414] hover:border-[#C9A84C] hover:bg-[rgba(201,168,76,0.05)] transition-all duration-200 overflow-hidden relative block"
           >
             <div className="h-[2px] w-full bg-gradient-to-r from-[rgba(201,168,76,0.0)] via-[#C9A84C] to-[rgba(201,168,76,0.0)]" />
@@ -169,6 +178,7 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
             href={waUrl(config.mensagem_destination_beauty)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => registrarContato("destination_beauty")}
             className="text-left border border-[rgba(201,168,76,0.4)] bg-[#141414] hover:border-[#C9A84C] hover:bg-[rgba(201,168,76,0.05)] transition-all duration-200 overflow-hidden relative block"
           >
             <div className="h-[2px] w-full bg-gradient-to-r from-[rgba(201,168,76,0.0)] via-[#C9A84C] to-[rgba(201,168,76,0.0)]" />
@@ -202,6 +212,7 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
               href={waUrl(SUPORTE_MSG)}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => registrarContato("duvida")}
               className="inline-flex items-center gap-2 text-[#25D366] hover:text-[#20bc5a] transition-colors text-sm font-sans"
             >
               <MessageCircle size={15} strokeWidth={1.5} className="shrink-0" />
