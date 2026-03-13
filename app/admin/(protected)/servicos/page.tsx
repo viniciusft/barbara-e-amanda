@@ -23,7 +23,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 type Categoria = "maquiagem" | "cabelo" | "combo";
-type SinalOpcao = "padrao" | "percentual" | "fixo";
+type SinalOpcao = "percentual" | "fixo";
 
 const EMPTY_FORM = {
   nome: "",
@@ -35,7 +35,7 @@ const EMPTY_FORM = {
   preco: 0,
   imagem_url: "",
   // Sinal config
-  sinal_opcao: "padrao" as SinalOpcao,
+  sinal_opcao: "percentual" as SinalOpcao,
   sinal_percentual_custom: 50,
   sinal_valor_fixo: 0,
 };
@@ -220,9 +220,8 @@ export default function ServicosPage() {
   function startEdit(s: Servico) {
     setEditingId(s.id);
     const cat: Categoria = (s.categoria as Categoria) ?? "maquiagem";
-    let sinalOpcao: SinalOpcao = "padrao";
+    let sinalOpcao: SinalOpcao = "percentual";
     if (s.sinal_tipo === "fixo") sinalOpcao = "fixo";
-    else if (s.sinal_tipo === "percentual" && s.sinal_percentual_custom != null) sinalOpcao = "percentual";
     setForm({
       nome: s.nome,
       descricao: s.descricao ?? "",
@@ -290,7 +289,7 @@ export default function ServicosPage() {
         preco: form.preco,
         imagem_url: form.imagem_url || null,
         // Sinal config
-        sinal_tipo: form.sinal_opcao === "padrao" ? "percentual" : form.sinal_opcao,
+        sinal_tipo: form.sinal_opcao,
         sinal_percentual_custom: form.sinal_opcao === "percentual" ? form.sinal_percentual_custom : null,
         sinal_valor_fixo: form.sinal_opcao === "fixo" ? form.sinal_valor_fixo : null,
       };
@@ -488,8 +487,8 @@ export default function ServicosPage() {
                 Configuração de Sinal
               </label>
               <div className="flex gap-2 flex-wrap mb-3">
-                {(["padrao", "percentual", "fixo"] as SinalOpcao[]).map((op) => {
-                  const labels = { padrao: "Usar padrão global", percentual: "Percentual personalizado", fixo: "Valor fixo" };
+                {(["percentual", "fixo"] as SinalOpcao[]).map((op) => {
+                  const labels: Record<SinalOpcao, string> = { percentual: "Percentual personalizado", fixo: "Valor fixo" };
                   return (
                     <button
                       key={op}
@@ -533,11 +532,6 @@ export default function ServicosPage() {
                     placeholder="0,00"
                   />
                 </div>
-              )}
-              {form.sinal_opcao === "padrao" && (
-                <p className="text-foreground/30 text-xs font-sans">
-                  Usa o percentual configurado em Perfil → Configurações de Pagamento.
-                </p>
               )}
             </div>
 
