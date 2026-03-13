@@ -130,6 +130,41 @@ export interface AdminConfig {
   updated_at: string;
 }
 
+export interface Cliente {
+  id: string;
+  telefone: string;
+  nome: string;
+  email: string | null;
+  data_nascimento: string | null;
+  observacoes: string | null;
+  total_agendamentos: number;
+  total_gasto: number;
+  ultimo_agendamento_em: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type NotificacaoTipo =
+  | "nova_solicitacao"
+  | "sinal_pendente"
+  | "sem_confirmacao"
+  | "agendamento_hoje"
+  | "contato_casamento"
+  | "contato_destination"
+  | "contato_duvida";
+
+export interface Notificacao {
+  id: string;
+  tipo: NotificacaoTipo;
+  titulo: string;
+  descricao: string;
+  agendamento_id: string | null;
+  lead_id: string | null;
+  lida: boolean;
+  lida_em: string | null;
+  created_at: string;
+}
+
 export interface SlotDisponivel {
   hora_inicio: string; // HH:MM — overall start (first service)
   hora_fim: string; // HH:MM — overall end

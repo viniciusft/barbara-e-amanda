@@ -282,6 +282,20 @@ export async function POST(req: NextRequest) {
       console.error("[GCal] createCalendarEvent failed:", err?.message);
     }
 
+    // Notification: nova_solicitacao
+    if (!session) {
+      // Only for public bookings (status = solicitacao)
+      try {
+        await supabase.from("notificacoes").insert({
+          tipo: "nova_solicitacao",
+          titulo: "Nova solicitação de agendamento",
+          descricao: `${nome_cliente} solicitou ${servico.nome}`,
+          agendamento_id: agendamento.id,
+          lida: false,
+        });
+      } catch { /* non-fatal */ }
+    }
+
     // Create lead record
     try {
       const now = new Date().toISOString();
