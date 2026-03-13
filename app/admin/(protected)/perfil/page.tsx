@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, Instagram, Phone, MapPin, CreditCard, MessageCircle, RefreshCw, Image, Star, Link as LinkIcon } from "lucide-react";
+import { Save, Instagram, Phone, MapPin, CreditCard, MessageCircle, RefreshCw, Image as ImageIcon, Star, Link as LinkIcon } from "lucide-react";
 import ImageUpload from "@/components/admin/ImageUpload";
 
 const DEFAULT_SINAL_TEMPLATE = `Ola {nome_cliente}! Sou {nome_secretaria} do {nome_studio}.
@@ -238,7 +238,7 @@ export default function PerfilPage() {
             {/* Header / hero background images */}
             <div className="border-t border-[var(--gold-muted-border)] pt-5 space-y-5">
               <div className="flex items-center gap-2">
-                <Image size={14} className="text-gold" strokeWidth={1.5} alt="" />
+                <ImageIcon size={14} className="text-gold" strokeWidth={1.5} />
                 <span className="text-xs font-sans text-foreground/50 uppercase tracking-widest">
                   Imagens de Fundo do Hero
                 </span>
