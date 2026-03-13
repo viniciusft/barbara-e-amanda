@@ -170,7 +170,7 @@ textarea:focus {
     @apply rounded-card border p-6;
     background-color: var(--surface-card);
     border-color: var(--surface-border);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+    box-shadow: var(--shadow-card, 0 2px 12px rgba(0,0,0,0.4));
   }
 
   .input-luxury {

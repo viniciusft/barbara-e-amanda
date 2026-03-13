@@ -84,7 +84,7 @@ function ProgressBar({ etapa }: { etapa: string }) {
   const isNegative = etapa === "cancelado" || etapa === "nao_compareceu";
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1 bg-[rgba(255,255,255,0.06)] rounded-full overflow-hidden" style={{ minWidth: 48 }}>
+      <div className="flex-1 h-1 bg-surface-border rounded-full overflow-hidden" style={{ minWidth: 48 }}>
         {isNegative ? (
           <div className="h-full bg-red-700 rounded-full" style={{ width: "100%" }} />
         ) : (
@@ -95,7 +95,7 @@ function ProgressBar({ etapa }: { etapa: string }) {
         )}
       </div>
       {!isNegative && (
-        <span className="text-[rgba(245,240,232,0.3)] text-[10px] font-sans shrink-0">{pct}%</span>
+        <span className="text-foreground/30 text-[10px] font-sans shrink-0">{pct}%</span>
       )}
     </div>
   );
@@ -104,13 +104,13 @@ function ProgressBar({ etapa }: { etapa: string }) {
 function HistoricoPopover({ historico }: { historico: HistoricoEntry[] | null }) {
   const [open, setOpen] = useState(false);
   if (!historico || historico.length === 0) {
-    return <span className="text-[rgba(245,240,232,0.2)] text-xs font-sans">—</span>;
+    return <span className="text-foreground/20 text-xs font-sans">—</span>;
   }
   return (
     <div className="relative inline-block">
       <button
         onClick={(e) => { e.stopPropagation(); setOpen((p) => !p); }}
-        className="flex items-center gap-1 text-[rgba(201,168,76,0.7)] hover:text-[#C9A84C] text-xs font-sans transition-colors"
+        className="flex items-center gap-1 text-gold/70 hover:text-gold text-xs font-sans transition-colors"
       >
         <Clock size={11} strokeWidth={1.5} />
         {historico.length} etapa{historico.length !== 1 ? "s" : ""}
@@ -129,12 +129,12 @@ function HistoricoPopover({ historico }: { historico: HistoricoEntry[] | null })
                       style={{ backgroundColor: cfg.hex }}
                     />
                     <div>
-                      <p className="text-[rgba(245,240,232,0.8)] text-xs font-sans">{cfg.label}</p>
-                      <p className="text-[rgba(245,240,232,0.3)] text-[10px] font-sans">
+                      <p className="text-foreground/80 text-xs font-sans">{cfg.label}</p>
+                      <p className="text-foreground/30 text-[10px] font-sans">
                         {new Date(h.em).toLocaleString("pt-BR")}
                       </p>
                       {h.obs && (
-                        <p className="text-[rgba(245,240,232,0.4)] text-[10px] font-sans italic">{h.obs}</p>
+                        <p className="text-foreground/40 text-[10px] font-sans italic">{h.obs}</p>
                       )}
                     </div>
                   </div>
@@ -175,8 +175,8 @@ function AgendamentoDrawer({
       <div className="flex-1 bg-black/70" onClick={onClose} />
       <div className="w-full max-w-xl bg-surface border-l border-surface-border h-full overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border">
-          <p className="text-[#C9A84C] text-xs font-sans uppercase tracking-widest">Agendamento</p>
-          <button onClick={onClose} className="text-[rgba(245,240,232,0.4)] hover:text-[rgba(245,240,232,0.7)] transition-colors">
+          <p className="text-gold text-xs font-sans uppercase tracking-widest">Agendamento</p>
+          <button onClick={onClose} className="text-foreground/40 hover:text-foreground/70 transition-colors">
             <X size={18} strokeWidth={1.5} />
           </button>
         </div>
@@ -184,7 +184,7 @@ function AgendamentoDrawer({
           {loading ? (
             <div className="flex items-center gap-3 py-12">
               <div className="w-5 h-5 border border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
-              <span className="text-[rgba(245,240,232,0.4)] font-sans text-sm">Carregando...</span>
+              <span className="text-foreground/40 font-sans text-sm">Carregando...</span>
             </div>
           ) : agendamento ? (
             <AgendamentoCard
@@ -194,7 +194,7 @@ function AgendamentoDrawer({
               adminConfig={adminConfig}
             />
           ) : (
-            <p className="text-[rgba(245,240,232,0.4)] font-sans text-sm">Agendamento não encontrado.</p>
+            <p className="text-foreground/40 font-sans text-sm">Agendamento não encontrado.</p>
           )}
         </div>
       </div>
@@ -266,17 +266,17 @@ export default function LeadsPage() {
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Users size={20} className="text-[#C9A84C]" strokeWidth={1.5} />
-            <h2 className="font-display text-3xl text-[#F5F0E8] font-light">Leads</h2>
+            <Users size={20} className="text-gold" strokeWidth={1.5} />
+            <h2 className="font-display text-3xl text-foreground font-light">Leads</h2>
           </div>
-          <p className="text-[rgba(245,240,232,0.4)] font-sans text-sm">
+          <p className="text-foreground/40 font-sans text-sm">
             {total} lead{total !== 1 ? "s" : ""} registrado{total !== 1 ? "s" : ""}
           </p>
         </div>
         <button
           onClick={() => exportXlsx(leads)}
           disabled={leads.length === 0}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-sans border border-[rgba(201,168,76,0.3)] text-[rgba(201,168,76,0.7)] hover:border-[#C9A84C] hover:text-[#C9A84C] transition-colors disabled:opacity-40"
+          className="flex items-center gap-2 px-4 py-2 text-xs font-sans border border-[var(--gold-muted-border)] text-gold/70 hover:border-[#C9A84C] hover:text-gold transition-colors disabled:opacity-40"
         >
           <Download size={13} strokeWidth={1.5} />
           Exportar planilha
@@ -287,7 +287,7 @@ export default function LeadsPage() {
       <div className="space-y-3 mb-6">
         {/* Search */}
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgba(245,240,232,0.3)]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/30" />
           <input
             type="text"
             value={search}
@@ -300,7 +300,7 @@ export default function LeadsPage() {
         {/* Date range */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-[10px] font-sans text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-1">
+            <label className="block text-[10px] font-sans text-foreground/35 uppercase tracking-widest mb-1">
               Data início
             </label>
             <input
@@ -311,7 +311,7 @@ export default function LeadsPage() {
             />
           </div>
           <div>
-            <label className="block text-[10px] font-sans text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-1">
+            <label className="block text-[10px] font-sans text-foreground/35 uppercase tracking-widest mb-1">
               Data fim
             </label>
             <input
@@ -325,7 +325,7 @@ export default function LeadsPage() {
 
         {/* Etapa filter */}
         <div>
-          <p className="text-[10px] font-sans text-[rgba(245,240,232,0.35)] uppercase tracking-widest mb-2">
+          <p className="text-[10px] font-sans text-foreground/35 uppercase tracking-widest mb-2">
             Filtrar por etapa
           </p>
           <div className="flex flex-wrap gap-2">
@@ -337,7 +337,7 @@ export default function LeadsPage() {
                   key={value}
                   onClick={() => toggleEtapa(value)}
                   className={`px-2.5 py-1 text-[10px] font-sans border transition-colors ${
-                    active ? cfg.badgeClass : "border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.35)] hover:border-[rgba(255,255,255,0.2)]"
+                    active ? cfg.badgeClass : "border-surface-border text-foreground/35 hover:border-foreground/20"
                   }`}
                 >
                   {label}
@@ -347,7 +347,7 @@ export default function LeadsPage() {
             {etapaFilter.length > 0 && (
               <button
                 onClick={() => setEtapaFilter([])}
-                className="px-2.5 py-1 text-[10px] font-sans text-[rgba(245,240,232,0.3)] hover:text-[rgba(245,240,232,0.6)] transition-colors"
+                className="px-2.5 py-1 text-[10px] font-sans text-foreground/30 hover:text-foreground/60 transition-colors"
               >
                 Limpar
               </button>
@@ -360,19 +360,19 @@ export default function LeadsPage() {
       {loading ? (
         <div className="flex items-center gap-3 py-12">
           <div className="w-5 h-5 border border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
-          <span className="text-[rgba(245,240,232,0.4)] font-sans text-sm">Carregando...</span>
+          <span className="text-foreground/40 font-sans text-sm">Carregando...</span>
         </div>
       ) : leads.length === 0 ? (
         <div className="border border-surface-border rounded-card p-12 text-center">
-          <Users size={32} className="text-[rgba(201,168,76,0.2)] mx-auto mb-3" strokeWidth={1} />
-          <p className="text-[rgba(245,240,232,0.3)] font-sans text-sm">Nenhum lead encontrado.</p>
+          <Users size={32} className="text-gold/20 mx-auto mb-3" strokeWidth={1} />
+          <p className="text-foreground/30 font-sans text-sm">Nenhum lead encontrado.</p>
         </div>
       ) : (
         <div className="border border-surface-border rounded-card overflow-hidden">
           {/* Table header */}
           <div className="hidden md:grid grid-cols-[2fr_1fr_1.5fr_1.5fr_1fr_1fr] gap-4 px-4 py-2.5 bg-surface-card border-b border-surface-border">
             {["Cliente", "Serviço", "Etapa", "Progresso", "Entrada", "Histórico"].map((h) => (
-              <p key={h} className="text-[10px] font-sans text-[rgba(245,240,232,0.35)] uppercase tracking-widest">
+              <p key={h} className="text-[10px] font-sans text-foreground/35 uppercase tracking-widest">
                 {h}
               </p>
             ))}
@@ -394,12 +394,12 @@ export default function LeadsPage() {
                 >
                   {/* Cliente */}
                   <div>
-                    <p className="text-[rgba(245,240,232,0.85)] text-sm font-sans">{lead.nome}</p>
-                    <p className="text-[rgba(245,240,232,0.35)] text-xs font-sans">{lead.telefone}</p>
+                    <p className="text-foreground/85 text-sm font-sans">{lead.nome}</p>
+                    <p className="text-foreground/35 text-xs font-sans">{lead.telefone}</p>
                   </div>
 
                   {/* Serviço */}
-                  <p className="text-[rgba(245,240,232,0.5)] text-xs font-sans self-center">
+                  <p className="text-foreground/50 text-xs font-sans self-center">
                     {lead.servico_nome ?? "—"}
                   </p>
 
@@ -416,7 +416,7 @@ export default function LeadsPage() {
                   </div>
 
                   {/* Data entrada */}
-                  <p className="text-[rgba(245,240,232,0.35)] text-xs font-sans self-center">
+                  <p className="text-foreground/35 text-xs font-sans self-center">
                     {formatDate(lead.created_at)}
                   </p>
 
@@ -434,7 +434,7 @@ export default function LeadsPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
-          <p className="text-[rgba(245,240,232,0.3)] text-xs font-sans">
+          <p className="text-foreground/30 text-xs font-sans">
             Página {page} de {totalPages} ({total} total)
           </p>
           <div className="flex items-center gap-2">

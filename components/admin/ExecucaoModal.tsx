@@ -75,16 +75,16 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-surface-border rounded-t-card">
           <div>
-            <p className="text-[#C9A84C] text-[9px] tracking-[0.3em] uppercase font-sans mb-0.5">
+            <p className="text-gold text-[9px] tracking-[0.3em] uppercase font-sans mb-0.5">
               Confirmar Execução
             </p>
-            <h3 className="font-display text-lg text-[#F5F0E8] font-light">
+            <h3 className="font-display text-lg text-foreground font-light">
               Como foi o atendimento?
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="text-[rgba(245,240,232,0.3)] hover:text-[rgba(245,240,232,0.7)] transition-colors p-1"
+            className="text-foreground/30 hover:text-foreground/70 transition-colors p-1"
           >
             <X size={18} />
           </button>
@@ -94,17 +94,17 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
         <div className="px-5 py-5 space-y-5">
           {/* Cliente + Serviço resumo */}
           <div className="bg-gold-muted border border-gold/20 px-4 py-3 rounded-btn">
-            <p className="text-[#F5F0E8] font-sans text-sm font-medium">
+            <p className="text-foreground font-sans text-sm font-medium">
               {agendamento.nome_cliente}
             </p>
-            <p className="text-[#C9A84C] font-sans text-xs mt-0.5">
+            <p className="text-gold font-sans text-xs mt-0.5">
               {agendamento.servico?.nome ?? agendamento.servico_nome}
             </p>
           </div>
 
           {/* Serviço executado toggle */}
           <div>
-            <p className="text-[rgba(245,240,232,0.5)] text-xs font-sans uppercase tracking-wider mb-2">
+            <p className="text-foreground/50 text-xs font-sans uppercase tracking-wider mb-2">
               Serviço executado?
             </p>
             <div className="flex gap-2">
@@ -113,7 +113,7 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
                 className={`flex items-center gap-2 px-4 py-2 text-sm font-sans border transition-colors ${
                   servicoExecutado
                     ? "border-green-700 bg-green-950/40 text-green-400"
-                    : "border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.4)] hover:border-[rgba(255,255,255,0.2)]"
+                    : "border-surface-border text-foreground/40 hover:border-foreground/20"
                 }`}
               >
                 <CheckCircle size={14} /> Sim
@@ -123,7 +123,7 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
                 className={`flex items-center gap-2 px-4 py-2 text-sm font-sans border transition-colors ${
                   !servicoExecutado
                     ? "border-red-800 bg-red-950/40 text-red-400"
-                    : "border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.4)] hover:border-[rgba(255,255,255,0.2)]"
+                    : "border-surface-border text-foreground/40 hover:border-foreground/20"
                 }`}
               >
                 <XCircle size={14} /> Não
@@ -133,12 +133,12 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
 
           {/* Preço cobrado */}
           <div>
-            <label className="text-[rgba(245,240,232,0.5)] text-xs font-sans uppercase tracking-wider block mb-1.5">
+            <label className="text-foreground/50 text-xs font-sans uppercase tracking-wider block mb-1.5">
               Preço cobrado
             </label>
             <div className="flex items-center gap-3">
               <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgba(245,240,232,0.4)] text-sm font-sans">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 text-sm font-sans">
                   R$
                 </span>
                 <input
@@ -163,7 +163,7 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
                 </span>
               )}
               {!tipoAjuste && (
-                <span className="text-[rgba(245,240,232,0.25)] text-xs font-sans whitespace-nowrap">
+                <span className="text-foreground/25 text-xs font-sans whitespace-nowrap">
                   Tabela: {formatCurrency(precoOriginal)}
                 </span>
               )}
@@ -173,7 +173,7 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
           {/* Motivo ajuste (se houver) */}
           {tipoAjuste && (
             <div>
-              <label className="text-[rgba(245,240,232,0.5)] text-xs font-sans uppercase tracking-wider block mb-1.5">
+              <label className="text-foreground/50 text-xs font-sans uppercase tracking-wider block mb-1.5">
                 Motivo do ajuste
               </label>
               <input
@@ -188,7 +188,7 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
 
           {/* Forma de pagamento */}
           <div>
-            <label className="text-[rgba(245,240,232,0.5)] text-xs font-sans uppercase tracking-wider block mb-1.5">
+            <label className="text-foreground/50 text-xs font-sans uppercase tracking-wider block mb-1.5">
               Forma de pagamento
             </label>
             <div className="flex flex-wrap gap-2">
@@ -198,8 +198,8 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
                   onClick={() => setFormaPagamento(forma.value)}
                   className={`px-3 py-1.5 text-xs font-sans border transition-colors ${
                     formaPagamento === forma.value
-                      ? "border-[#C9A84C] bg-[rgba(201,168,76,0.1)] text-[#C9A84C]"
-                      : "border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.4)] hover:border-[rgba(255,255,255,0.25)]"
+                      ? "border-gold bg-[var(--gold-muted)] text-gold"
+                      : "border-surface-border text-foreground/40 hover:border-foreground/25"
                   }`}
                 >
                   {forma.label}
@@ -210,7 +210,7 @@ export default function ExecucaoModal({ agendamento, onClose, onSaved }: Props) 
 
           {/* Observações */}
           <div>
-            <label className="text-[rgba(245,240,232,0.5)] text-xs font-sans uppercase tracking-wider block mb-1.5">
+            <label className="text-foreground/50 text-xs font-sans uppercase tracking-wider block mb-1.5">
               Observações (opcional)
             </label>
             <textarea

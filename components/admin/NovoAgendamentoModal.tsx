@@ -107,16 +107,16 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border rounded-t-card">
           <div>
-            <p className="text-[#C9A84C] text-[9px] tracking-[0.35em] uppercase font-sans mb-0.5">
+            <p className="text-gold text-[9px] tracking-[0.35em] uppercase font-sans mb-0.5">
               Admin
             </p>
-            <h3 className="font-display text-xl text-[#F5F0E8] font-light">
+            <h3 className="font-display text-xl text-foreground font-light">
               Novo Agendamento
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="text-[rgba(245,240,232,0.3)] hover:text-[rgba(245,240,232,0.7)] transition-colors p-1"
+            className="text-foreground/30 hover:text-foreground/70 transition-colors p-1"
           >
             <X size={18} />
           </button>
@@ -126,8 +126,8 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
         <div className="px-6 py-5 space-y-4">
           {/* Serviço */}
           <div>
-            <label className="text-[rgba(245,240,232,0.45)] text-xs font-sans uppercase tracking-wider block mb-1.5">
-              Serviço <span className="text-[#C9A84C]">*</span>
+            <label className="text-foreground/45 text-xs font-sans uppercase tracking-wider block mb-1.5">
+              Serviço <span className="text-gold">*</span>
             </label>
             <select
               value={servicoId}
@@ -142,7 +142,7 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
               ))}
             </select>
             {servico && (
-              <p className="text-[rgba(245,240,232,0.3)] text-xs font-sans mt-1">
+              <p className="text-foreground/30 text-xs font-sans mt-1">
                 {servico.categoria === "combo"
                   ? `💄 ${servico.duracao_maquiagem_min}min + 💇 ${servico.duracao_cabelo_min}min = ${servico.duracao_minutos}min total`
                   : `${servico.duracao_minutos} min`}
@@ -152,8 +152,8 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
 
           {/* Data */}
           <div>
-            <label className="text-[rgba(245,240,232,0.45)] text-xs font-sans uppercase tracking-wider block mb-1.5">
-              Data <span className="text-[#C9A84C]">*</span>
+            <label className="text-foreground/45 text-xs font-sans uppercase tracking-wider block mb-1.5">
+              Data <span className="text-gold">*</span>
             </label>
             <input
               type="date"
@@ -167,16 +167,16 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
           {/* Horário */}
           {(servicoId && data) && (
             <div>
-              <label className="text-[rgba(245,240,232,0.45)] text-xs font-sans uppercase tracking-wider block mb-1.5">
-                Horário <span className="text-[#C9A84C]">*</span>
+              <label className="text-foreground/45 text-xs font-sans uppercase tracking-wider block mb-1.5">
+                Horário <span className="text-gold">*</span>
               </label>
               {loadingSlots ? (
-                <div className="flex items-center gap-2 py-2 text-[rgba(245,240,232,0.3)] text-sm font-sans">
+                <div className="flex items-center gap-2 py-2 text-foreground/30 text-sm font-sans">
                   <Loader2 size={14} className="animate-spin" />
                   Carregando horários...
                 </div>
               ) : slots.length === 0 ? (
-                <p className="text-[rgba(245,240,232,0.3)] text-sm font-sans py-1">
+                <p className="text-foreground/30 text-sm font-sans py-1">
                   Nenhum horário disponível nessa data
                 </p>
               ) : (
@@ -187,13 +187,13 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
                       onClick={() => setSelectedSlot(s)}
                       className={`px-3 py-1.5 text-xs font-sans border transition-colors ${
                         selectedSlot?.hora_inicio === s.hora_inicio
-                          ? "border-[#C9A84C] bg-[rgba(201,168,76,0.12)] text-[#C9A84C]"
-                          : "border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.5)] hover:border-[rgba(255,255,255,0.25)]"
+                          ? "border-gold bg-[var(--gold-muted)] text-gold"
+                          : "border-surface-border text-foreground/50 hover:border-foreground/25"
                       }`}
                     >
                       {s.hora_inicio}
                       {s.combo_ordem && (
-                        <span className="text-[rgba(245,240,232,0.4)] ml-1">
+                        <span className="text-foreground/40 ml-1">
                           {s.combo_ordem === "maquiagem_primeiro" ? "· 💄→💇" : "· 💇→💄"}
                         </span>
                       )}
@@ -201,8 +201,8 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
                   ))}
                   {/* Combo summary */}
                   {selectedSlot?.combo_ordem && (
-                    <div className="w-full mt-2 p-2.5 bg-[rgba(201,168,76,0.06)] border border-[rgba(201,168,76,0.2)] text-xs font-sans text-[rgba(245,240,232,0.6)] space-y-0.5">
-                      <p className="text-[#C9A84C] mb-1">Organização do atendimento:</p>
+                    <div className="w-full mt-2 p-2.5 bg-[var(--gold-muted)] border border-[var(--gold-muted-border)] text-xs font-sans text-foreground/60 space-y-0.5">
+                      <p className="text-gold mb-1">Organização do atendimento:</p>
                       <p>💄 Maquiagem: {selectedSlot.hora_maquiagem} – {addMins(selectedSlot.hora_maquiagem!, servico?.duracao_maquiagem_min ?? 0)}</p>
                       <p>💇 Cabelo: {selectedSlot.hora_cabelo} – {selectedSlot.hora_fim}</p>
                     </div>
@@ -214,8 +214,8 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
 
           {/* Cliente */}
           <div>
-            <label className="text-[rgba(245,240,232,0.45)] text-xs font-sans uppercase tracking-wider block mb-1.5">
-              Nome do cliente <span className="text-[#C9A84C]">*</span>
+            <label className="text-foreground/45 text-xs font-sans uppercase tracking-wider block mb-1.5">
+              Nome do cliente <span className="text-gold">*</span>
             </label>
             <input
               type="text"
@@ -227,8 +227,8 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
           </div>
 
           <div>
-            <label className="text-[rgba(245,240,232,0.45)] text-xs font-sans uppercase tracking-wider block mb-1.5">
-              Telefone <span className="text-[#C9A84C]">*</span>
+            <label className="text-foreground/45 text-xs font-sans uppercase tracking-wider block mb-1.5">
+              Telefone <span className="text-gold">*</span>
             </label>
             <input
               type="tel"
@@ -240,7 +240,7 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
           </div>
 
           <div>
-            <label className="text-[rgba(245,240,232,0.45)] text-xs font-sans uppercase tracking-wider block mb-1.5">
+            <label className="text-foreground/45 text-xs font-sans uppercase tracking-wider block mb-1.5">
               Observações
             </label>
             <textarea
@@ -254,7 +254,7 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
 
           {/* Status inicial */}
           <div>
-            <label className="text-[rgba(245,240,232,0.45)] text-xs font-sans uppercase tracking-wider block mb-1.5">
+            <label className="text-foreground/45 text-xs font-sans uppercase tracking-wider block mb-1.5">
               Status inicial
             </label>
             <div className="flex gap-2">
@@ -267,7 +267,7 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
                       ? s === "confirmado"
                         ? "border-green-700 bg-green-950/30 text-green-400"
                         : "border-yellow-700 bg-yellow-950/30 text-yellow-400"
-                      : "border-[rgba(255,255,255,0.1)] text-[rgba(245,240,232,0.4)] hover:border-[rgba(255,255,255,0.2)]"
+                      : "border-surface-border text-foreground/40 hover:border-foreground/20"
                   }`}
                 >
                   {s === "pendente" ? "Pendente" : "Confirmado"}
