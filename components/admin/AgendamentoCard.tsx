@@ -180,8 +180,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
   const { sinalPct: defaultSinalPct } = calcSinal(
     valorTotalInit,
     agendamento,
-    agendamento.servico,
-    adminConfig
+    agendamento.servico
   );
   const [sinalPct, setSinalPct] = useState<number>(defaultSinalPct);
   const [showSinalForm, setShowSinalForm] = useState(false);

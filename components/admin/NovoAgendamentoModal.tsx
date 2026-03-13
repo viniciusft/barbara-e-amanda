@@ -45,13 +45,16 @@ export default function NovoAgendamentoModal({ onClose, onCreated }: Props) {
 
   useEffect(() => {
     if (!servicoId || !data) { setSlots([]); setSelectedSlot(null); return; }
+    const controller = new AbortController();
     setLoadingSlots(true);
     setSlots([]);
     setSelectedSlot(null);
-    fetch(`/api/slots?data=${data}&servico_id=${servicoId}`)
+    fetch(`/api/slots?data=${data}&servico_id=${servicoId}`, { signal: controller.signal })
       .then((r) => r.json())
       .then((d) => setSlots(Array.isArray(d) ? d : []))
+      .catch((e) => { if (e.name !== "AbortError") setSlots([]); })
       .finally(() => setLoadingSlots(false));
+    return () => controller.abort();
   }, [servicoId, data]);
 
   const servico = servicos.find((s) => s.id === servicoId);

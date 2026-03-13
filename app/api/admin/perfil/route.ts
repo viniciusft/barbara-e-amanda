@@ -10,8 +10,9 @@ export async function GET() {
     const { data, error } = await supabase
       .from("admin_config")
       .select(
-        "nome_studio, bio, instagram, whatsapp, endereco, foto_url, foto_header_url, foto_header_mobile_url, chave_pix, tipo_chave_pix, nome_recebedor_pix, sinal_percentual_padrao, nome_secretaria, mensagem_whatsapp_template, mensagem_confirmacao_template, google_meu_negocio_url, mensagem_avaliacao_template, tema"
+        "nome_studio, bio, instagram, whatsapp, endereco, foto_url, foto_header_url, foto_header_mobile_url, chave_pix, tipo_chave_pix, nome_recebedor_pix, nome_secretaria, mensagem_whatsapp_template, mensagem_confirmacao_template, google_meu_negocio_url, mensagem_avaliacao_template, tema"
       )
+      .order("created_at", { ascending: true })
       .limit(1)
       .single();
 
@@ -44,7 +45,6 @@ export async function PATCH(req: NextRequest) {
     chave_pix,
     tipo_chave_pix,
     nome_recebedor_pix,
-    sinal_percentual_padrao,
     nome_secretaria,
     mensagem_whatsapp_template,
     mensagem_confirmacao_template,
@@ -57,6 +57,7 @@ export async function PATCH(req: NextRequest) {
   const { data: existing } = await supabase
     .from("admin_config")
     .select("id")
+    .order("created_at", { ascending: true })
     .limit(1)
     .single();
 
@@ -72,7 +73,6 @@ export async function PATCH(req: NextRequest) {
     chave_pix: chave_pix ?? null,
     tipo_chave_pix: tipo_chave_pix ?? null,
     nome_recebedor_pix: nome_recebedor_pix ?? null,
-    sinal_percentual_padrao: sinal_percentual_padrao ?? null,
     nome_secretaria: nome_secretaria ?? null,
     mensagem_whatsapp_template: mensagem_whatsapp_template ?? null,
     mensagem_confirmacao_template: mensagem_confirmacao_template ?? null,
@@ -102,8 +102,9 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: result.error.message }, { status: 500 });
   }
 
-  // Revalidate the home page so the new images/content appear without manual F5
   revalidatePath("/");
+  revalidatePath("/admin/perfil");
+  revalidatePath("/admin");
 
   return NextResponse.json(result.data);
 }

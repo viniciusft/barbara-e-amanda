@@ -7,6 +7,7 @@ import { Plus, X } from "lucide-react";
 
 type Modo = "auto" | "custom";
 type ModoHorario = "ambos" | "separado";
+type Categoria = "maquiagem" | "cabelo" | "ambos";
 
 interface HorarioLocal {
   id: string;
@@ -16,6 +17,7 @@ interface HorarioLocal {
   hora_inicio_cabelo: string;
   hora_fim_cabelo: string;
   modo_horario: ModoHorario;
+  categoria: Categoria;
   ativo: boolean;
   intervalo_minutos: number;
   modo: Modo;
@@ -50,6 +52,7 @@ function fromDB(h: HorarioDisponivel): HorarioLocal {
     hora_inicio_cabelo: h.hora_inicio_cabelo ?? h.hora_inicio,
     hora_fim_cabelo: h.hora_fim_cabelo ?? h.hora_fim,
     modo_horario: (h.modo_horario as ModoHorario) ?? "ambos",
+    categoria: (h.categoria as Categoria) ?? "ambos",
     ativo: h.ativo,
     intervalo_minutos: h.intervalo_minutos ?? 30,
     modo: isCustom ? "custom" : "auto",
@@ -96,6 +99,7 @@ export default function HorariosPage() {
           hora_inicio_cabelo: "09:00",
           hora_fim_cabelo: "18:00",
           modo_horario: "ambos" as ModoHorario,
+          categoria: "ambos" as Categoria,
           ativo: i >= 1 && i <= 5,
           intervalo_minutos: 30,
           modo: "auto" as Modo,
@@ -141,6 +145,7 @@ export default function HorariosPage() {
         hora_inicio_cabelo: h.modo_horario === "separado" ? h.hora_inicio_cabelo : null,
         hora_fim_cabelo: h.modo_horario === "separado" ? h.hora_fim_cabelo : null,
         modo_horario: h.modo_horario,
+        categoria: h.categoria,
         ativo: h.ativo,
         intervalo_minutos: h.intervalo_minutos,
         horarios_customizados: h.modo === "custom" && h.customTimes.length > 0 ? h.customTimes : null,
@@ -216,6 +221,30 @@ export default function HorariosPage() {
 
                   {h.ativo && (
                     <div className="ml-14 space-y-4">
+                      {/* Categoria selector */}
+                      <div>
+                        <p className="text-xs font-sans text-foreground/40 uppercase tracking-wider mb-2">Categoria</p>
+                        <div className="flex gap-2">
+                          {([
+                            { value: "ambos", label: "💄💇 Ambos" },
+                            { value: "maquiagem", label: "💄 Maquiagem" },
+                            { value: "cabelo", label: "💇 Cabelo/Penteado" },
+                          ] as { value: Categoria; label: string }[]).map(({ value, label }) => (
+                            <button
+                              key={value}
+                              onClick={() => update(h.dia_semana, { categoria: value })}
+                              className={`px-3 py-1.5 text-xs font-sans border transition-colors ${
+                                h.categoria === value
+                                  ? "border-gold bg-[var(--gold-muted)] text-gold"
+                                  : "border-surface-border text-foreground/50 hover:border-foreground/25"
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                       {/* Mode toggle */}
                       <div className="flex items-center gap-6">
                         {(["auto", "custom"] as Modo[]).map((m) => (
