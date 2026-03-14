@@ -134,16 +134,31 @@ export default function HorariosPage() {
 
   useEffect(() => { fetchHorarios(); }, []);
 
+  // dupWarn: key = "dia-m" or "dia-c", value = true while warning is visible
+  const [dupWarn, setDupWarn] = useState<Record<string, boolean>>({});
+
+  function showDupWarn(dia: number, cabelo: boolean) {
+    const key = `${dia}-${cabelo ? "c" : "m"}`;
+    setDupWarn((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => setDupWarn((prev) => { const n = { ...prev }; delete n[key]; return n; }), 2000);
+  }
+
   function update(dia: number, partial: Partial<HorarioLocal>) {
     setHorarios((prev) => prev.map((h) => h.dia_semana === dia ? { ...h, ...partial } : h));
   }
 
   function addCustomTime(dia: number, cabelo = false) {
     const h = horarios.find((hh) => hh.dia_semana === dia)!;
+    const list = cabelo ? h.customTimesCabelo : h.customTimes;
+    // Find first time not yet in list, starting from 09:00
+    const candidates = ["09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30",
+      "13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00"];
+    const next = candidates.find((t) => !list.includes(t)) ?? null;
+    if (next === null) { showDupWarn(dia, cabelo); return; }
     if (cabelo) {
-      update(dia, { customTimesCabelo: [...h.customTimesCabelo, "09:00"] });
+      update(dia, { customTimesCabelo: [...h.customTimesCabelo, next] });
     } else {
-      update(dia, { customTimes: [...h.customTimes, "09:00"] });
+      update(dia, { customTimes: [...h.customTimes, next] });
     }
   }
 
@@ -158,10 +173,16 @@ export default function HorariosPage() {
 
   function updateCustomTime(dia: number, idx: number, value: string, cabelo = false) {
     const h = horarios.find((hh) => hh.dia_semana === dia)!;
+    const list = cabelo ? h.customTimesCabelo : h.customTimes;
+    // Block if another entry already has this value
+    if (list.some((t, i) => t === value && i !== idx)) {
+      showDupWarn(dia, cabelo);
+      return;
+    }
     if (cabelo) {
-      update(dia, { customTimesCabelo: h.customTimesCabelo.map((t, i) => i === idx ? value : t) });
+      update(dia, { customTimesCabelo: list.map((t, i) => i === idx ? value : t) });
     } else {
-      update(dia, { customTimes: h.customTimes.map((t, i) => i === idx ? value : t) });
+      update(dia, { customTimes: list.map((t, i) => i === idx ? value : t) });
     }
   }
 
@@ -182,7 +203,11 @@ export default function HorariosPage() {
         ativo: h.ativo,
         intervalo_minutos: h.intervalo_minutos,
         horarios_customizados: h.modo === "custom"
-          ? encodeCustomTimes(h.customTimes, h.customTimesCabelo, h.modo_horario)
+          ? encodeCustomTimes(
+              Array.from(new Set(h.customTimes)),
+              Array.from(new Set(h.customTimesCabelo)),
+              h.modo_horario
+            )
           : null,
       }));
 
@@ -228,9 +253,21 @@ export default function HorariosPage() {
         <>
           <div className="grid gap-4 mb-6">
             {horarios.map((h) => {
-              const previewSlots = h.modo === "auto"
+              // Compute preview slots per category
+              const isSeparado = h.modo_horario === "separado";
+              const previewMaq = h.modo === "auto"
                 ? generateSlots(h.hora_inicio, h.hora_fim, h.intervalo_minutos)
-                : [...h.customTimes, ...h.customTimesCabelo].slice().sort();
+                : Array.from(new Set(h.customTimes)).sort();
+              const previewCab = h.modo === "auto"
+                ? (isSeparado ? generateSlots(h.hora_inicio_cabelo, h.hora_fim_cabelo, h.intervalo_minutos) : previewMaq)
+                : Array.from(new Set(h.customTimesCabelo)).sort();
+              // For display: if separado show two rows; otherwise one
+              const previewRows: { label: string; slots: string[]; color: string }[] = isSeparado
+                ? [
+                    { label: "💄 Maquiagem", slots: previewMaq, color: "text-rose-400" },
+                    { label: "💇 Cabelo/Penteado", slots: previewCab, color: "text-blue-400" },
+                  ]
+                : [{ label: "", slots: previewMaq, color: "text-foreground/35" }];
 
               return (
                 <div
@@ -399,7 +436,7 @@ export default function HorariosPage() {
                             {h.modo_horario === "separado" && (
                               <p className="text-xs font-sans text-rose-400 uppercase tracking-wider mb-2">💄 Maquiagem</p>
                             )}
-                            <div className="flex flex-wrap gap-2 mb-2">
+                            <div className="flex flex-wrap gap-2 mb-1">
                               {h.customTimes.map((t, idx) => (
                                 <div key={idx} className="flex items-center gap-1 border border-surface-border bg-surface-elevated rounded-btn">
                                   <input
@@ -424,13 +461,16 @@ export default function HorariosPage() {
                                 Adicionar
                               </button>
                             </div>
+                            {dupWarn[`${h.dia_semana}-m`] && (
+                              <p className="text-xs text-amber-400 font-sans">Horário já adicionado</p>
+                            )}
                           </div>
 
                           {/* Cabelo — only when separado */}
                           {h.modo_horario === "separado" && (
                             <div>
                               <p className="text-xs font-sans text-blue-400 uppercase tracking-wider mb-2">💇 Cabelo/Penteado</p>
-                              <div className="flex flex-wrap gap-2 mb-2">
+                              <div className="flex flex-wrap gap-2 mb-1">
                                 {h.customTimesCabelo.map((t, idx) => (
                                   <div key={idx} className="flex items-center gap-1 border border-surface-border bg-surface-elevated rounded-btn">
                                     <input
@@ -455,29 +495,43 @@ export default function HorariosPage() {
                                   Adicionar
                                 </button>
                               </div>
+                              {dupWarn[`${h.dia_semana}-c`] && (
+                                <p className="text-xs text-amber-400 font-sans">Horário já adicionado</p>
+                              )}
                             </div>
                           )}
                         </div>
                       )}
 
                       {/* Slot preview */}
-                      {previewSlots.length > 0 && (
-                        <div>
-                          <p className="text-[10px] font-sans text-foreground/35 uppercase tracking-widest mb-2">
-                            Preview — {previewSlots.length} horários
-                          </p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {previewSlots.slice(0, 10).map((s) => (
-                              <span key={s} className="text-xs font-sans text-gray-400 border border-surface-border rounded-badge px-2 py-0.5">
-                                {s}
-                              </span>
-                            ))}
-                            {previewSlots.length > 10 && (
-                              <span className="text-xs font-sans text-foreground/35 px-2 py-0.5">
-                                +{previewSlots.length - 10} mais
-                              </span>
-                            )}
-                          </div>
+                      {previewRows.some((r) => r.slots.length > 0) && (
+                        <div className="space-y-2">
+                          {previewRows.map((row, ri) => row.slots.length > 0 && (
+                            <div key={ri}>
+                              {row.label && (
+                                <p className={`text-[10px] font-sans uppercase tracking-widest mb-1 ${row.color}`}>
+                                  {row.label} — {row.slots.length} horários
+                                </p>
+                              )}
+                              {!row.label && (
+                                <p className="text-[10px] font-sans text-foreground/35 uppercase tracking-widest mb-1">
+                                  Preview — {row.slots.length} horários
+                                </p>
+                              )}
+                              <div className="flex flex-wrap gap-1.5">
+                                {row.slots.slice(0, 10).map((s) => (
+                                  <span key={s} className="text-xs font-sans text-gray-400 border border-surface-border rounded-badge px-2 py-0.5">
+                                    {s}
+                                  </span>
+                                ))}
+                                {row.slots.length > 10 && (
+                                  <span className="text-xs font-sans text-foreground/35 px-2 py-0.5">
+                                    +{row.slots.length - 10} mais
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
