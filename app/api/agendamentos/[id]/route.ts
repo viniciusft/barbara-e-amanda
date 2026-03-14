@@ -3,6 +3,44 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { deleteCalendarEvent, updateCalendarEvent } from "@/lib/google-calendar";
+import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
+
+const TZ = "America/Sao_Paulo";
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+
+  const supabase = createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("agendamentos")
+    .select("*, servico:servicos(*)")
+    .eq("id", params.id)
+    .single();
+
+  if (error || !data) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
+
+  const maqStartBRT = toZonedTime(new Date(data.data_hora), TZ);
+  const endBRT = toZonedTime(new Date(data.data_hora_fim), TZ);
+  let displayStart = maqStartBRT;
+  if (data.data_hora_cabelo && new Date(data.data_hora_cabelo) < new Date(data.data_hora)) {
+    displayStart = toZonedTime(new Date(data.data_hora_cabelo), TZ);
+  }
+  const extra: Record<string, string> = {
+    data: format(displayStart, "yyyy-MM-dd"),
+    hora_inicio: format(displayStart, "HH:mm"),
+    hora_fim: format(endBRT, "HH:mm"),
+  };
+  if (data.data_hora_cabelo) {
+    extra.hora_inicio_cabelo = format(toZonedTime(new Date(data.data_hora_cabelo), TZ), "HH:mm");
+    extra.hora_inicio_maquiagem = format(maqStartBRT, "HH:mm");
+  }
+  return NextResponse.json({ ...data, ...extra });
+}
 
 const STATUS_EMOJI: Record<string, string> = {
   solicitacao: "⏳",

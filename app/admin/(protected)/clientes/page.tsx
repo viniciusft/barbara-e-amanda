@@ -84,7 +84,7 @@ export default function ClientesPage() {
           <span className="text-foreground/40 font-sans text-sm">Carregando...</span>
         </div>
       ) : clientes.length === 0 ? (
-        <div className="border border-surface-border p-12 text-center">
+        <div className="border border-surface-border rounded-card p-12 text-center">
           <UserRound size={32} className="text-foreground/15 mx-auto mb-3" strokeWidth={1} />
           <p className="text-foreground/40 font-sans text-sm">
             {query ? "Nenhum cliente encontrado para esta busca." : "Nenhum cliente ainda."}
@@ -93,7 +93,7 @@ export default function ClientesPage() {
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden md:block border border-surface-border overflow-hidden">
+          <div className="hidden md:block border border-surface-border rounded-card overflow-hidden">
             <table className="w-full text-sm font-sans">
               <thead>
                 <tr className="border-b border-surface-border bg-surface-elevated">
@@ -143,7 +143,7 @@ export default function ClientesPage() {
               <button
                 key={c.id}
                 onClick={() => router.push(`/admin/clientes/${c.id}`)}
-                className="w-full text-left border border-surface-border bg-surface-card p-4 flex items-center gap-3"
+                className="w-full text-left border border-surface-border bg-surface-card rounded-card p-4 flex items-center gap-3"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">

@@ -171,36 +171,42 @@ export default function NotificacoesPage() {
           <div className="w-5 h-5 border border-gold border-t-transparent rounded-full animate-spin" />
         </div>
       ) : visible.length === 0 ? (
-        <div className="border border-surface-border p-16 text-center">
+        <div className="border border-surface-border rounded-card p-16 text-center">
           <Bell size={32} className="text-foreground/15 mx-auto mb-3" strokeWidth={1} />
           <p className="text-foreground/40 font-sans text-sm">Nenhuma notificação encontrada.</p>
         </div>
       ) : (
-        <div className="border border-surface-border divide-y divide-surface-border">
+        <div className="border border-surface-border rounded-card divide-y divide-surface-border overflow-hidden">
           {visible.map((n) => (
             <button
               key={n.id}
               onClick={() => markAsRead(n)}
-              className={`w-full text-left flex items-start gap-4 px-4 py-4 transition-colors hover:bg-surface-elevated ${
-                !n.lida ? "bg-gold/[0.03]" : ""
+              className={`w-full text-left flex items-start gap-4 px-4 py-4 transition-colors hover:bg-surface-elevated relative ${
+                !n.lida ? "bg-gold/[0.04]" : ""
               }`}
             >
-              <span className="text-xl shrink-0 mt-0.5">{TIPO_ICONS[n.tipo] ?? "🔔"}</span>
+              {/* Unread indicator stripe */}
+              {!n.lida && (
+                <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gold" />
+              )}
+              <span className={`text-xl shrink-0 mt-0.5 ${!n.lida ? "" : "opacity-50"}`}>{TIPO_ICONS[n.tipo] ?? "🔔"}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                  <span className="font-sans font-medium text-sm text-foreground">{n.titulo}</span>
-                  {!n.lida && (
-                    <span className="text-[9px] font-sans border border-gold/50 text-gold px-1.5 py-0.5 uppercase tracking-wider">
-                      Nova
-                    </span>
-                  )}
+                  <span className={`font-sans text-sm ${!n.lida ? "font-semibold text-foreground" : "font-medium text-foreground/60"}`}>
+                    {n.titulo}
+                  </span>
                   <span className="text-[10px] font-sans border border-surface-border text-foreground/30 px-1.5 py-0.5 uppercase tracking-wider">
                     {TIPO_LABELS[n.tipo] ?? n.tipo}
                   </span>
                 </div>
-                <p className="text-foreground/50 font-sans text-xs leading-snug">{n.descricao}</p>
+                <p className={`font-sans text-xs leading-snug ${!n.lida ? "text-foreground/60" : "text-foreground/35"}`}>{n.descricao}</p>
               </div>
-              <span className="text-foreground/30 text-[10px] font-sans shrink-0 mt-0.5">{timeAgo(n.created_at)}</span>
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <span className="text-foreground/30 text-[10px] font-sans">{timeAgo(n.created_at)}</span>
+                {!n.lida && (
+                  <span className="w-2 h-2 rounded-full bg-gold block" />
+                )}
+              </div>
             </button>
           ))}
         </div>

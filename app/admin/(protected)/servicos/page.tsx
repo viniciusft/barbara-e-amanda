@@ -77,7 +77,7 @@ function SortableItem({ servico: s, onEdit, onToggle, onDelete }: SortableItemPr
     <div
       ref={setNodeRef}
       style={style}
-      className={`border flex overflow-hidden ${
+      className={`border flex overflow-hidden rounded-card ${
         isDragging
           ? "border-gold bg-[var(--gold-muted)] shadow-lg shadow-[rgba(201,168,76,0.15)]"
           : s.ativo
@@ -444,7 +444,7 @@ export default function ServicosPage() {
 
       {/* Form */}
       {showForm && (
-        <div className="border border-[var(--gold-muted-border)] bg-surface-card p-6 mb-6">
+        <div className="border border-[var(--gold-muted-border)] bg-surface-card rounded-card p-6 mb-6">
           <h3 className="font-display text-xl text-foreground mb-5">
             {editingId ? "Editar Serviço" : "Novo Serviço"}
           </h3>
@@ -669,7 +669,7 @@ export default function ServicosPage() {
       )}
 
       {!loading && servicos.length === 0 && (
-        <div className="border border-[var(--gold-muted-border)] p-12 text-center">
+        <div className="border border-[var(--gold-muted-border)] rounded-card p-12 text-center">
           <p className="text-foreground/30 font-sans">Nenhum serviço cadastrado.</p>
         </div>
       )}
@@ -707,7 +707,7 @@ export default function ServicosPage() {
 
         {/* Edit form */}
         {editingEspecial && (
-          <div className="border border-[var(--gold-muted-border)] bg-surface-card p-6 mb-6">
+          <div className="border border-[var(--gold-muted-border)] bg-surface-card rounded-card p-6 mb-6">
             <h4 className="font-display text-lg text-foreground mb-4">
               Editar: {ESPECIAL_DEFAULTS[editingEspecial].titulo}
             </h4>

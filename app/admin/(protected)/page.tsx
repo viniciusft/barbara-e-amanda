@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { format, addDays, addWeeks, subWeeks, startOfWeek, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, ChevronLeft, ChevronRight, X, Plus } from "lucide-react";
@@ -173,6 +174,8 @@ function DayColumn({
 
 export default function AdminDashboard() {
   const today = format(new Date(), "yyyy-MM-dd");
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [weekStart, setWeekStart] = useState(() =>
     format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd")
@@ -184,6 +187,7 @@ export default function AdminDashboard() {
   const [adminConfig, setAdminConfig] = useState<AdminConfig | null>(null);
   const [activeDay, setActiveDay] = useState(today);
   const [currentTimeTop, setCurrentTimeTop] = useState<number | null>(getCurrentTimeTop);
+  const pendingAgendamentoId = useRef<string | null>(searchParams.get("agendamento"));
 
   const weekDays = Array.from({ length: 7 }, (_, i) =>
     format(addDays(new Date(weekStart + "T12:00:00"), i), "yyyy-MM-dd")
@@ -208,11 +212,43 @@ export default function AdminDashboard() {
     try {
       const res = await fetch(`/api/agendamentos?semana=${weekStart}`);
       const data = await res.json();
-      if (Array.isArray(data)) setAgendamentos(data);
+      if (Array.isArray(data)) {
+        setAgendamentos(data);
+        // Auto-open agendamento from ?agendamento= query param
+        if (pendingAgendamentoId.current) {
+          const target = data.find((a: Agendamento) => a.id === pendingAgendamentoId.current);
+          if (target) {
+            setSelected(target);
+            if (target.data) setActiveDay(target.data);
+            pendingAgendamentoId.current = null;
+            router.replace("/admin");
+          }
+        }
+      }
     } finally {
       setLoading(false);
     }
-  }, [weekStart]);
+  }, [weekStart, router]);
+
+  // If target agendamento not in current week, fetch it from API
+  useEffect(() => {
+    const id = searchParams.get("agendamento");
+    if (!id) return;
+    pendingAgendamentoId.current = id;
+    // Fetch the agendamento to find its date and navigate to the right week
+    fetch(`/api/agendamentos/${id}`)
+      .then((r) => r.json())
+      .then((ag: Agendamento) => {
+        if (ag?.data) {
+          const agDate = new Date(ag.data + "T12:00:00");
+          const ws = format(startOfWeek(agDate, { weekStartsOn: 1 }), "yyyy-MM-dd");
+          setWeekStart(ws);
+          setActiveDay(ag.data);
+        }
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => { fetchAgendamentos(); }, [fetchAgendamentos]);
 
