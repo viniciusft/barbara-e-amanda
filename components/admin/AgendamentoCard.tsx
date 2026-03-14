@@ -52,9 +52,7 @@ const PAGAMENTO_LABEL: Record<string, string> = {
 
 const DEFAULT_SINAL_TEMPLATE = `Ola {nome_cliente}! Sou {nome_secretaria} do {nome_studio}.
 
-Sua solicitacao para *{servico}* em *{data}* as *{horario}* foi recebida!
-
-Para confirmar seu horario, solicitamos um sinal de *{sinal_percentual}%* do valor total.
+Sua solicitacao para *{servico}* em *{data}* as *{horario}* foi recebida! Aguardamos o pagamento do sinal para confirmar.
 
 Valor total: R$ {valor_total}
 Sinal ({sinal_percentual}%): R$ {valor_sinal}

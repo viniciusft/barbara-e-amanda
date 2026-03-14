@@ -21,7 +21,8 @@ interface HorarioLocal {
   ativo: boolean;
   intervalo_minutos: number;
   modo: Modo;
-  customTimes: string[];
+  customTimes: string[];        // maquiagem (or shared) custom times
+  customTimesCabelo: string[];  // cabelo custom times (only used when modo_horario=separado)
 }
 
 function generateSlots(inicio: string, fim: string, intervalo: number): string[] {
@@ -39,11 +40,29 @@ function generateSlots(inicio: string, fim: string, intervalo: number): string[]
   return slots;
 }
 
+// Encode/decode per-category custom times in the DB jsonb field.
+// When modo_horario=separado and custom: store as {m:[...],c:[...]}
+// When modo_horario=ambos and custom: plain string array
+function encodeCustomTimes(customTimes: string[], customTimesCabelo: string[], modoHorario: ModoHorario): string[] | null {
+  if (modoHorario === "separado") {
+    if (customTimes.length === 0 && customTimesCabelo.length === 0) return null;
+    // Encode as special marker format: [...maqTimes, "|||", ...cabeloTimes]
+    return [...customTimes, "|||", ...customTimesCabelo];
+  }
+  return customTimes.length > 0 ? customTimes : null;
+}
+
+function decodeCustomTimes(raw: string[] | null): { maq: string[]; cab: string[] } {
+  if (!raw || raw.length === 0) return { maq: [], cab: [] };
+  const sepIdx = raw.indexOf("|||");
+  if (sepIdx === -1) return { maq: raw, cab: [] };
+  return { maq: raw.slice(0, sepIdx), cab: raw.slice(sepIdx + 1) };
+}
+
 function fromDB(h: HorarioDisponivel): HorarioLocal {
-  const isCustom =
-    h.horarios_customizados !== null &&
-    Array.isArray(h.horarios_customizados) &&
-    h.horarios_customizados.length > 0;
+  const raw = h.horarios_customizados;
+  const hasCustom = raw !== null && Array.isArray(raw) && raw.length > 0;
+  const { maq, cab } = hasCustom ? decodeCustomTimes(raw as string[]) : { maq: [], cab: [] };
   return {
     id: h.id,
     dia_semana: h.dia_semana,
@@ -55,8 +74,9 @@ function fromDB(h: HorarioDisponivel): HorarioLocal {
     categoria: (h.categoria as Categoria) ?? "ambos",
     ativo: h.ativo,
     intervalo_minutos: h.intervalo_minutos ?? 30,
-    modo: isCustom ? "custom" : "auto",
-    customTimes: isCustom ? (h.horarios_customizados as string[]) : [],
+    modo: hasCustom ? "custom" : "auto",
+    customTimes: maq,
+    customTimesCabelo: cab,
   };
 }
 
@@ -104,6 +124,7 @@ export default function HorariosPage() {
           intervalo_minutos: 30,
           modo: "auto" as Modo,
           customTimes: [],
+          customTimesCabelo: [],
         };
       });
       setHorarios(complete);
@@ -117,19 +138,31 @@ export default function HorariosPage() {
     setHorarios((prev) => prev.map((h) => h.dia_semana === dia ? { ...h, ...partial } : h));
   }
 
-  function addCustomTime(dia: number) {
+  function addCustomTime(dia: number, cabelo = false) {
     const h = horarios.find((hh) => hh.dia_semana === dia)!;
-    update(dia, { customTimes: [...h.customTimes, "09:00"] });
+    if (cabelo) {
+      update(dia, { customTimesCabelo: [...h.customTimesCabelo, "09:00"] });
+    } else {
+      update(dia, { customTimes: [...h.customTimes, "09:00"] });
+    }
   }
 
-  function removeCustomTime(dia: number, idx: number) {
+  function removeCustomTime(dia: number, idx: number, cabelo = false) {
     const h = horarios.find((hh) => hh.dia_semana === dia)!;
-    update(dia, { customTimes: h.customTimes.filter((_, i) => i !== idx) });
+    if (cabelo) {
+      update(dia, { customTimesCabelo: h.customTimesCabelo.filter((_, i) => i !== idx) });
+    } else {
+      update(dia, { customTimes: h.customTimes.filter((_, i) => i !== idx) });
+    }
   }
 
-  function updateCustomTime(dia: number, idx: number, value: string) {
+  function updateCustomTime(dia: number, idx: number, value: string, cabelo = false) {
     const h = horarios.find((hh) => hh.dia_semana === dia)!;
-    update(dia, { customTimes: h.customTimes.map((t, i) => i === idx ? value : t) });
+    if (cabelo) {
+      update(dia, { customTimesCabelo: h.customTimesCabelo.map((t, i) => i === idx ? value : t) });
+    } else {
+      update(dia, { customTimes: h.customTimes.map((t, i) => i === idx ? value : t) });
+    }
   }
 
   async function handleSave() {
@@ -148,7 +181,9 @@ export default function HorariosPage() {
         categoria: h.categoria,
         ativo: h.ativo,
         intervalo_minutos: h.intervalo_minutos,
-        horarios_customizados: h.modo === "custom" && h.customTimes.length > 0 ? h.customTimes : null,
+        horarios_customizados: h.modo === "custom"
+          ? encodeCustomTimes(h.customTimes, h.customTimesCabelo, h.modo_horario)
+          : null,
       }));
 
       const res = await fetch("/api/horarios", {
@@ -195,7 +230,7 @@ export default function HorariosPage() {
             {horarios.map((h) => {
               const previewSlots = h.modo === "auto"
                 ? generateSlots(h.hora_inicio, h.hora_fim, h.intervalo_minutos)
-                : h.customTimes.slice().sort();
+                : [...h.customTimes, ...h.customTimesCabelo].slice().sort();
 
               return (
                 <div
@@ -223,8 +258,13 @@ export default function HorariosPage() {
                     <div className="ml-14 space-y-4">
                       {/* Categoria selector */}
                       <div>
-                        <p className="text-xs font-sans text-foreground/40 uppercase tracking-wider mb-2">Categoria</p>
-                        <div className="flex gap-2">
+                        <p className="text-xs font-sans text-foreground/40 uppercase tracking-wider mb-1">Serviços atendidos neste dia</p>
+                        <p className="text-[10px] font-sans text-foreground/25 mb-2">
+                          {h.categoria === "ambos" ? "Aceita agendamentos de maquiagem e cabelo/penteado" :
+                           h.categoria === "maquiagem" ? "Aceita apenas agendamentos de maquiagem" :
+                           "Aceita apenas agendamentos de cabelo/penteado"}
+                        </p>
+                        <div className="flex gap-2 flex-wrap">
                           {([
                             { value: "ambos", label: "💄💇 Ambos" },
                             { value: "maquiagem", label: "💄 Maquiagem" },
@@ -353,32 +393,70 @@ export default function HorariosPage() {
 
                       {/* CUSTOM mode */}
                       {h.modo === "custom" && (
-                        <div>
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {h.customTimes.map((t, idx) => (
-                              <div key={idx} className="flex items-center gap-1 border border-surface-border bg-surface-elevated rounded-btn">
-                                <input
-                                  type="time"
-                                  value={t}
-                                  onChange={(e) => updateCustomTime(h.dia_semana, idx, e.target.value)}
-                                  className="bg-transparent text-foreground px-2 py-1.5 text-sm font-sans focus:outline-none"
-                                />
+                        <div className="space-y-4">
+                          {/* Maquiagem (or shared) */}
+                          <div>
+                            {h.modo_horario === "separado" && (
+                              <p className="text-xs font-sans text-rose-400 uppercase tracking-wider mb-2">💄 Maquiagem</p>
+                            )}
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              {h.customTimes.map((t, idx) => (
+                                <div key={idx} className="flex items-center gap-1 border border-surface-border bg-surface-elevated rounded-btn">
+                                  <input
+                                    type="time"
+                                    value={t}
+                                    onChange={(e) => updateCustomTime(h.dia_semana, idx, e.target.value)}
+                                    className="bg-transparent text-foreground px-2 py-1.5 text-sm font-sans focus:outline-none"
+                                  />
+                                  <button
+                                    onClick={() => removeCustomTime(h.dia_semana, idx)}
+                                    className="px-1.5 text-foreground/30 hover:text-red-400 transition-colors"
+                                  >
+                                    <X size={12} />
+                                  </button>
+                                </div>
+                              ))}
+                              <button
+                                onClick={() => addCustomTime(h.dia_semana)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 border border-dashed border-[var(--gold-muted-border)] text-foreground/50 text-xs font-sans hover:border-gold hover:text-foreground/80 transition-colors"
+                              >
+                                <Plus size={12} />
+                                Adicionar
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Cabelo — only when separado */}
+                          {h.modo_horario === "separado" && (
+                            <div>
+                              <p className="text-xs font-sans text-blue-400 uppercase tracking-wider mb-2">💇 Cabelo/Penteado</p>
+                              <div className="flex flex-wrap gap-2 mb-2">
+                                {h.customTimesCabelo.map((t, idx) => (
+                                  <div key={idx} className="flex items-center gap-1 border border-surface-border bg-surface-elevated rounded-btn">
+                                    <input
+                                      type="time"
+                                      value={t}
+                                      onChange={(e) => updateCustomTime(h.dia_semana, idx, e.target.value, true)}
+                                      className="bg-transparent text-foreground px-2 py-1.5 text-sm font-sans focus:outline-none"
+                                    />
+                                    <button
+                                      onClick={() => removeCustomTime(h.dia_semana, idx, true)}
+                                      className="px-1.5 text-foreground/30 hover:text-red-400 transition-colors"
+                                    >
+                                      <X size={12} />
+                                    </button>
+                                  </div>
+                                ))}
                                 <button
-                                  onClick={() => removeCustomTime(h.dia_semana, idx)}
-                                  className="px-1.5 text-foreground/30 hover:text-red-400 transition-colors"
+                                  onClick={() => addCustomTime(h.dia_semana, true)}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 border border-dashed border-[var(--gold-muted-border)] text-foreground/50 text-xs font-sans hover:border-gold hover:text-foreground/80 transition-colors"
                                 >
-                                  <X size={12} />
+                                  <Plus size={12} />
+                                  Adicionar
                                 </button>
                               </div>
-                            ))}
-                            <button
-                              onClick={() => addCustomTime(h.dia_semana)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 border border-dashed border-[var(--gold-muted-border)] text-foreground/50 text-xs font-sans hover:border-gold hover:text-foreground/80 transition-colors"
-                            >
-                              <Plus size={12} />
-                              Adicionar
-                            </button>
-                          </div>
+                            </div>
+                          )}
                         </div>
                       )}
 

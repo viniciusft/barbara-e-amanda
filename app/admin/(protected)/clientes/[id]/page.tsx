@@ -134,7 +134,7 @@ export default function ClientePerfilPage() {
       </button>
 
       {/* Header */}
-      <div className="border border-surface-border bg-surface-card p-6 mb-6">
+      <div className="border border-surface-border bg-surface-card rounded-card p-6 mb-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             {/* Nome editável */}
@@ -192,7 +192,7 @@ export default function ClientePerfilPage() {
       </div>
 
       {/* Observações */}
-      <div className="border border-surface-border bg-surface-card p-5 mb-6">
+      <div className="border border-surface-border bg-surface-card rounded-card p-5 mb-6">
         <h3 className="font-sans text-xs uppercase tracking-widest text-foreground/40 mb-3">
           Observações (alergias, tipo de pele/cabelo, preferências)
         </h3>
@@ -233,7 +233,7 @@ export default function ClientePerfilPage() {
             {agendamentos.map((ag) => {
               const { label, color } = statusLabel(ag.status);
               return (
-                <div key={ag.id} className="border border-surface-border bg-surface-card p-4 flex items-center gap-4">
+                <div key={ag.id} className="border border-surface-border bg-surface-card rounded-card p-4 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-0.5">
                       <span className="font-sans text-sm font-medium text-foreground">{ag.servico_nome}</span>

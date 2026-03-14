@@ -141,33 +141,34 @@ export default function PerfilPage() {
   const [showPreviewConfirmacao, setShowPreviewConfirmacao] = useState(false);
   const [showPreviewAvaliacao, setShowPreviewAvaliacao] = useState(false);
 
+  function applyData(data: Record<string, unknown>) {
+    setForm({
+      nome_studio: (data.nome_studio as string) ?? "",
+      bio: (data.bio as string) ?? "",
+      instagram: (data.instagram as string) ?? "",
+      whatsapp: (data.whatsapp as string) ?? "",
+      endereco: (data.endereco as string) ?? "",
+      foto_url: (data.foto_url as string) ?? "",
+      foto_header_url: (data.foto_header_url as string) ?? "",
+      foto_header_mobile_url: (data.foto_header_mobile_url as string) ?? "",
+      chave_pix: (data.chave_pix as string) ?? "",
+      tipo_chave_pix: (data.tipo_chave_pix as string) ?? "celular",
+      nome_recebedor_pix: (data.nome_recebedor_pix as string) ?? "",
+      nome_secretaria: (data.nome_secretaria as string) ?? "",
+      mensagem_whatsapp_template: (data.mensagem_whatsapp_template as string) || DEFAULT_SINAL_TEMPLATE,
+      mensagem_confirmacao_template: (data.mensagem_confirmacao_template as string) || DEFAULT_CONFIRMACAO_TEMPLATE,
+      google_meu_negocio_url: (data.google_meu_negocio_url as string) ?? "",
+      mensagem_avaliacao_template: (data.mensagem_avaliacao_template as string) || DEFAULT_AVALIACAO_TEMPLATE,
+      mensagem_horario_personalizado: (data.mensagem_horario_personalizado as string) ?? "Olá! Não encontrei um horário disponível que se encaixe na minha agenda. Gostaria de solicitar um horário personalizado. Podem me ajudar? 😊",
+    });
+  }
+
   useEffect(() => {
-    fetch("/api/admin/perfil", { cache: "no-store" })
+    fetch("/api/admin/perfil")
       .then((r) => r.json())
-      .then((data) => {
-        if (data) {
-          setForm({
-            nome_studio: data.nome_studio ?? "",
-            bio: data.bio ?? "",
-            instagram: data.instagram ?? "",
-            whatsapp: data.whatsapp ?? "",
-            endereco: data.endereco ?? "",
-            foto_url: data.foto_url ?? "",
-            foto_header_url: data.foto_header_url ?? "",
-            foto_header_mobile_url: data.foto_header_mobile_url ?? "",
-            chave_pix: data.chave_pix ?? "",
-            tipo_chave_pix: data.tipo_chave_pix ?? "celular",
-            nome_recebedor_pix: data.nome_recebedor_pix ?? "",
-            nome_secretaria: data.nome_secretaria ?? "",
-            mensagem_whatsapp_template: data.mensagem_whatsapp_template || DEFAULT_SINAL_TEMPLATE,
-            mensagem_confirmacao_template: data.mensagem_confirmacao_template || DEFAULT_CONFIRMACAO_TEMPLATE,
-            google_meu_negocio_url: data.google_meu_negocio_url ?? "",
-            mensagem_avaliacao_template: data.mensagem_avaliacao_template || DEFAULT_AVALIACAO_TEMPLATE,
-            mensagem_horario_personalizado: data.mensagem_horario_personalizado ?? "Olá! Não encontrei um horário disponível que se encaixe na minha agenda. Gostaria de solicitar um horário personalizado. Podem me ajudar? 😊",
-          });
-        }
-      })
+      .then((data) => { if (data) applyData(data); })
       .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleSave() {
@@ -189,7 +190,10 @@ export default function PerfilPage() {
         const err = await res.json();
         setError(err.error || "Erro ao salvar");
       } else {
+        const saved = await res.json();
+        if (saved && !saved.error) applyData(saved);
         setSuccess("Perfil salvo com sucesso!");
+        setTimeout(() => setSuccess(""), 3000);
       }
     } catch {
       setError("Erro ao salvar perfil");

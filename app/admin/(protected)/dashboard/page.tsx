@@ -127,7 +127,7 @@ export default function DashboardPage() {
         <h3 className="text-xs font-sans uppercase tracking-widest text-foreground/40 mb-3">Hoje</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {/* Agendamentos hoje */}
-          <div className="border border-surface-border bg-surface-card p-4">
+          <div className="border border-surface-border bg-surface-card p-4 rounded-card">
             <div className="flex items-center gap-2 mb-3">
               <CalendarDays size={14} className="text-gold" strokeWidth={1.5} />
               <span className="text-xs font-sans text-foreground/40 uppercase tracking-wider">Agendamentos</span>
@@ -136,7 +136,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Receita do dia */}
-          <div className="border border-surface-border bg-surface-card p-4">
+          <div className="border border-surface-border bg-surface-card p-4 rounded-card">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp size={14} className="text-gold" strokeWidth={1.5} />
               <span className="text-xs font-sans text-foreground/40 uppercase tracking-wider">Receita</span>
@@ -145,7 +145,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Próximo agendamento */}
-          <div className="border border-surface-border bg-surface-card p-4 col-span-2 md:col-span-1">
+          <div className="border border-surface-border bg-surface-card p-4 rounded-card col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
               <Clock size={14} className="text-gold" strokeWidth={1.5} />
               <span className="text-xs font-sans text-foreground/40 uppercase tracking-wider">Próximo</span>
@@ -167,7 +167,7 @@ export default function DashboardPage() {
       <section>
         <h3 className="text-xs font-sans uppercase tracking-widest text-foreground/40 mb-3">Este mês</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="border border-surface-border bg-surface-card p-4">
+          <div className="border border-surface-border bg-surface-card p-4 rounded-card">
             <p className="text-xs font-sans text-foreground/40 uppercase tracking-wider mb-2">Atendimentos</p>
             <p className="font-display text-2xl text-foreground">{mes.total_atendimentos}</p>
           </div>
@@ -198,11 +198,11 @@ export default function DashboardPage() {
         </div>
 
         {hoje.agendamentos.length === 0 ? (
-          <div className="border border-surface-border p-6 text-center">
+          <div className="border border-surface-border rounded-card p-6 text-center">
             <p className="text-foreground/30 font-sans text-sm">Nenhum agendamento para hoje.</p>
           </div>
         ) : (
-          <div className="border border-surface-border divide-y divide-surface-border">
+          <div className="border border-surface-border rounded-card divide-y divide-surface-border overflow-hidden">
             {hoje.agendamentos.map((ag) => {
               const { label, color } = statusBadge(ag.status);
               return (
@@ -236,11 +236,11 @@ export default function DashboardPage() {
         </div>
 
         {notificacoes_recentes.length === 0 ? (
-          <div className="border border-surface-border p-6 text-center">
+          <div className="border border-surface-border rounded-card p-6 text-center">
             <p className="text-foreground/30 font-sans text-sm">Nenhuma notificação não lida.</p>
           </div>
         ) : (
-          <div className="border border-surface-border divide-y divide-surface-border">
+          <div className="border border-surface-border rounded-card divide-y divide-surface-border overflow-hidden">
             {notificacoes_recentes.map((n) => (
               <Link
                 key={n.id}
@@ -270,21 +270,21 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Link
             href="/admin"
-            className="border border-surface-border bg-surface-card px-4 py-3 flex items-center gap-3 hover:bg-surface-elevated transition-colors"
+            className="border border-surface-border bg-surface-card rounded-card px-4 py-3 flex items-center gap-3 hover:bg-surface-elevated transition-colors"
           >
             <CalendarDays size={18} className="text-gold shrink-0" strokeWidth={1.5} />
             <span className="font-sans text-sm text-foreground">Ver agenda da semana</span>
           </Link>
           <Link
             href="/admin/financeiro"
-            className="border border-surface-border bg-surface-card px-4 py-3 flex items-center gap-3 hover:bg-surface-elevated transition-colors"
+            className="border border-surface-border bg-surface-card rounded-card px-4 py-3 flex items-center gap-3 hover:bg-surface-elevated transition-colors"
           >
             <TrendingUp size={18} className="text-gold shrink-0" strokeWidth={1.5} />
             <span className="font-sans text-sm text-foreground">Financeiro do mês</span>
           </Link>
           <Link
             href="/admin/clientes"
-            className="border border-surface-border bg-surface-card px-4 py-3 flex items-center gap-3 hover:bg-surface-elevated transition-colors"
+            className="border border-surface-border bg-surface-card rounded-card px-4 py-3 flex items-center gap-3 hover:bg-surface-elevated transition-colors"
           >
             <Users size={18} className="text-gold shrink-0" strokeWidth={1.5} />
             <span className="font-sans text-sm text-foreground">Ver clientes</span>
