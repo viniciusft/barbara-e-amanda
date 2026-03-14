@@ -124,6 +124,7 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
                     src={s.imagem_url}
                     alt={s.nome}
                     className="w-full h-full object-cover object-center"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">

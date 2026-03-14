@@ -65,6 +65,7 @@ export default async function HomePage() {
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover object-center md:hidden"
                 aria-hidden="true"
+                fetchPriority="high"
               />
             )}
             {/* Desktop image (hidden on mobile, shown on md+) */}
@@ -75,6 +76,7 @@ export default async function HomePage() {
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover object-center hidden md:block"
                 aria-hidden="true"
+                fetchPriority="high"
               />
             )}
             {/* Dark overlay so text remains readable */}
