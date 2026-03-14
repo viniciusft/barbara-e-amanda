@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, MessageCircle } from "lucide-react";
 import ServicePage from "@/components/seo/ServicePage";
+import ServicoLinks from "@/components/seo/ServicoLinks";
 import { createServerSupabaseClient } from "@/lib/supabase";
 
 export const dynamic = "force-static";
@@ -104,6 +105,8 @@ Além da noiva, atendemos madrinhas, mãe da noiva e convidadas, tornando a prep
               "O valor varia conforme o número de pessoas e os serviços contratados (só maquiagem, só penteado ou combo completo). Entre em contato para receber uma proposta personalizada para o seu casamento.",
           },
         ]}
+        galeriaPagina="casamento"
+        galeriaSubtitulo="Noivas inesquecíveis"
         ctaLabel="Agendar dia da noiva agora"
         breadcrumb={[
           { name: "Início", url: siteUrl },
@@ -166,6 +169,7 @@ Além da noiva, atendemos madrinhas, mãe da noiva e convidadas, tornando a prep
           </div>
         </section>
       </div>
+      <ServicoLinks />
     </>
   );
 }

@@ -1,6 +1,21 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { ArrowRight, Instagram, Phone } from "lucide-react";
+import Galeria from "@/components/seo/Galeria";
+
+// NOTE: Add NEXT_PUBLIC_SITE_URL in Vercel → Settings → Environment Variables
+// e.g. NEXT_PUBLIC_SITE_URL=https://ambar.com.br
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
+
+export const metadata: Metadata = {
+  title: "Âmbar Beauty Studio | Maquiagem e Penteado em Passos MG",
+  description:
+    "Studio de maquiagem e penteado em Passos MG. Maquiagem social, noiva, penteado, babyliss e combos. Agende online agora com facilidade!",
+  alternates: {
+    canonical: siteUrl,
+  },
+};
 
 export const revalidate = 0; // always re-render; revalidatePath('/') also triggers this
 
@@ -119,6 +134,31 @@ export default async function HomePage() {
           </Link>
         </div>
 
+      </section>
+
+      {/* NOSSO TRABALHO */}
+      <section className="max-w-5xl mx-auto px-6 py-20">
+        <div className="mb-10 text-center">
+          <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-3">
+            Portfólio
+          </p>
+          <h2 className="font-display text-4xl md:text-5xl text-[#F5F0E8] font-light mb-3">
+            Nosso Trabalho
+          </h2>
+          <p className="text-[#F5F0E8]/40 font-sans text-sm">
+            Cada detalhe pensado para você
+          </p>
+        </div>
+        <Galeria pagina="home" limite={6} />
+        <div className="mt-10 text-center">
+          <Link
+            href="/servicos/maquiagem-social"
+            className="inline-flex items-center gap-3 border border-[rgba(201,168,76,0.4)] text-[#C9A84C] px-8 py-4 font-sans font-semibold text-sm uppercase tracking-widest hover:bg-[rgba(201,168,76,0.08)] transition-colors rounded-btn"
+          >
+            Ver todos os serviços
+            <ArrowRight size={16} />
+          </Link>
+        </div>
       </section>
 
       {/* FOOTER */}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ServicePage from "@/components/seo/ServicePage";
+import ServicoLinks from "@/components/seo/ServicoLinks";
 
 export const dynamic = "force-static";
 
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
 
 export default function BabylissPage() {
   return (
+    <>
     <ServicePage
       serviceName="Babyliss"
       serviceDescription="Serviço profissional de babyliss em Passos MG com ondas naturais, duradouras e perfeitas para festas, eventos e o dia a dia."
@@ -69,6 +71,8 @@ No Âmbar Beauty Studio, o babyliss é feito com protetor térmico profissional 
           answer: "O valor varia conforme o comprimento e o volume do cabelo. Para verificar os preços atualizados e disponibilidade, acesse nosso sistema de agendamento online ou entre em contato conosco.",
         },
       ]}
+      galeriaPagina="babyliss"
+      galeriaSubtitulo="Resultados com babyliss"
       ctaLabel="Agendar babyliss agora"
       breadcrumb={[
         { name: "Início", url: siteUrl },
@@ -76,5 +80,7 @@ No Âmbar Beauty Studio, o babyliss é feito com protetor térmico profissional 
         { name: "Babyliss", url: `${siteUrl}/servicos/babyliss` },
       ]}
     />
+    <ServicoLinks />
+    </>
   );
 }

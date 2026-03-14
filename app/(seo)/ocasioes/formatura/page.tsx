@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, MessageCircle } from "lucide-react";
 import ServicePage from "@/components/seo/ServicePage";
+import ServicoLinks from "@/components/seo/ServicoLinks";
 import { createServerSupabaseClient } from "@/lib/supabase";
 
 export const dynamic = "force-static";
@@ -104,6 +105,8 @@ O atendimento inclui uma consultoria rápida no dia ou um agendamento prévio pa
               "O valor varia conforme os serviços escolhidos (só maquiagem, só penteado ou combo). Entre em contato pelo WhatsApp ou acesse nossa página de agendamento para consultar os valores atualizados.",
           },
         ]}
+        galeriaPagina="formatura"
+        galeriaSubtitulo="Formandas que brilharam"
         ctaLabel="Agendar maquiagem de formatura agora"
         breadcrumb={[
           { name: "Início", url: siteUrl },
@@ -166,6 +169,7 @@ O atendimento inclui uma consultoria rápida no dia ou um agendamento prévio pa
           </div>
         </section>
       </div>
+      <ServicoLinks />
     </>
   );
 }

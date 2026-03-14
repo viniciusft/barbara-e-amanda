@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ServicePage from "@/components/seo/ServicePage";
+import ServicoLinks from "@/components/seo/ServicoLinks";
 
 export const dynamic = "force-static";
 
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
 
 export default function MaquiagemNoivaPage() {
   return (
+    <>
     <ServicePage
       serviceName="Maquiagem de Noiva"
       serviceDescription="Serviço especializado de maquiagem de noiva em Passos MG com teste de make, atendimento exclusivo e alta durabilidade."
@@ -69,6 +71,8 @@ Usamos técnicas como airbrush, primer de longa duração, fixadores e bases com
           answer: "Sim! Utilizamos fixadores e produtos à prova d'água especialmente selecionados para isso. Com os produtos certos e a técnica adequada, a maquiagem resiste a emoções, calor e uma longa jornada de celebração.",
         },
       ]}
+      galeriaPagina="maquiagem-noiva"
+      galeriaSubtitulo="Noivas que passaram por nossas mãos"
       ctaLabel="Agendar maquiagem de noiva agora"
       breadcrumb={[
         { name: "Início", url: siteUrl },
@@ -76,5 +80,7 @@ Usamos técnicas como airbrush, primer de longa duração, fixadores e bases com
         { name: "Maquiagem de Noiva", url: `${siteUrl}/servicos/maquiagem-noiva` },
       ]}
     />
+    <ServicoLinks />
+    </>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ServicePage from "@/components/seo/ServicePage";
+import ServicoLinks from "@/components/seo/ServicoLinks";
 
 export const dynamic = "force-static";
 
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
 
 export default function MaquiagemSocialPage() {
   return (
+    <>
     <ServicePage
       serviceName="Maquiagem Social"
       serviceDescription="Serviço de maquiagem social profissional em Passos MG para festas, eventos, aniversários e ocasiões especiais."
@@ -70,6 +72,8 @@ A maquiagem social é diferente da maquiagem do dia a dia: ela é feita para dur
           answer: "Sim! Oferecemos o combo maquiagem + penteado com desconto em relação à contratação separada. Informe no agendamento que deseja o combo para verificar os horários disponíveis.",
         },
       ]}
+      galeriaPagina="maquiagem-social"
+      galeriaSubtitulo="Makes sociais feitas por nós"
       ctaLabel="Agendar maquiagem social agora"
       breadcrumb={[
         { name: "Início", url: siteUrl },
@@ -77,5 +81,7 @@ A maquiagem social é diferente da maquiagem do dia a dia: ela é feita para dur
         { name: "Maquiagem Social", url: `${siteUrl}/servicos/maquiagem-social` },
       ]}
     />
+    <ServicoLinks />
+    </>
   );
 }

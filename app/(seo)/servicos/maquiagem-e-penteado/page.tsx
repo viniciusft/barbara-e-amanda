@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ServicePage from "@/components/seo/ServicePage";
+import ServicoLinks from "@/components/seo/ServicoLinks";
 
 export const dynamic = "force-static";
 
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
 
 export default function MaquiagemPenteadoPage() {
   return (
+    <>
     <ServicePage
       serviceName="Combo Maquiagem e Penteado"
       serviceDescription="Combo completo de maquiagem + penteado profissional em Passos MG para noivas, formaturas e eventos com coerência visual e melhor custo-benefício."
@@ -69,6 +71,8 @@ Além da harmonia estética, o combo oferece praticidade (tudo em um só lugar e
           answer: "O valor varia de acordo com os serviços específicos escolhidos dentro do combo. Para verificar os preços atualizados e a disponibilidade, acesse nosso sistema de agendamento online.",
         },
       ]}
+      galeriaPagina="maquiagem-e-penteado"
+      galeriaSubtitulo="Combos completos"
       ctaLabel="Agendar combo maquiagem + penteado agora"
       breadcrumb={[
         { name: "Início", url: siteUrl },
@@ -76,5 +80,7 @@ Além da harmonia estética, o combo oferece praticidade (tudo em um só lugar e
         { name: "Maquiagem e Penteado", url: `${siteUrl}/servicos/maquiagem-e-penteado` },
       ]}
     />
+    <ServicoLinks />
+    </>
   );
 }
