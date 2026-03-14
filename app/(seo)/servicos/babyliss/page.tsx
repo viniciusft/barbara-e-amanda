@@ -71,6 +71,8 @@ No Âmbar Beauty Studio, o babyliss é feito com protetor térmico profissional 
           answer: "O valor varia conforme o comprimento e o volume do cabelo. Para verificar os preços atualizados e disponibilidade, acesse nosso sistema de agendamento online ou entre em contato conosco.",
         },
       ]}
+      galeriaPagina="babyliss"
+      galeriaSubtitulo="Resultados com babyliss"
       ctaLabel="Agendar babyliss agora"
       breadcrumb={[
         { name: "Início", url: siteUrl },

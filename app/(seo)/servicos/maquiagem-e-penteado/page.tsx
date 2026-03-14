@@ -71,6 +71,8 @@ Além da harmonia estética, o combo oferece praticidade (tudo em um só lugar e
           answer: "O valor varia de acordo com os serviços específicos escolhidos dentro do combo. Para verificar os preços atualizados e a disponibilidade, acesse nosso sistema de agendamento online.",
         },
       ]}
+      galeriaPagina="maquiagem-e-penteado"
+      galeriaSubtitulo="Combos completos"
       ctaLabel="Agendar combo maquiagem + penteado agora"
       breadcrumb={[
         { name: "Início", url: siteUrl },

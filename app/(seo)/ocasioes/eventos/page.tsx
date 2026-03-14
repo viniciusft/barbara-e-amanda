@@ -105,6 +105,8 @@ Atendemos tanto no studio em Passos MG quanto em locação para grupos. Para fes
               "O valor do serviço é baseado nos procedimentos contratados (maquiagem, penteado ou combo), não necessariamente no tipo de evento. Acesse nossa página de agendamento ou entre em contato para verificar os valores atualizados.",
           },
         ]}
+        galeriaPagina="eventos"
+        galeriaSubtitulo="Looks para cada ocasião"
         ctaLabel="Agendar maquiagem para evento agora"
         breadcrumb={[
           { name: "Início", url: siteUrl },

@@ -71,6 +71,8 @@ Nosso atendimento começa com uma conversa sobre o que você imagina e o que com
           answer: "O valor varia de acordo com o estilo e a complexidade do penteado. Para consultar os preços atualizados e verificar a disponibilidade, acesse nosso sistema de agendamento online ou entre em contato conosco.",
         },
       ]}
+      galeriaPagina="penteado"
+      galeriaSubtitulo="Penteados que já realizamos"
       ctaLabel="Agendar penteado agora"
       breadcrumb={[
         { name: "Início", url: siteUrl },

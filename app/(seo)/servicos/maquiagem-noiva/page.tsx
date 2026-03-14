@@ -71,6 +71,8 @@ Usamos técnicas como airbrush, primer de longa duração, fixadores e bases com
           answer: "Sim! Utilizamos fixadores e produtos à prova d'água especialmente selecionados para isso. Com os produtos certos e a técnica adequada, a maquiagem resiste a emoções, calor e uma longa jornada de celebração.",
         },
       ]}
+      galeriaPagina="maquiagem-noiva"
+      galeriaSubtitulo="Noivas que passaram por nossas mãos"
       ctaLabel="Agendar maquiagem de noiva agora"
       breadcrumb={[
         { name: "Início", url: siteUrl },

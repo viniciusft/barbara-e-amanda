@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Sparkles, ChevronDown } from "lucide-react";
+import Galeria from "@/components/seo/Galeria";
 
 export interface FaqItem {
   question: string;
@@ -23,6 +24,9 @@ export interface ServicePageProps {
   ctaLabel: string; // e.g. "Agendar maquiagem de noiva agora"
   // Breadcrumb
   breadcrumb: { name: string; url: string }[];
+  // Gallery
+  galeriaPagina?: string;
+  galeriaSubtitulo?: string;
 }
 
 export default function ServicePage({
@@ -37,6 +41,8 @@ export default function ServicePage({
   faqs,
   ctaLabel,
   breadcrumb,
+  galeriaPagina,
+  galeriaSubtitulo,
 }: ServicePageProps) {
   const serviceSchema = {
     "@context": "https://schema.org",
@@ -200,28 +206,11 @@ export default function ServicePage({
           </ol>
         </section>
 
-        {/* ── Galeria placeholder ────────────────────────────────────── */}
-        <section>
-          <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-3">
-            Galeria
-          </p>
-          <h2 className="font-display text-3xl md:text-4xl text-[#F5F0E8] font-light mb-8">
-            Nosso trabalho
-          </h2>
-          <div className="grid grid-cols-3 gap-3">
-            {[1, 2, 3].map((n) => (
-              <div
-                key={n}
-                className="aspect-square bg-[#111] border border-[rgba(201,168,76,0.1)] rounded-card flex items-center justify-center"
-              >
-                <div className="text-center">
-                  <Sparkles size={24} className="text-[rgba(201,168,76,0.2)] mx-auto mb-2" strokeWidth={1} />
-                  <p className="text-[#F5F0E8]/15 text-[10px] font-sans">foto em breve</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        {/* ── Galeria ────────────────────────────────────────────────── */}
+        <Galeria
+          pagina={galeriaPagina ?? ""}
+          subtitulo={galeriaSubtitulo}
+        />
 
         {/* Divider */}
         <div className="h-px bg-gradient-to-r from-transparent via-[rgba(201,168,76,0.3)] to-transparent" />

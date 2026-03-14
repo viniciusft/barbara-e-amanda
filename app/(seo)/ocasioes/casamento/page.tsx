@@ -105,6 +105,8 @@ Além da noiva, atendemos madrinhas, mãe da noiva e convidadas, tornando a prep
               "O valor varia conforme o número de pessoas e os serviços contratados (só maquiagem, só penteado ou combo completo). Entre em contato para receber uma proposta personalizada para o seu casamento.",
           },
         ]}
+        galeriaPagina="casamento"
+        galeriaSubtitulo="Noivas inesquecíveis"
         ctaLabel="Agendar dia da noiva agora"
         breadcrumb={[
           { name: "Início", url: siteUrl },
