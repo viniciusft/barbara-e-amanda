@@ -31,13 +31,13 @@ export async function GET(
     .order("data_hora", { ascending: false });
 
   // Collect all names used by this client across bookings
-  const nomesUsados = [
-    ...new Set(
+  const nomesUsados = Array.from(
+    new Set(
       (agendamentos ?? [])
         .map((a) => a.nome_cliente)
         .filter((n): n is string => !!n && n !== cliente.nome)
-    ),
-  ];
+    )
+  );
 
   // Compute real totals
   const totalGastoReal = (agendamentos ?? [])
