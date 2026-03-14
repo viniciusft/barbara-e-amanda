@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ServicePage from "@/components/seo/ServicePage";
+import ServicoLinks from "@/components/seo/ServicoLinks";
 
 export const dynamic = "force-static";
 
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
 
 export default function MaquiagemNoivaPage() {
   return (
+    <>
     <ServicePage
       serviceName="Maquiagem de Noiva"
       serviceDescription="Serviço especializado de maquiagem de noiva em Passos MG com teste de make, atendimento exclusivo e alta durabilidade."
@@ -76,5 +78,7 @@ Usamos técnicas como airbrush, primer de longa duração, fixadores e bases com
         { name: "Maquiagem de Noiva", url: `${siteUrl}/servicos/maquiagem-noiva` },
       ]}
     />
+    <ServicoLinks />
+    </>
   );
 }

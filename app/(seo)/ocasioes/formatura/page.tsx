@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, MessageCircle } from "lucide-react";
 import ServicePage from "@/components/seo/ServicePage";
+import ServicoLinks from "@/components/seo/ServicoLinks";
 import { createServerSupabaseClient } from "@/lib/supabase";
 
 export const dynamic = "force-static";
@@ -166,6 +167,7 @@ O atendimento inclui uma consultoria rápida no dia ou um agendamento prévio pa
           </div>
         </section>
       </div>
+      <ServicoLinks />
     </>
   );
 }

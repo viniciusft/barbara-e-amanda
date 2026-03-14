@@ -1,6 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { ArrowRight, Instagram, Phone } from "lucide-react";
+
+// NOTE: Add NEXT_PUBLIC_SITE_URL in Vercel → Settings → Environment Variables
+// e.g. NEXT_PUBLIC_SITE_URL=https://ambar.com.br
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
+
+export const metadata: Metadata = {
+  title: "Âmbar Beauty Studio | Maquiagem e Penteado em Passos MG",
+  description:
+    "Studio de maquiagem e penteado em Passos MG. Maquiagem social, noiva, penteado, babyliss e combos. Agende online agora com facilidade!",
+  alternates: {
+    canonical: siteUrl,
+  },
+};
 
 export const revalidate = 0; // always re-render; revalidatePath('/') also triggers this
 

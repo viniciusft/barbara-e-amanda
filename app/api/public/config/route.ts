@@ -6,7 +6,7 @@ export async function GET() {
     const supabase = createServerSupabaseClient();
     const { data, error } = await supabase
       .from("admin_config")
-      .select("whatsapp, nome_studio")
+      .select("nome_studio, whatsapp, instagram, endereco, google_meu_negocio_url")
       .limit(1)
       .single();
 

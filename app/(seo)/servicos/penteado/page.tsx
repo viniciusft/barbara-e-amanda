@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ServicePage from "@/components/seo/ServicePage";
+import ServicoLinks from "@/components/seo/ServicoLinks";
 
 export const dynamic = "force-static";
 
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
 
 export default function PenteadoPage() {
   return (
+    <>
     <ServicePage
       serviceName="Penteado Profissional"
       serviceDescription="Penteados profissionais em Passos MG para festas, formaturas, casamentos e eventos. Estilos preso, semi-preso, solto com ondas e tranças."
@@ -76,5 +78,7 @@ Nosso atendimento começa com uma conversa sobre o que você imagina e o que com
         { name: "Penteado", url: `${siteUrl}/servicos/penteado` },
       ]}
     />
+    <ServicoLinks />
+    </>
   );
 }

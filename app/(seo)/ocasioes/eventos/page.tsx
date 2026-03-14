@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, MessageCircle } from "lucide-react";
 import ServicePage from "@/components/seo/ServicePage";
+import ServicoLinks from "@/components/seo/ServicoLinks";
 import { createServerSupabaseClient } from "@/lib/supabase";
 
 export const dynamic = "force-static";
@@ -166,6 +167,7 @@ Atendemos tanto no studio em Passos MG quanto em locação para grupos. Para fes
           </div>
         </section>
       </div>
+      <ServicoLinks />
     </>
   );
 }
