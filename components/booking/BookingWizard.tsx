@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Servico, SlotDisponivel } from "@/types";
+import { tocarSom } from "@/lib/sons";
 import StepServicos from "./StepServicos";
 import StepAgenda from "./StepAgenda";
 import StepDados from "./StepDados";
@@ -166,6 +167,7 @@ export default function BookingWizard() {
               selected={data.servico}
               config={config}
               onSelect={(servico) => {
+                tocarSom("selecao");
                 updateData({ servico, slot: null, data: "" });
                 goNext();
               }}
@@ -184,6 +186,7 @@ export default function BookingWizard() {
                 selectedSlot={data.slot}
                 config={config}
                 onSelect={(date, slot) => {
+                  tocarSom("selecao");
                   updateData({ data: date, slot });
                   setSlotTakenMsg("");
                   goNext();
@@ -199,7 +202,7 @@ export default function BookingWizard() {
               email={data.email}
               observacoes={data.observacoes}
               onChange={updateData}
-              onNext={goNext}
+              onNext={() => { tocarSom("avanco"); goNext(); }}
               onBack={goBack}
             />
           )}
@@ -236,6 +239,7 @@ export default function BookingWizard() {
                   throw new Error("Erro ao realizar agendamento. Tente novamente.");
                 }
                 setBooked(true);
+                tocarSom("sucesso");
                 setSlotTakenMsg("");
               }}
               onBack={goBack}

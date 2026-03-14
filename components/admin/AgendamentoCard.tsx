@@ -26,6 +26,22 @@ function syncLead(agendamentoId: string, etapa: string) {
   }).catch(() => {});
 }
 
+function criarNotificacao(tipo: string, titulo: string, descricao: string, agendamentoId: string) {
+  fetch("/api/admin/notificacoes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tipo, titulo, descricao, agendamento_id: agendamentoId }),
+  }).catch(() => {});
+}
+
+function resolverNotificacao(tipo: string, agendamentoId: string) {
+  fetch("/api/admin/notificacoes", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tipo, agendamento_id: agendamentoId }),
+  }).catch(() => {});
+}
+
 const PAGAMENTO_LABEL: Record<string, string> = {
   pix: "PIX",
   dinheiro: "Dinheiro",
@@ -248,6 +264,28 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
     await patchAndUpdate({ status });
     onStatusChange(current.id, status);
     syncLead(current.id, status);
+
+    if (status === "nao_compareceu") {
+      criarNotificacao(
+        "nao_compareceu",
+        "Cliente não compareceu",
+        `${current.nome_cliente} não compareceu para ${current.servico?.nome ?? current.servico_nome}.`,
+        current.id
+      );
+    } else if (status === "confirmado") {
+      // If confirmed and date is within 48h without confirmation message, flag it
+      const dataHora = new Date(current.data_hora);
+      const in48h = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      if (dataHora > new Date() && dataHora <= in48h && !current.confirmacao_enviada_em) {
+        criarNotificacao(
+          "sem_confirmacao",
+          "Confirmação não enviada",
+          `${current.nome_cliente} — ${current.servico?.nome ?? current.servico_nome} confirmado sem mensagem de confirmação.`,
+          current.id
+        );
+      }
+    }
+
     setLoading(false);
   }
 
@@ -288,6 +326,13 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
     });
     onStatusChange(current.id, "aguardando_sinal");
     syncLead(current.id, "whatsapp_sinal_enviado");
+
+    criarNotificacao(
+      "sinal_pendente",
+      "Sinal pendente",
+      `${current.nome_cliente} — ${current.servico?.nome ?? current.servico_nome} aguardando pagamento do sinal.`,
+      current.id
+    );
   }
 
   async function handleConfirmSinal() {
@@ -307,6 +352,18 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
       setShowSinalForm(false);
       onStatusChange(current.id, "confirmado");
       syncLead(current.id, "sinal_pago");
+      resolverNotificacao("sinal_pendente", current.id);
+      // Check if needs sem_confirmacao
+      const dataHora = new Date(current.data_hora);
+      const in48h = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      if (dataHora > new Date() && dataHora <= in48h && !current.confirmacao_enviada_em) {
+        criarNotificacao(
+          "sem_confirmacao",
+          "Confirmação não enviada",
+          `${current.nome_cliente} — ${current.servico?.nome ?? current.servico_nome} confirmado sem mensagem de confirmação.`,
+          current.id
+        );
+      }
     }
   }
 
@@ -320,6 +377,7 @@ export default function AgendamentoCard({ agendamento, onStatusChange, onUpdated
     await patchAndUpdate({ confirmacao_enviada_em: new Date().toISOString() });
     setSavingConfirmacao(false);
     syncLead(current.id, "confirmacao_enviada");
+    resolverNotificacao("sem_confirmacao", current.id);
   }
 
   function handleExecucaoSaved(updated: Agendamento) {

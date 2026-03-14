@@ -5,6 +5,15 @@ import { useRouter } from "next/navigation";
 import { Search, UserRound, ChevronRight } from "lucide-react";
 import { Cliente } from "@/types";
 
+// Enriched type returned by the updated API
+interface ClienteEnriquecido extends Cliente {
+  total_concluidos: number;
+  total_gasto_real: number;
+  total_todos_agendamentos: number;
+  nomes_usados: string[];
+  ultima_data_hora: string | null;
+}
+
 function formatCurrency(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
@@ -21,7 +30,7 @@ function formatDate(iso: string | null) {
 
 export default function ClientesPage() {
   const router = useRouter();
-  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [clientes, setClientes] = useState<ClienteEnriquecido[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -107,7 +116,7 @@ export default function ClientesPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <span className="text-foreground font-medium">{c.nome}</span>
-                        {c.total_agendamentos >= 5 && (
+                        {c.total_todos_agendamentos >= 5 && (
                           <span className="text-[9px] font-sans border border-gold/50 text-gold px-1.5 py-0.5 uppercase tracking-wider">
                             Frequente
                           </span>
@@ -116,9 +125,9 @@ export default function ClientesPage() {
                     </td>
                     <td className="px-4 py-3 text-foreground/60">{c.telefone}</td>
                     <td className="px-4 py-3 text-foreground/50 hidden lg:table-cell">{c.email ?? "—"}</td>
-                    <td className="px-4 py-3 text-right text-foreground/70">{c.total_agendamentos}</td>
-                    <td className="px-4 py-3 text-right text-gold font-medium">{formatCurrency(c.total_gasto)}</td>
-                    <td className="px-4 py-3 text-right text-foreground/50 hidden lg:table-cell">{formatDate(c.ultimo_agendamento_em)}</td>
+                    <td className="px-4 py-3 text-right text-foreground/70">{c.total_concluidos}</td>
+                    <td className="px-4 py-3 text-right text-gold font-medium">{formatCurrency(c.total_gasto_real)}</td>
+                    <td className="px-4 py-3 text-right text-foreground/50 hidden lg:table-cell">{formatDate(c.ultima_data_hora ?? c.ultimo_agendamento_em)}</td>
                     <td className="px-4 py-3">
                       <ChevronRight size={14} className="text-foreground/25" />
                     </td>
@@ -139,7 +148,7 @@ export default function ClientesPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-foreground font-medium font-sans">{c.nome}</span>
-                    {c.total_agendamentos >= 5 && (
+                    {c.total_todos_agendamentos >= 5 && (
                       <span className="text-[9px] border border-gold/50 text-gold px-1.5 py-0.5 uppercase tracking-wider font-sans shrink-0">
                         Frequente
                       </span>
@@ -147,8 +156,8 @@ export default function ClientesPage() {
                   </div>
                   <p className="text-foreground/40 text-xs font-sans">{c.telefone}</p>
                   <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-xs font-sans text-foreground/40">{c.total_agendamentos} atend.</span>
-                    <span className="text-xs font-sans text-gold">{formatCurrency(c.total_gasto)}</span>
+                    <span className="text-xs font-sans text-foreground/40">{c.total_concluidos} atend.</span>
+                    <span className="text-xs font-sans text-gold">{formatCurrency(c.total_gasto_real)}</span>
                   </div>
                 </div>
                 <ChevronRight size={16} className="text-foreground/25 shrink-0" />
