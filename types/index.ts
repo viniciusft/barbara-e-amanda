@@ -149,6 +149,7 @@ export type NotificacaoTipo =
   | "sinal_pendente"
   | "sem_confirmacao"
   | "agendamento_hoje"
+  | "nao_compareceu"
   | "contato_casamento"
   | "contato_destination"
   | "contato_duvida";

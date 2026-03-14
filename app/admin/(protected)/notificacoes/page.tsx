@@ -1,39 +1,41 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, CheckCheck } from "lucide-react";
 import { Notificacao } from "@/types";
 
-const TIPOS: { value: string; label: string }[] = [
-  { value: "", label: "Todas" },
-  { value: "nova_solicitacao", label: "Nova solicitação" },
-  { value: "sinal_pendente", label: "Sinal pendente" },
-  { value: "sem_confirmacao", label: "Sem confirmação" },
-  { value: "agendamento_hoje", label: "Agendamento hoje" },
-  { value: "contato_casamento", label: "Contato casamento" },
-  { value: "contato_destination", label: "Destination Beauty" },
-  { value: "contato_duvida", label: "Dúvida" },
+// Pills matching the task spec
+const PILLS: { value: string; label: string; tipos: string[] }[] = [
+  { value: "",              label: "Todas",           tipos: [] },
+  { value: "solicitacoes",  label: "Solicitações",    tipos: ["nova_solicitacao"] },
+  { value: "sinal",         label: "Sinal Pendente",  tipos: ["sinal_pendente"] },
+  { value: "confirmacao",   label: "Sem Confirmação", tipos: ["sem_confirmacao"] },
+  { value: "hoje",          label: "Hoje",            tipos: ["agendamento_hoje"] },
+  { value: "nao_veio",      label: "Não Compareceu",  tipos: ["nao_compareceu"] },
+  { value: "contatos",      label: "Contatos",        tipos: ["contato_casamento", "contato_destination", "contato_duvida"] },
 ];
 
 const TIPO_ICONS: Record<string, string> = {
-  nova_solicitacao: "🆕",
-  sinal_pendente: "💰",
-  sem_confirmacao: "📩",
-  agendamento_hoje: "📅",
-  contato_casamento: "💍",
+  nova_solicitacao:    "🆕",
+  sinal_pendente:      "💰",
+  sem_confirmacao:     "📩",
+  agendamento_hoje:    "📅",
+  nao_compareceu:      "🚫",
+  contato_casamento:   "💍",
   contato_destination: "✈️",
-  contato_duvida: "💬",
+  contato_duvida:      "💬",
 };
 
 const TIPO_LABELS: Record<string, string> = {
-  nova_solicitacao: "Nova solicitação",
-  sinal_pendente: "Sinal pendente",
-  sem_confirmacao: "Sem confirmação",
-  agendamento_hoje: "Agendamento hoje",
-  contato_casamento: "Contato casamento",
+  nova_solicitacao:    "Nova solicitação",
+  sinal_pendente:      "Sinal pendente",
+  sem_confirmacao:     "Sem confirmação",
+  agendamento_hoje:    "Agendamento hoje",
+  nao_compareceu:      "Não compareceu",
+  contato_casamento:   "Contato casamento",
   contato_destination: "Destination Beauty",
-  contato_duvida: "Dúvida",
+  contato_duvida:      "Dúvida",
 };
 
 function timeAgo(iso: string) {
@@ -49,31 +51,45 @@ function timeAgo(iso: string) {
 
 export default function NotificacoesPage() {
   const router = useRouter();
-  const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
-  const [naoLidas, setNaoLidas] = useState(0);
+  const [all, setAll] = useState<Notificacao[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tipoFiltro, setTipoFiltro] = useState<string>("");
+  const [pill, setPill] = useState("");
   const [markingAll, setMarkingAll] = useState(false);
 
-  const fetchNotificacoes = useCallback(async (tipo: string) => {
+  const fetchAll = useCallback(async () => {
     setLoading(true);
-    const url = `/api/admin/notificacoes${tipo ? `?tipo=${tipo}` : ""}`;
-    const res = await fetch(url);
+    const res = await fetch("/api/admin/notificacoes");
     const data = await res.json();
-    setNotificacoes(data.notificacoes ?? []);
-    setNaoLidas(data.nao_lidas ?? 0);
+    setAll(data.notificacoes ?? []);
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    fetchNotificacoes(tipoFiltro);
-  }, [tipoFiltro, fetchNotificacoes]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // Compute counts of unread per pill
+  const pillCounts = useMemo(() => {
+    return PILLS.map((p) => {
+      if (p.value === "") return { value: "", count: all.filter((n) => !n.lida).length };
+      return {
+        value: p.value,
+        count: all.filter((n) => !n.lida && p.tipos.includes(n.tipo)).length,
+      };
+    });
+  }, [all]);
+
+  // Filter notifications for current pill
+  const visible = useMemo(() => {
+    if (!pill) return all;
+    const tipos = PILLS.find((p) => p.value === pill)?.tipos ?? [];
+    return all.filter((n) => tipos.includes(n.tipo));
+  }, [all, pill]);
+
+  const naoLidas = all.filter((n) => !n.lida).length;
 
   async function markAsRead(n: Notificacao) {
     if (!n.lida) {
       await fetch(`/api/admin/notificacoes/${n.id}`, { method: "PATCH" });
-      setNotificacoes((prev) => prev.map((x) => x.id === n.id ? { ...x, lida: true } : x));
-      setNaoLidas((c) => Math.max(0, c - 1));
+      setAll((prev) => prev.map((x) => x.id === n.id ? { ...x, lida: true } : x));
     }
     if (n.agendamento_id) {
       router.push(`/admin?agendamento=${n.agendamento_id}`);
@@ -87,8 +103,7 @@ export default function NotificacoesPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "mark_all_read" }),
     });
-    setNotificacoes((prev) => prev.map((n) => ({ ...n, lida: true })));
-    setNaoLidas(0);
+    setAll((prev) => prev.map((n) => ({ ...n, lida: true })));
     setMarkingAll(false);
   }
 
@@ -121,21 +136,33 @@ export default function NotificacoesPage() {
         )}
       </div>
 
-      {/* Filtro por tipo */}
+      {/* Pills with counters */}
       <div className="flex gap-2 flex-wrap mb-6">
-        {TIPOS.map((t) => (
-          <button
-            key={t.value}
-            onClick={() => setTipoFiltro(t.value)}
-            className={`px-3 py-1.5 text-xs font-sans border transition-colors ${
-              tipoFiltro === t.value
-                ? "border-gold text-gold bg-gold-muted"
-                : "border-surface-border text-foreground/50 hover:text-foreground hover:border-foreground/30"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+        {PILLS.map((p) => {
+          const countObj = pillCounts.find((c) => c.value === p.value);
+          const count = countObj?.count ?? 0;
+          const active = pill === p.value;
+          return (
+            <button
+              key={p.value}
+              onClick={() => setPill(p.value)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-sans border transition-colors ${
+                active
+                  ? "border-gold text-gold bg-gold-muted"
+                  : "border-surface-border text-foreground/50 hover:text-foreground hover:border-foreground/30"
+              }`}
+            >
+              {p.label}
+              {count > 0 && (
+                <span className={`font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center text-[9px] px-1 ${
+                  active ? "bg-gold text-[#0a0a0a]" : "bg-foreground/15 text-foreground/60"
+                }`}>
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* List */}
@@ -143,14 +170,14 @@ export default function NotificacoesPage() {
         <div className="flex items-center gap-3 py-16 justify-center">
           <div className="w-5 h-5 border border-gold border-t-transparent rounded-full animate-spin" />
         </div>
-      ) : notificacoes.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="border border-surface-border p-16 text-center">
           <Bell size={32} className="text-foreground/15 mx-auto mb-3" strokeWidth={1} />
           <p className="text-foreground/40 font-sans text-sm">Nenhuma notificação encontrada.</p>
         </div>
       ) : (
         <div className="border border-surface-border divide-y divide-surface-border">
-          {notificacoes.map((n) => (
+          {visible.map((n) => (
             <button
               key={n.id}
               onClick={() => markAsRead(n)}
