@@ -1,180 +1,563 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, MessageCircle } from "lucide-react";
-import ServicePage from "@/components/seo/ServicePage";
-import ServicoLinks from "@/components/seo/ServicoLinks";
+import {
+  Check, ArrowRight, Sparkles, MessageCircle,
+  Heart, Users2, Camera,
+} from "lucide-react";
+import Carrossel, { type CarrosselFoto } from "@/components/seo/Carrossel";
+import FaqAccordion, { type FaqItem } from "@/components/seo/FaqAccordion";
 import { createServerSupabaseClient } from "@/lib/supabase";
-import { getConteudo } from "@/lib/conteudo";
 
 export const dynamic = "force-static";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const c = await getConteudo("casamento");
-  return {
+// ── Static metadata ───────────────────────────────────────────────────────────
+
+export const metadata: Metadata = {
+  title: "Maquiagem para Casamento em Passos MG | Âmbar Beauty Studio",
+  description:
+    "Maquiagem e penteado para noivas em Passos MG. Dia da noiva completo, teste de maquiagem, atendimento exclusivo. Reserve sua data no Âmbar Beauty Studio.",
+  alternates: {
+    canonical: `${siteUrl}/ocasioes/casamento`,
+  },
+  openGraph: {
     title: "Maquiagem para Casamento em Passos MG | Âmbar Beauty Studio",
-    description:
-      c?.descricao_curta ??
-      "Maquiagem e penteado para noivas em Passos MG. Dia da noiva completo, teste de maquiagem, atendimento exclusivo. Reserve sua data no Âmbar Beauty Studio.",
-    keywords: [
-      "maquiagem casamento passos mg",
-      "dia da noiva passos mg",
-      "maquiagem noiva passos",
-      "penteado noiva passos mg",
-      "casamento passos mg make",
-    ],
-    openGraph: {
-      title: "Maquiagem e Penteado para Casamento em Passos MG | Âmbar Beauty Studio",
-      description:
-        "Dia da noiva completo com maquiagem e penteado profissional em Passos MG. Teste de make, atendimento exclusivo. Âmbar Beauty Studio.",
-      url: `${siteUrl}/ocasioes/casamento`,
-    },
-    alternates: { canonical: `${siteUrl}/ocasioes/casamento` },
-  };
-}
+    description: "Maquiagem e penteado para noivas em Passos MG.",
+    type: "website",
+  },
+};
 
-async function getWhatsapp(): Promise<string | null> {
-  try {
-    const db = createServerSupabaseClient();
-    const { data } = await db
-      .from("admin_config")
-      .select("whatsapp")
-      .limit(1)
-      .single();
-    return data?.whatsapp ?? null;
-  } catch {
-    return null;
-  }
-}
+// ── Fallback content ──────────────────────────────────────────────────────────
 
-export default async function CasamentoPage() {
-  const [whatsapp, c] = await Promise.all([getWhatsapp(), getConteudo("casamento")]);
-  const whatsappNumber = whatsapp?.replace(/\D/g, "") ?? "";
-  const whatsappUrl = whatsappNumber
-    ? `https://wa.me/55${whatsappNumber}?text=${encodeURIComponent("Olá! Gostaria de informações sobre maquiagem e penteado para casamento.")}`
-    : null;
+const SLUG = "casamento";
 
-  return (
-    <>
-      <ServicePage
-        serviceName="Maquiagem e Penteado para Casamento"
-        serviceDescription="Serviço completo de dia da noiva em Passos MG: maquiagem e penteado com teste prévio, atendimento exclusivo e produtos de altíssima durabilidade."
-        serviceUrl={`${siteUrl}/ocasioes/casamento`}
-        heroTitle={c?.titulo ?? "Maquiagem e Penteado para Casamento em Passos MG"}
-        heroSubtitle={c?.subtitulo ?? "O seu dia mais especial merece um atendimento à altura. Dia da noiva completo — maquiagem e penteado — com teste prévio, produtos premium e dedicação exclusiva ao seu look."}
-        whatIsText={`O casamento é um dos momentos mais marcantes da vida, e o visual da noiva precisa ser impecável do início ao fim da celebração. O serviço de dia da noiva no Âmbar Beauty Studio é pensado para que você viva cada instante com leveza e confiança, sabendo que sua beleza está em boas mãos.
+const DEFAULT_TITULO = "Maquiagem e Penteado para Casamento em Passos MG";
+const DEFAULT_SUBTITULO =
+  "O seu dia mais especial merece um atendimento à altura. Dia da noiva completo com teste prévio, produtos premium e dedicação exclusiva ao seu look.";
+const DEFAULT_TEXTO = `O casamento é um dos momentos mais marcantes da vida, e o visual da noiva precisa ser impecável do início ao fim da celebração. O serviço de dia da noiva no Âmbar Beauty Studio é pensado para que você viva cada instante com leveza e confiança, sabendo que sua beleza está em boas mãos.
 
 O processo começa com uma consulta detalhada e um teste de maquiagem e penteado, feitos com antecedência para garantir que o look do grande dia já foi validado e aprovado por você. Usamos produtos de altíssima fixação — à prova de lágrimas, calor e emoção — para que a maquiagem dure da cerimônia até a última dança.
 
-Além da noiva, atendemos madrinhas, mãe da noiva e convidadas, tornando a preparação do dia ainda mais especial e integrada. Cada detalhe é pensado para que você chegue ao altar se sentindo a versão mais radiante de si mesma.`}
-        idealFor={[
-          "Noivas com casamento civil, religioso ou ao ar livre em Passos MG",
-          "Casamentos diurnos e noturnos com look duradouro",
-          "Noivas que desejam um visual natural, clássico ou glamouroso",
-          "Madrinhas de honra que querem produção integrada",
-          "Mãe da noiva e convidadas especiais",
-          "Noivas que valorizam teste prévio e atendimento exclusivo",
-        ]}
-        howItWorks={[
-          "Entre em contato para verificar a disponibilidade da data do casamento e agendar o teste de maquiagem e penteado.",
-          "Teste completo: sessão de experimentação do look com no mínimo 30 dias de antecedência para eventuais ajustes.",
-          "Confirmação do pacote e das pessoas incluídas no atendimento (noiva, madrinhas, mãe da noiva).",
-          "No dia do casamento, a equipe chega no horário combinado para iniciar o cronograma de atendimento.",
-          "Maquiagem e penteado aplicados com os produtos e técnicas definidos no teste, entrega de kit de retoque.",
-        ]}
-        faqs={[
-          {
-            question: "Com quanto tempo de antecedência devo reservar minha data de casamento?",
-            answer:
-              "Recomendamos reservar com pelo menos 3 a 6 meses de antecedência, especialmente para datas em alta temporada (outubro a dezembro). O teste de maquiagem e penteado é feito entre 30 e 60 dias antes do casamento.",
-          },
-          {
-            question: "O teste de maquiagem e penteado está incluído no pacote?",
-            answer:
-              "Sim! O teste de maquiagem e penteado faz parte do serviço de dia da noiva. É durante o teste que definimos o look final, os produtos ideais para o seu tipo de pele e o estilo do penteado. Recomendamos usar a roupa ou acessórios próximos ao visual do casamento.",
-          },
-          {
-            question: "Atendem também madrinhas e familiares no mesmo dia?",
-            answer:
-              "Sim! Montamos um cronograma completo para noiva, madrinhas, mãe da noiva e convidadas especiais. Quanto mais pessoas incluídas, mais cedo iniciamos o atendimento — nosso time é organizado para que todos fiquem prontas no horário ideal.",
-          },
-          {
-            question: "Fazem atendimento no local do casamento ou apenas no studio?",
-            answer:
-              "Atendemos tanto no Âmbar Beauty Studio em Passos MG quanto no local do casamento — hotel, haras, sítio ou salão. Consulte as condições de deslocamento para eventos fora de Passos.",
-          },
-          {
-            question: "Como funciona o valor do pacote de casamento?",
-            answer:
-              "O valor varia conforme o número de pessoas e os serviços contratados (só maquiagem, só penteado ou combo completo). Entre em contato para receber uma proposta personalizada para o seu casamento.",
-          },
-        ]}
-        galeriaPagina="casamento"
-        galeriaSubtitulo="Noivas inesquecíveis"
-        ctaLabel="Agendar dia da noiva agora"
-        breadcrumb={[
-          { name: "Início", url: siteUrl },
-          { name: "Ocasiões", url: `${siteUrl}/ocasioes` },
-          { name: "Casamento", url: `${siteUrl}/ocasioes/casamento` },
-        ]}
+Além da noiva, atendemos madrinhas, mãe da noiva e convidadas, tornando a preparação do dia ainda mais especial e integrada. Cada detalhe é pensado para que você chegue ao altar se sentindo a versão mais radiante de si mesma.`;
+
+const DEFAULT_FAQS: FaqItem[] = [
+  {
+    question: "Com quanto tempo de antecedência devo reservar minha data?",
+    answer:
+      "Recomendamos reservar com pelo menos 3 a 6 meses de antecedência, especialmente para datas em alta temporada (outubro a dezembro). O teste de maquiagem e penteado é feito entre 30 e 60 dias antes do casamento.",
+  },
+  {
+    question: "O teste de maquiagem está incluído no pacote?",
+    answer:
+      "Sim! O teste faz parte do serviço de dia da noiva. É durante o teste que definimos o look final, os produtos ideais para o seu tipo de pele e o estilo do penteado. Recomendamos usar a roupa ou acessórios próximos ao visual do casamento.",
+  },
+  {
+    question: "Atendem também madrinhas e familiares no mesmo dia?",
+    answer:
+      "Sim! Montamos um cronograma completo para noiva, madrinhas, mãe da noiva e convidadas especiais. Quanto mais pessoas incluídas, mais cedo iniciamos o atendimento.",
+  },
+  {
+    question: "Fazem atendimento no local do casamento?",
+    answer:
+      "Atendemos tanto no Âmbar Beauty Studio em Passos MG quanto no local do casamento — hotel, haras, sítio ou salão. Consulte as condições de deslocamento para eventos fora de Passos.",
+  },
+  {
+    question: "Como funciona o valor do pacote de casamento?",
+    answer:
+      "O valor varia conforme o número de pessoas e os serviços contratados. Entre em contato para receber uma proposta personalizada para o seu casamento.",
+  },
+];
+
+const PARA_QUEM = [
+  {
+    icon: Heart,
+    titulo: "Noivas",
+    descricao:
+      "Para casamentos civis, religiosos ou ao ar livre. Look exclusivo com teste prévio e altíssima durabilidade.",
+  },
+  {
+    icon: Users2,
+    titulo: "Madrinhas e Familiares",
+    descricao:
+      "Atendimento integrado para toda a família da noiva, com cronograma organizado para o grande dia.",
+  },
+  {
+    icon: Sparkles,
+    titulo: "Cerimônia Especial",
+    descricao:
+      "Do casamento íntimo à grande festa, adaptamos o look ao estilo da sua celebração.",
+  },
+  {
+    icon: Camera,
+    titulo: "Ensaio Pre-Wedding",
+    descricao:
+      "Maquiagem profissional para fotos que ficam para a eternidade.",
+  },
+];
+
+// ── Data fetching ─────────────────────────────────────────────────────────────
+
+interface GaleriaRow {
+  id: string;
+  imagem_url: string;
+  titulo: string | null;
+  tipo_exibicao: string | null;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ConteudoRow = Record<string, any> | null;
+
+async function getData() {
+  try {
+    const db = createServerSupabaseClient();
+
+    const [conteudoRes, galeriaRes, configRes] = await Promise.allSettled([
+      db
+        .from("conteudo_paginas")
+        .select("*")
+        .eq("pagina", SLUG)
+        .single(),
+      db
+        .from("galeria")
+        .select("id, imagem_url, titulo, tipo_exibicao")
+        .eq("pagina", SLUG)
+        .eq("ativo", true)
+        .order("ordem", { ascending: true }),
+      db.from("admin_config").select("whatsapp, nome_studio").limit(1).single(),
+    ]);
+
+    const conteudo: ConteudoRow =
+      conteudoRes.status === "fulfilled" ? conteudoRes.value.data : null;
+    const galeria: GaleriaRow[] =
+      galeriaRes.status === "fulfilled" ? (galeriaRes.value.data ?? []) : [];
+    const config =
+      configRes.status === "fulfilled" ? configRes.value.data : null;
+
+    return { conteudo, galeria, config };
+  } catch {
+    return { conteudo: null, galeria: [], config: null };
+  }
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export default async function CasamentoPage() {
+  const { conteudo, galeria, config } = await getData();
+
+  // Derived content (with fallbacks)
+  const titulo: string = conteudo?.titulo ?? DEFAULT_TITULO;
+  const subtitulo: string = conteudo?.subtitulo ?? DEFAULT_SUBTITULO;
+  const textoPrincipal: string = conteudo?.texto_principal ?? DEFAULT_TEXTO;
+
+  // Parse FAQ from conteudo (JSONB column) or fallback
+  let faqs: FaqItem[] = DEFAULT_FAQS;
+  if (conteudo?.faq) {
+    try {
+      const parsed =
+        typeof conteudo.faq === "string" ? JSON.parse(conteudo.faq) : conteudo.faq;
+      if (Array.isArray(parsed) && parsed.length > 0) faqs = parsed;
+    } catch { /* keep default */ }
+  }
+
+  // Separate gallery by tipo_exibicao
+  const heroFoto = galeria.find((f) => f.tipo_exibicao === "hero") ?? null;
+  const carrosselFotos: CarrosselFoto[] = galeria
+    .filter((f) => f.tipo_exibicao === "carrossel")
+    .map(({ id, imagem_url, titulo: t }) => ({ id, url: imagem_url, titulo: t }));
+  const gridFotos = galeria.filter((f) => f.tipo_exibicao === "grid").slice(0, 6);
+
+  // WhatsApp
+  const wanum = config?.whatsapp?.replace(/\D/g, "") ?? "";
+  const waUrl = wanum
+    ? `https://wa.me/55${wanum}?text=${encodeURIComponent("Olá! Gostaria de informações sobre maquiagem para casamento.")}`
+    : "#";
+
+  // ── JSON-LD schemas ──────────────────────────────────────────────────────────
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Início", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "Ocasiões", item: `${siteUrl}/ocasioes` },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: "Casamento",
+        item: `${siteUrl}/ocasioes/casamento`,
+      },
+    ],
+  };
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+    })),
+  };
+
+  const imageGallerySchema =
+    carrosselFotos.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "ImageGallery",
+          name: "Maquiagem para Casamento — Nosso Trabalho",
+          associatedMedia: carrosselFotos.map((f) => ({
+            "@type": "ImageObject",
+            contentUrl: f.url,
+            description: f.titulo ?? "Maquiagem para casamento - Âmbar Beauty Studio - Passos MG",
+          })),
+        }
+      : null;
+
+  return (
+    <div className="bg-white text-neutral-800">
+      {/* Schemas */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
 
-      {/* Internal links + WhatsApp CTA */}
-      <div className="max-w-5xl mx-auto px-5 pb-20 space-y-10">
-        {/* WhatsApp secondary CTA */}
-        {whatsappUrl && (
-          <div className="text-center">
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SEÇÃO 1 — HERO
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section
+        className="relative min-h-[420px] md:min-h-[500px] flex items-center"
+        style={
+          heroFoto
+            ? {
+                backgroundImage: `url(${heroFoto.imagem_url})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : undefined
+        }
+      >
+        {/* Background overlay */}
+        {heroFoto ? (
+          <div className="absolute inset-0 bg-black/55" />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 to-neutral-800" />
+        )}
+
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-5 py-16 md:py-24">
+          {/* Breadcrumb */}
+          <nav aria-label="Breadcrumb" className="mb-5">
+            <ol className="flex items-center gap-2 text-sm text-white/70 flex-wrap">
+              <li>
+                <Link href="/" className="hover:text-white transition-colors">
+                  Início
+                </Link>
+              </li>
+              <li className="text-white/40">/</li>
+              <li>
+                <Link href="/ocasioes" className="hover:text-white transition-colors">
+                  Ocasiões
+                </Link>
+              </li>
+              <li className="text-white/40">/</li>
+              <li className="text-white/90">Casamento</li>
+            </ol>
+          </nav>
+
+          <h1 className="font-display text-4xl md:text-5xl text-white font-semibold leading-tight mb-3 max-w-2xl">
+            {titulo}
+          </h1>
+          <p className="text-lg text-white/80 mb-6 max-w-xl font-sans">{subtitulo}</p>
+
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/agendar"
+              className="inline-flex items-center gap-2 bg-[#C9A84C] text-black font-semibold rounded-lg px-6 py-3 text-sm hover:bg-[#E2C97E] transition-colors"
+            >
+              <Sparkles size={15} />
+              Agendar agora
+            </Link>
             <a
-              href={whatsappUrl}
+              href={waUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 border border-[rgba(201,168,76,0.4)] text-[#C9A84C] px-8 py-4 font-sans font-semibold text-sm uppercase tracking-widest hover:bg-[rgba(201,168,76,0.08)] transition-colors rounded-btn"
+              className="inline-flex items-center gap-2 border border-white/50 text-white rounded-lg px-6 py-3 text-sm hover:bg-white/10 transition-colors font-sans"
             >
-              <MessageCircle size={16} />
+              <MessageCircle size={15} />
               Falar pelo WhatsApp
             </a>
           </div>
-        )}
+        </div>
+      </section>
 
-        {/* Related service pages */}
-        <section>
-          <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-4 text-center">
-            Serviços relacionados
-          </p>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <Link
-              href="/servicos/maquiagem-noiva"
-              className="flex items-center justify-between gap-3 border border-[rgba(201,168,76,0.15)] bg-[#111] rounded-card p-5 hover:border-[rgba(201,168,76,0.4)] transition-colors group"
-            >
-              <div>
-                <p className="text-[#F5F0E8]/90 font-sans text-sm font-medium group-hover:text-[#C9A84C] transition-colors">
-                  Maquiagem de Noiva
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SEÇÃO 2 — CARROSSEL DE FOTOS
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section className="bg-white py-16">
+        {imageGallerySchema && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(imageGallerySchema) }}
+          />
+        )}
+        <div className="max-w-5xl mx-auto px-5">
+          <div className="text-center mb-8">
+            <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
+              Galeria
+            </p>
+            <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
+              Nosso Trabalho
+            </h2>
+            <p className="text-neutral-500 font-sans mt-2 text-sm">
+              Cada detalhe feito para você
+            </p>
+          </div>
+          <Carrossel fotos={carrosselFotos} />
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SEÇÃO 3 — SOBRE + CARD CTA
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section className="bg-white border-t border-neutral-100 py-16">
+        <div className="max-w-5xl mx-auto px-5">
+          <div className="grid lg:grid-cols-5 gap-12 items-start">
+            {/* Text — second on mobile, first on desktop */}
+            <div className="lg:col-span-3 order-2 lg:order-1">
+              <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-3">
+                Sobre a ocasião
+              </p>
+              <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold mb-6">
+                O dia mais especial da sua vida
+              </h2>
+              <div className="space-y-4">
+                {textoPrincipal.split("\n\n").map((para, i) => (
+                  <p key={i} className="text-neutral-600 leading-relaxed font-sans">
+                    {para}
+                  </p>
+                ))}
+              </div>
+              <ul className="mt-8 space-y-3">
+                {[
+                  "Teste de maquiagem e penteado incluído",
+                  "Produtos premium de altíssima durabilidade",
+                  "Atendimento exclusivo no dia do casamento",
+                  "Recebimento de kit de retoque",
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-3 text-neutral-700 font-sans text-sm">
+                    <Check size={16} className="text-[#C9A84C] shrink-0" strokeWidth={2.5} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* CTA card — first on mobile for conversion */}
+            <div className="lg:col-span-2 order-1 lg:order-2">
+              <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm lg:sticky lg:top-6">
+                <p className="font-semibold text-neutral-900 text-lg mb-1">
+                  Dia da Noiva Completo
                 </p>
-                <p className="text-[#F5F0E8]/40 font-sans text-xs mt-1">
-                  Make exclusivo com teste prévio e alta durabilidade
+                <p className="text-neutral-500 font-sans text-sm mb-5">Consulte disponibilidade</p>
+                <hr className="border-neutral-100 mb-5" />
+                <Link
+                  href="/agendar"
+                  className="flex items-center justify-center gap-2 w-full bg-[#C9A84C] text-black font-semibold rounded-lg py-3 text-sm hover:bg-[#E2C97E] transition-colors mb-3"
+                >
+                  <Sparkles size={14} />
+                  Agendar agora
+                </Link>
+                <a
+                  href={waUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full border border-[#C9A84C] text-[#C9A84C] rounded-lg py-3 text-sm hover:bg-[rgba(201,168,76,0.06)] transition-colors font-sans"
+                >
+                  <MessageCircle size={14} />
+                  Tirar dúvidas
+                </a>
+                <p className="text-xs text-neutral-400 text-center mt-4 font-sans">
+                  Agendamento 100% online · Sem taxa
                 </p>
               </div>
-              <ArrowRight size={16} className="text-[#C9A84C] shrink-0" />
-            </Link>
-            <Link
-              href="/servicos/penteado"
-              className="flex items-center justify-between gap-3 border border-[rgba(201,168,76,0.15)] bg-[#111] rounded-card p-5 hover:border-[rgba(201,168,76,0.4)] transition-colors group"
-            >
-              <div>
-                <p className="text-[#F5F0E8]/90 font-sans text-sm font-medium group-hover:text-[#C9A84C] transition-colors">
-                  Penteado para Noiva
-                </p>
-                <p className="text-[#F5F0E8]/40 font-sans text-xs mt-1">
-                  Coque, trança, ondas e todos os estilos para o grande dia
-                </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SEÇÃO 4 — PARA QUEM É IDEAL
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section className="bg-neutral-50 py-16">
+        <div className="max-w-5xl mx-auto px-5">
+          <div className="text-center mb-10">
+            <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
+              Indicações
+            </p>
+            <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
+              Para quem é ideal?
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {PARA_QUEM.map(({ icon: Icon, titulo: t, descricao }) => (
+              <div
+                key={t}
+                className="bg-white rounded-xl p-5 border border-neutral-100 hover:border-[rgba(201,168,76,0.4)] hover:shadow-sm transition-all"
+              >
+                <Icon size={24} className="text-[#C9A84C] mb-3" strokeWidth={1.5} />
+                <p className="font-semibold text-neutral-800 text-sm mb-1.5">{t}</p>
+                <p className="text-neutral-500 text-xs leading-relaxed font-sans">{descricao}</p>
               </div>
-              <ArrowRight size={16} className="text-[#C9A84C] shrink-0" />
-            </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SEÇÃO 5 — GRID DE FOTOS (só renderiza se houver fotos tipo "grid")
+      ═══════════════════════════════════════════════════════════════════════ */}
+      {gridFotos.length > 0 && (
+        <section className="bg-white py-16">
+          <div className="max-w-5xl mx-auto px-5">
+            <div className="mb-8">
+              <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
+                Portfólio
+              </p>
+              <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
+                Mais trabalhos
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {gridFotos.map((foto) => {
+                const alt = foto.titulo ?? "Maquiagem para casamento - Âmbar Beauty Studio - Passos MG";
+                return (
+                  <div key={foto.id}>
+                    <script
+                      type="application/ld+json"
+                      dangerouslySetInnerHTML={{
+                        __html: JSON.stringify({
+                          "@context": "https://schema.org",
+                          "@type": "ImageObject",
+                          contentUrl: foto.imagem_url,
+                          description: alt,
+                        }),
+                      }}
+                    />
+                    <div className="relative aspect-square rounded-xl overflow-hidden group">
+                      <Image
+                        src={foto.imagem_url}
+                        alt={alt}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        unoptimized
+                      />
+                      {foto.titulo && (
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-end">
+                          <p className="px-3 pb-3 text-white text-xs font-sans opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300">
+                            {foto.titulo}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
-      </div>
-      <ServicoLinks />
-    </>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SEÇÃO 6 — FAQ
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section className="bg-white border-t border-neutral-100 py-16">
+        <div className="max-w-3xl mx-auto px-5">
+          <div className="text-center mb-10">
+            <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
+              Dúvidas
+            </p>
+            <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
+              Perguntas frequentes
+            </h2>
+            <p className="text-neutral-500 font-sans text-sm mt-2">
+              Tudo o que você precisa saber antes de agendar
+            </p>
+          </div>
+          <FaqAccordion faqs={faqs} />
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SEÇÃO 7a — CTA FINAL
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section className="bg-neutral-900 py-16">
+        <div className="max-w-5xl mx-auto px-5 text-center">
+          <h2 className="font-display text-3xl md:text-4xl text-white font-semibold mb-3">
+            Pronta para o grande dia?
+          </h2>
+          <p className="text-white/70 font-sans mb-8 max-w-md mx-auto">
+            Reserve sua data e garanta o look perfeito para o seu casamento em Passos MG
+          </p>
+          <Link
+            href="/agendar"
+            className="inline-flex items-center gap-2 bg-[#C9A84C] text-black font-semibold rounded-lg px-8 py-4 text-sm hover:bg-[#E2C97E] transition-colors"
+          >
+            <Sparkles size={16} />
+            Agendar agora
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SEÇÃO 7b — LINKS PARA SERVIÇOS
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <section className="bg-neutral-50 py-12">
+        <div className="max-w-5xl mx-auto px-5">
+          <p className="text-neutral-500 text-sm uppercase tracking-wider font-sans text-center mb-8">
+            Conheça também
+          </p>
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin snap-x snap-mandatory">
+            {[
+              {
+                label: "Maquiagem de Noiva",
+                descricao: "Make exclusivo com teste prévio",
+                href: "/servicos/maquiagem-noiva",
+              },
+              {
+                label: "Penteado",
+                descricao: "Coque, trança e ondas para noivas",
+                href: "/servicos/penteado",
+              },
+              {
+                label: "Maquiagem + Penteado",
+                descricao: "Combo completo, tudo em um atendimento",
+                href: "/servicos/maquiagem-e-penteado",
+              },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex-shrink-0 w-56 snap-start bg-white border border-neutral-200 rounded-xl p-4 hover:border-[#C9A84C] transition-colors group"
+              >
+                <p className="font-semibold text-neutral-800 text-sm group-hover:text-[#C9A84C] transition-colors mb-1">
+                  {item.label}
+                </p>
+                <p className="text-neutral-500 text-xs font-sans mb-3">{item.descricao}</p>
+                <span className="text-[#C9A84C] text-xs font-sans flex items-center gap-1">
+                  Ver mais <ArrowRight size={12} />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

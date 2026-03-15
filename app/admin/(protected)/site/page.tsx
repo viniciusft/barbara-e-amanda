@@ -283,11 +283,26 @@ function formatDate(iso: string | null | undefined) {
 
 const SEO_HINT_CLASS = "flex items-start gap-1.5 text-[10px] text-gray-500 font-sans mt-1.5 leading-relaxed";
 
+// ── Páginas disponíveis ────────────────────────────────────────────────────────
+
+const PAGINAS = [
+  { slug: "maquiagem-social",   label: "Maquiagem Social",     rota: "/servicos/maquiagem-social",   temServico: true,  grupo: "servicos" },
+  { slug: "maquiagem-noiva",    label: "Maquiagem Noiva",      rota: "/servicos/maquiagem-noiva",    temServico: true,  grupo: "servicos" },
+  { slug: "penteado",           label: "Penteado",             rota: "/servicos/penteado",           temServico: true,  grupo: "servicos" },
+  { slug: "babyliss",           label: "Babyliss",             rota: "/servicos/babyliss",           temServico: true,  grupo: "servicos" },
+  { slug: "maquiagem-e-penteado", label: "Maquiagem + Penteado", rota: "/servicos/maquiagem-e-penteado", temServico: true, grupo: "servicos" },
+  { slug: "casamento",          label: "Casamento",            rota: "/ocasioes/casamento",          temServico: false, grupo: "ocasioes" },
+  { slug: "formatura",          label: "Formatura",            rota: "/ocasioes/formatura",          temServico: false, grupo: "ocasioes" },
+  { slug: "eventos",            label: "Eventos",              rota: "/ocasioes/eventos",            temServico: false, grupo: "ocasioes" },
+] as const;
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function AdminSitePage() {
-  const PAGINA = "maquiagem-social";
-  const PUBLIC_PATH = "/servicos/maquiagem-social";
+  const [selectedSlug, setSelectedSlug] = useState("maquiagem-social");
+  const paginaConfig = PAGINAS.find((p) => p.slug === selectedSlug) ?? PAGINAS[0];
+  const PAGINA = paginaConfig.slug;
+  const PUBLIC_PATH = paginaConfig.rota;
 
   // ── Shared ──────────────────────────────────────────────────────────────────
   const [tab, setTab] = useState<"textos" | "fotos" | "faq">("textos");
@@ -350,10 +365,21 @@ export default function AdminSitePage() {
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
   );
 
-  // ── Load initial data ────────────────────────────────────────────────────────
+  // ── Load data (re-runs on page change) ──────────────────────────────────────
   useEffect(() => {
     async function load() {
       setLoading(true);
+      // Reset form state for new page
+      setTitulo("");
+      setSubtitulo("");
+      setTextoPrincipal("");
+      setMetaDesc("");
+      setLastSaved(null);
+      setServico(null);
+      setFotos([]);
+      setFaqs([]);
+      setShowUpload(false);
+      setShowHeroUpload(false);
       try {
         const res = await fetch(`/api/admin/site/conteudo?pagina=${PAGINA}`);
         const data = await res.json();
@@ -377,7 +403,8 @@ export default function AdminSitePage() {
       }
     }
     load();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSlug]);
 
   // ── Salvar textos ────────────────────────────────────────────────────────────
   async function handleSaveTextos() {
@@ -611,14 +638,23 @@ export default function AdminSitePage() {
                 Página
               </label>
               <select
-                value="maquiagem-social"
-                disabled
-                className="input-luxury text-sm w-full opacity-80 cursor-not-allowed"
+                value={selectedSlug}
+                onChange={(e) => { setSelectedSlug(e.target.value); setTab("textos"); }}
+                className="input-luxury text-sm w-full"
               >
-                <option value="maquiagem-social">Maquiagem Social</option>
+                <optgroup label="── Serviços ──">
+                  {PAGINAS.filter((p) => p.grupo === "servicos").map((p) => (
+                    <option key={p.slug} value={p.slug}>{p.label}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="── Ocasiões ──">
+                  {PAGINAS.filter((p) => p.grupo === "ocasioes").map((p) => (
+                    <option key={p.slug} value={p.slug}>{p.label}</option>
+                  ))}
+                </optgroup>
               </select>
               <p className="text-[10px] text-gray-600 font-sans mt-1.5 flex items-center gap-1">
-                <Info size={10} /> Mais páginas serão adicionadas em breve
+                <Info size={10} /> {paginaConfig.rota}
               </p>
             </div>
 
@@ -719,7 +755,7 @@ export default function AdminSitePage() {
                       </div>
 
                       {/* Preço e Duração — somente leitura, vem de Serviços */}
-                      <div className="bg-surface-elevated border border-surface-border rounded-card p-4 space-y-2">
+                      {paginaConfig.temServico && <div className="bg-surface-elevated border border-surface-border rounded-card p-4 space-y-2">
                         <p className="text-xs font-medium text-foreground font-sans">Preço e duração</p>
                         <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
                           Esses dados vêm do cadastro do serviço e não podem ser editados aqui.
@@ -739,7 +775,7 @@ export default function AdminSitePage() {
                           <ExternalLink size={10} />
                           Editar em Admin → Serviços
                         </Link>
-                      </div>
+                      </div>}
 
                       {/* Meta description */}
                       <div>
@@ -764,7 +800,7 @@ export default function AdminSitePage() {
                         />
                         <p className={SEO_HINT_CLASS}>
                           <Info size={10} className="text-gold mt-0.5 shrink-0" />
-                          Inclua: &quot;maquiagem social Passos MG&quot;, &quot;agendar online&quot;. Entre 120 e 160 chars.
+                          Inclua o nome do serviço e &quot;Passos MG&quot;, &quot;agendar online&quot;. Entre 120 e 160 chars.
                         </p>
                       </div>
 
@@ -1207,7 +1243,7 @@ export default function AdminSitePage() {
               {/* URL bar */}
               <div className="flex-1 min-w-0">
                 <div className="bg-surface rounded px-3 py-1 text-xs text-gray-500 font-sans text-center truncate">
-                  .../servicos/maquiagem-social
+                  ...{PUBLIC_PATH}
                 </div>
               </div>
 
