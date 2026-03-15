@@ -1,9 +1,10 @@
+import React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Clock, Check, ArrowRight, Sparkles, MessageCircle,
-  Crown, GraduationCap, PartyPopper, Camera,
+  PartyPopper, GraduationCap, Heart, Camera, Briefcase, Star, Users,
 } from "lucide-react";
 import Carrossel, { type CarrosselFoto } from "@/components/seo/Carrossel";
 import FaqAccordion, { type FaqItem } from "@/components/seo/FaqAccordion";
@@ -29,6 +30,18 @@ export const metadata: Metadata = {
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
+  party:      PartyPopper,
+  graduation: GraduationCap,
+  heart:      Heart,
+  camera:     Camera,
+  briefcase:  Briefcase,
+  star:       Star,
+  users:      Users,
+  sparkles:   Sparkles,
+};
+
 // ── Fallback content ──────────────────────────────────────────────────────────
 
 const DEFAULT_TITULO = "Penteado Profissional em Passos MG";
@@ -39,61 +52,6 @@ const DEFAULT_TEXTO = `O penteado profissional é muito mais do que apenas "arru
 Trabalhamos com os principais estilos de penteado: o elegante coque clássico ou moderno (perfeito para noivas e formaturas), o semi-preso com cachos ou ondas, o solto com babyliss ou ondas de ferro, e as tranças embutidas ou decorativas. Cada técnica usa produtos de fixação profissional para garantir que o penteado se mantenha impecável por toda a festa.
 
 Nosso atendimento começa com uma conversa sobre o que você imagina e o que combina com seu cabelo. Cabelos lisos, ondulados, cacheados e crespos têm tratamentos específicos — e nossa equipe tem experiência com todos eles.`;
-
-const DEFAULT_FAQS: FaqItem[] = [
-  {
-    question: "Qual penteado combina com meu tipo de cabelo?",
-    answer:
-      "Cada tipo de cabelo tem estilos que funcionam melhor. Cabelos finos ficam ótimos com coques elaborados e semi-presos. Cabelos volumosos se adaptam bem a penteados soltos com ondas. No atendimento, nossa profissional avalia seu cabelo e sugere as melhores opções para você.",
-  },
-  {
-    question: "O penteado dura a noite toda?",
-    answer:
-      "Sim! Utilizamos produtos de fixação profissional (laquê, cera, finalizadores) que garantem que o penteado se mantenha por 6 a 12 horas, dependendo do estilo e das condições climáticas. Para noivas, usamos técnicas específicas de alta durabilidade.",
-  },
-  {
-    question: "Preciso lavar o cabelo antes de fazer o penteado?",
-    answer:
-      "Sim, o ideal é vir com o cabelo lavado no dia anterior ou na manhã do atendimento, porém sem aplicar condicionadores pesados na raiz. Cabelos levemente texturizados seguram melhor a maioria dos penteados.",
-  },
-  {
-    question: "Posso combinar penteado com maquiagem?",
-    answer:
-      "Sim! Temos o combo maquiagem + penteado que garante coerência no visual completo e é mais vantajoso financeiramente. Basta selecionar o serviço combo no agendamento online.",
-  },
-  {
-    question: "Qual o valor do penteado?",
-    answer:
-      "O valor varia de acordo com o estilo e a complexidade do penteado. Para consultar os preços atualizados e verificar a disponibilidade, acesse nosso sistema de agendamento online.",
-  },
-];
-
-const PARA_QUEM = [
-  {
-    icon: Crown,
-    titulo: "Noivas e Debutantes",
-    descricao:
-      "Coques, tranças e penteados elaborados para o dia mais especial. Alta durabilidade garantida.",
-  },
-  {
-    icon: GraduationCap,
-    titulo: "Formaturas",
-    descricao:
-      "Look impecável para a colação de grau e a festa, que resiste às fotos e à emoção.",
-  },
-  {
-    icon: PartyPopper,
-    titulo: "Festas e Eventos",
-    descricao:
-      "Semi-presos, soltos com ondas e tranças para aniversários, casamentos e comemorações.",
-  },
-  {
-    icon: Camera,
-    titulo: "Ensaios Fotográficos",
-    descricao:
-      "Penteados que fotografam bem sob qualquer luz, para books e ensaios artísticos.",
-  },
-];
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
 
@@ -153,15 +111,19 @@ export default async function PenteadoPage() {
   const preco: number = servico?.preco ?? conteudo?.preco_a_partir_de ?? 120;
   const duracao: number = servico?.duracao_minutos ?? 60;
 
-  // Parse FAQ from conteudo (JSONB column) or fallback
-  let faqs: FaqItem[] = DEFAULT_FAQS;
+  // FAQ from DB
+  let faqs: FaqItem[] = [];
   if (conteudo?.faq) {
     try {
       const parsed =
         typeof conteudo.faq === "string" ? JSON.parse(conteudo.faq) : conteudo.faq;
-      if (Array.isArray(parsed) && parsed.length > 0) faqs = parsed;
-    } catch { /* keep default */ }
+      if (Array.isArray(parsed)) faqs = parsed;
+    } catch { /* keep empty */ }
   }
+
+  // Para quem from DB
+  interface ParaQuemDbItem { icone: string; titulo: string; descricao: string; }
+  const paraQuemItems: ParaQuemDbItem[] = conteudo?.para_quem ?? [];
 
   // Separate gallery by tipo_exibicao
   const heroFoto = galeria.find((f) => f.tipo_exibicao === "hero") ?? null;
@@ -193,7 +155,7 @@ export default async function PenteadoPage() {
     ],
   };
 
-  const faqSchema = {
+  const faqSchema = faqs.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: faqs.map((faq) => ({
@@ -201,7 +163,7 @@ export default async function PenteadoPage() {
       name: faq.question,
       acceptedAnswer: { "@type": "Answer", text: faq.answer },
     })),
-  };
+  } : null;
 
   const imageGallerySchema =
     carrosselFotos.length > 0
@@ -224,10 +186,12 @@ export default async function PenteadoPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 1 — HERO
@@ -401,30 +365,35 @@ export default async function PenteadoPage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 4 — PARA QUEM É IDEAL
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-neutral-50 py-16">
-        <div className="max-w-5xl mx-auto px-5">
-          <div className="text-center mb-10">
-            <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
-              Indicações
-            </p>
-            <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
-              Para quem é ideal?
-            </h2>
+      {paraQuemItems.length > 0 && (
+        <section className="bg-neutral-50 py-16">
+          <div className="max-w-5xl mx-auto px-5">
+            <div className="text-center mb-10">
+              <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
+                Indicações
+              </p>
+              <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
+                Para quem é ideal?
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {paraQuemItems.map((item) => {
+                const Icon = ICON_MAP[item.icone] ?? Star;
+                return (
+                  <div
+                    key={item.titulo}
+                    className="bg-white rounded-xl p-5 border border-neutral-100 hover:border-[rgba(201,168,76,0.4)] hover:shadow-sm transition-all"
+                  >
+                    <Icon size={24} className="text-[#C9A84C] mb-3" strokeWidth={1.5} />
+                    <p className="font-semibold text-neutral-800 text-sm mb-1.5">{item.titulo}</p>
+                    <p className="text-neutral-500 text-xs leading-relaxed font-sans">{item.descricao}</p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {PARA_QUEM.map(({ icon: Icon, titulo: t, descricao }) => (
-              <div
-                key={t}
-                className="bg-white rounded-xl p-5 border border-neutral-100 hover:border-[rgba(201,168,76,0.4)] hover:shadow-sm transition-all"
-              >
-                <Icon size={24} className="text-[#C9A84C] mb-3" strokeWidth={1.5} />
-                <p className="font-semibold text-neutral-800 text-sm mb-1.5">{t}</p>
-                <p className="text-neutral-500 text-xs leading-relaxed font-sans">{descricao}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 5 — GRID DE FOTOS (só renderiza se houver fotos tipo "grid")
@@ -484,22 +453,24 @@ export default async function PenteadoPage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 6 — FAQ
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-white border-t border-neutral-100 py-16">
-        <div className="max-w-3xl mx-auto px-5">
-          <div className="text-center mb-10">
-            <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
-              Dúvidas
-            </p>
-            <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
-              Perguntas frequentes
-            </h2>
-            <p className="text-neutral-500 font-sans text-sm mt-2">
-              Tudo o que você precisa saber antes de agendar
-            </p>
+      {faqs.length > 0 && (
+        <section className="bg-white border-t border-neutral-100 py-16">
+          <div className="max-w-3xl mx-auto px-5">
+            <div className="text-center mb-10">
+              <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
+                Dúvidas
+              </p>
+              <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
+                Perguntas frequentes
+              </h2>
+              <p className="text-neutral-500 font-sans text-sm mt-2">
+                Tudo o que você precisa saber antes de agendar
+              </p>
+            </div>
+            <FaqAccordion faqs={faqs} />
           </div>
-          <FaqAccordion faqs={faqs} />
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 7a — CTA FINAL

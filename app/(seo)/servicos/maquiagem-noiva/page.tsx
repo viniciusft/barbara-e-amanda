@@ -1,9 +1,10 @@
+import React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Clock, Check, ArrowRight, Sparkles, MessageCircle,
-  Heart, Users2, Camera,
+  PartyPopper, GraduationCap, Heart, Camera, Briefcase, Star, Users,
 } from "lucide-react";
 import Carrossel, { type CarrosselFoto } from "@/components/seo/Carrossel";
 import FaqAccordion, { type FaqItem } from "@/components/seo/FaqAccordion";
@@ -27,6 +28,18 @@ export const metadata: Metadata = {
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
+  party:      PartyPopper,
+  graduation: GraduationCap,
+  heart:      Heart,
+  camera:     Camera,
+  briefcase:  Briefcase,
+  star:       Star,
+  users:      Users,
+  sparkles:   Sparkles,
+};
+
 // ── Fallback content ──────────────────────────────────────────────────────────
 
 const DEFAULT_TITULO = "Maquiagem de Noiva em Passos MG";
@@ -37,57 +50,6 @@ const DEFAULT_TEXTO = `A maquiagem de noiva é um serviço diferenciado e exclus
 No Âmbar Beauty Studio, entendemos que cada noiva é única. Por isso, o processo começa com uma conversa aprofundada sobre o estilo do casamento, a iluminação do espaço, a paleta de cores da festa e, claro, o que você sonha para o seu look. Trabalhamos para que você se sinta a versão mais linda de si mesma — reconhecível e autêntica.
 
 Usamos técnicas como airbrush, primer de longa duração, fixadores e bases com alta cobertura que resistem a lágrimas, calor e emoção. O resultado é uma maquiagem impecável do início ao fim da cerimônia e da festa.`;
-
-const DEFAULT_FAQS: FaqItem[] = [
-  {
-    question: "Quando devo marcar o teste de maquiagem de noiva?",
-    answer:
-      "O ideal é fazer o teste entre 30 e 60 dias antes do casamento. Isso dá tempo para eventuais ajustes e para você se acostumar com o look. Evite fazer o teste muito próximo ao casamento para não haver surpresas.",
-  },
-  {
-    question: "Quanto tempo dura o atendimento de maquiagem de noiva no dia?",
-    answer:
-      "O atendimento completo de maquiagem de noiva leva entre 1h30 e 2 horas, dependendo da complexidade do look. Recomendamos reservar pelo menos 3 horas no seu cronograma da manhã para maquiagem + penteado com tranquilidade.",
-  },
-  {
-    question: "O serviço inclui penteado?",
-    answer:
-      "A maquiagem de noiva e o penteado podem ser contratados separadamente ou em combo. Recomendamos o combo completo para garantir coerência visual e praticidade no dia. Entre em contato para verificar a disponibilidade do pacote noiva completo.",
-  },
-  {
-    question: "Qual a diferença entre maquiagem de noiva e maquiagem social?",
-    answer:
-      "A maquiagem de noiva inclui o teste prévio, uso de produtos de altíssima durabilidade (resistentes a lágrimas e calor por 12 a 16h), técnicas mais elaboradas e um processo de atendimento mais completo. A maquiagem social é mais rápida e adequada para eventos do dia a dia.",
-  },
-  {
-    question: "A maquiagem de noiva realmente resiste às lágrimas e ao calor?",
-    answer:
-      "Sim! Utilizamos fixadores e produtos à prova d'água especialmente selecionados para isso. Com os produtos certos e a técnica adequada, a maquiagem resiste a emoções, calor e uma longa jornada de celebração.",
-  },
-];
-
-const PARA_QUEM = [
-  {
-    icon: Heart,
-    titulo: "Noivas",
-    descricao: "Para casamentos civis, religiosos ou ao ar livre. Look exclusivo e duradouro para o grande dia.",
-  },
-  {
-    icon: Users2,
-    titulo: "Madrinhas e Damas",
-    descricao: "Atendimento integrado para madrinhas de honra que querem um visual harmonioso com a noiva.",
-  },
-  {
-    icon: Sparkles,
-    titulo: "Dia da Noiva",
-    descricao: "Atendimento exclusivo e completo, com todo o tempo necessário para a produção perfeita.",
-  },
-  {
-    icon: Camera,
-    titulo: "Ensaios Pre-Wedding",
-    descricao: "Maquiagem para ensaios fotográficos que antecipam o clima e o estilo do casamento.",
-  },
-];
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
 
@@ -146,14 +108,19 @@ export default async function MaquiagemNoivaPage() {
   const preco: number = servico?.preco ?? conteudo?.preco_a_partir_de ?? 250;
   const duracao: number = servico?.duracao_minutos ?? 90;
 
-  let faqs: FaqItem[] = DEFAULT_FAQS;
+  // FAQ from DB
+  let faqs: FaqItem[] = [];
   if (conteudo?.faq) {
     try {
       const parsed =
         typeof conteudo.faq === "string" ? JSON.parse(conteudo.faq) : conteudo.faq;
-      if (Array.isArray(parsed) && parsed.length > 0) faqs = parsed;
-    } catch { /* keep default */ }
+      if (Array.isArray(parsed)) faqs = parsed;
+    } catch { /* keep empty */ }
   }
+
+  // Para quem from DB
+  interface ParaQuemDbItem { icone: string; titulo: string; descricao: string; }
+  const paraQuemItems: ParaQuemDbItem[] = conteudo?.para_quem ?? [];
 
   const heroFoto = galeria.find((f) => f.tipo_exibicao === "hero") ?? null;
   const carrosselFotos: CarrosselFoto[] = galeria
@@ -176,7 +143,7 @@ export default async function MaquiagemNoivaPage() {
     ],
   };
 
-  const faqSchema = {
+  const faqSchema = faqs.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: faqs.map((faq) => ({
@@ -184,7 +151,7 @@ export default async function MaquiagemNoivaPage() {
       name: faq.question,
       acceptedAnswer: { "@type": "Answer", text: faq.answer },
     })),
-  };
+  } : null;
 
   const imageGallerySchema =
     carrosselFotos.length > 0
@@ -203,7 +170,12 @@ export default async function MaquiagemNoivaPage() {
   return (
     <div className="bg-white text-neutral-800">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
 
       {/* ── HERO ── */}
       <section
@@ -295,23 +267,31 @@ export default async function MaquiagemNoivaPage() {
       </section>
 
       {/* ── PARA QUEM ── */}
-      <section className="bg-neutral-50 py-16">
-        <div className="max-w-5xl mx-auto px-5">
-          <div className="text-center mb-10">
-            <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">Indicações</p>
-            <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">Para quem é ideal?</h2>
+      {paraQuemItems.length > 0 && (
+        <section className="bg-neutral-50 py-16">
+          <div className="max-w-5xl mx-auto px-5">
+            <div className="text-center mb-10">
+              <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">Indicações</p>
+              <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">Para quem é ideal?</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {paraQuemItems.map((item) => {
+                const Icon = ICON_MAP[item.icone] ?? Star;
+                return (
+                  <div
+                    key={item.titulo}
+                    className="bg-white rounded-xl p-5 border border-neutral-100 hover:border-[rgba(201,168,76,0.4)] hover:shadow-sm transition-all"
+                  >
+                    <Icon size={24} className="text-[#C9A84C] mb-3" strokeWidth={1.5} />
+                    <p className="font-semibold text-neutral-800 text-sm mb-1.5">{item.titulo}</p>
+                    <p className="text-neutral-500 text-xs leading-relaxed font-sans">{item.descricao}</p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {PARA_QUEM.map(({ icon: Icon, titulo: t, descricao }) => (
-              <div key={t} className="bg-white rounded-xl p-5 border border-neutral-100 hover:border-[rgba(201,168,76,0.4)] hover:shadow-sm transition-all">
-                <Icon size={24} className="text-[#C9A84C] mb-3" strokeWidth={1.5} />
-                <p className="font-semibold text-neutral-800 text-sm mb-1.5">{t}</p>
-                <p className="text-neutral-500 text-xs leading-relaxed font-sans">{descricao}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── GRID ── */}
       {gridFotos.length > 0 && (
@@ -344,16 +324,18 @@ export default async function MaquiagemNoivaPage() {
       )}
 
       {/* ── FAQ ── */}
-      <section className="bg-white border-t border-neutral-100 py-16">
-        <div className="max-w-3xl mx-auto px-5">
-          <div className="text-center mb-10">
-            <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">Dúvidas</p>
-            <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">Perguntas frequentes</h2>
-            <p className="text-neutral-500 font-sans text-sm mt-2">Tudo o que você precisa saber antes de agendar</p>
+      {faqs.length > 0 && (
+        <section className="bg-white border-t border-neutral-100 py-16">
+          <div className="max-w-3xl mx-auto px-5">
+            <div className="text-center mb-10">
+              <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">Dúvidas</p>
+              <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">Perguntas frequentes</h2>
+              <p className="text-neutral-500 font-sans text-sm mt-2">Tudo o que você precisa saber antes de agendar</p>
+            </div>
+            <FaqAccordion faqs={faqs} />
           </div>
-          <FaqAccordion faqs={faqs} />
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── CTA ── */}
       <section className="bg-neutral-900 py-16">
