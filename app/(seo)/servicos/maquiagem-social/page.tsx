@@ -1,9 +1,10 @@
+import React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Clock, Check, ArrowRight, Sparkles, MessageCircle,
-  PartyPopper, GraduationCap, Briefcase, Camera,
+  PartyPopper, GraduationCap, Heart, Camera, Briefcase, Star, Users,
 } from "lucide-react";
 import Carrossel, { type CarrosselFoto } from "@/components/seo/Carrossel";
 import FaqAccordion, { type FaqItem } from "@/components/seo/FaqAccordion";
@@ -29,6 +30,18 @@ export const metadata: Metadata = {
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
+  party:      PartyPopper,
+  graduation: GraduationCap,
+  heart:      Heart,
+  camera:     Camera,
+  briefcase:  Briefcase,
+  star:       Star,
+  users:      Users,
+  sparkles:   Sparkles,
+};
+
 // ── Fallback content ──────────────────────────────────────────────────────────
 
 const DEFAULT_TITULO = "Maquiagem Social em Passos MG";
@@ -39,56 +52,6 @@ No Âmbar Beauty Studio, cada maquiagem social é personalizada de acordo com se
 
 A maquiagem social é diferente da maquiagem do dia a dia: ela é feita para durar, para fotografar bem e para resistir às emoções e à temperatura do evento. Nossas profissionais têm experiência em diferentes tons de pele e estilos, do look mais natural ao mais glamouroso.`;
 
-const DEFAULT_FAQS: FaqItem[] = [
-  {
-    question: "Quanto tempo dura o atendimento de maquiagem social?",
-    answer:
-      "O atendimento de maquiagem social dura em média 45 a 60 minutos, dependendo da complexidade do look desejado. Recomendamos agendar com pelo menos 1h30 de antecedência ao evento.",
-  },
-  {
-    question: "A maquiagem dura o dia (e a noite) toda?",
-    answer:
-      "Sim! Trabalhamos com produtos de alta fixação e longa duração. Uma maquiagem social bem feita pode durar 8 a 12 horas dependendo do tipo de pele e das condições do ambiente.",
-  },
-  {
-    question: "Preciso agendar com antecedência?",
-    answer:
-      "Recomendamos agendar com pelo menos 2 a 3 dias de antecedência, especialmente para datas próximas a feriados ou finais de semana. Nosso sistema online mostra os horários disponíveis em tempo real.",
-  },
-  {
-    question: "Posso combinar maquiagem social com penteado?",
-    answer:
-      "Sim! Oferecemos o combo maquiagem + penteado com desconto. Informe no agendamento que deseja o combo para verificar os horários disponíveis.",
-  },
-  {
-    question: "Qual a diferença entre maquiagem social e maquiagem de noiva?",
-    answer:
-      "A maquiagem de noiva é mais elaborada, com teste prévio e atendimento exclusivo para o grande dia. A maquiagem social é uma produção completa e versátil para eventos em geral, com excelente durabilidade mas sem o protocolo especial de noiva.",
-  },
-];
-
-const PARA_QUEM = [
-  {
-    icon: PartyPopper,
-    titulo: "Festas e Aniversários",
-    descricao: "Debutantes, 15 anos, aniversários adultos e festas de família com look duradouro e elegante.",
-  },
-  {
-    icon: GraduationCap,
-    titulo: "Formaturas",
-    descricao: "Look impecável para colação de grau e festa de formatura. Da sessão de fotos à última dança.",
-  },
-  {
-    icon: Briefcase,
-    titulo: "Eventos Corporativos",
-    descricao: "Produção sofisticada e discreta para eventos profissionais, apresentações e confraternizações.",
-  },
-  {
-    icon: Camera,
-    titulo: "Ensaios Fotográficos",
-    descricao: "Make profissional que fotografia bem sob qualquer iluminação, para books e ensaios artísticos.",
-  },
-];
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
 
@@ -148,15 +111,19 @@ export default async function MaquiagemSocialPage() {
   const preco: number = servico?.preco ?? conteudo?.preco_a_partir_de ?? 180;
   const duracao: number = servico?.duracao_minutos ?? 60;
 
-  // Parse FAQ from conteudo (JSONB column) or fallback
-  let faqs: FaqItem[] = DEFAULT_FAQS;
+  // FAQ from DB
+  let faqs: FaqItem[] = [];
   if (conteudo?.faq) {
     try {
       const parsed =
         typeof conteudo.faq === "string" ? JSON.parse(conteudo.faq) : conteudo.faq;
-      if (Array.isArray(parsed) && parsed.length > 0) faqs = parsed;
-    } catch { /* keep default */ }
+      if (Array.isArray(parsed)) faqs = parsed;
+    } catch { /* keep empty */ }
   }
+
+  // Para quem from DB
+  interface ParaQuemDbItem { icone: string; titulo: string; descricao: string; }
+  const paraQuemItems: ParaQuemDbItem[] = conteudo?.para_quem ?? [];
 
   // Separate gallery by tipo_exibicao
   const heroFoto = galeria.find((f) => f.tipo_exibicao === "hero") ?? null;
@@ -188,7 +155,7 @@ export default async function MaquiagemSocialPage() {
     ],
   };
 
-  const faqSchema = {
+  const faqSchema = faqs.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: faqs.map((faq) => ({
@@ -196,7 +163,7 @@ export default async function MaquiagemSocialPage() {
       name: faq.question,
       acceptedAnswer: { "@type": "Answer", text: faq.answer },
     })),
-  };
+  } : null;
 
   const imageGallerySchema =
     carrosselFotos.length > 0
@@ -219,10 +186,12 @@ export default async function MaquiagemSocialPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 1 — HERO
@@ -396,30 +365,35 @@ export default async function MaquiagemSocialPage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 4 — PARA QUEM É IDEAL
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-neutral-50 py-16">
-        <div className="max-w-5xl mx-auto px-5">
-          <div className="text-center mb-10">
-            <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
-              Indicações
-            </p>
-            <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
-              Para quem é ideal?
-            </h2>
+      {paraQuemItems.length > 0 && (
+        <section className="bg-neutral-50 py-16">
+          <div className="max-w-5xl mx-auto px-5">
+            <div className="text-center mb-10">
+              <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
+                Indicações
+              </p>
+              <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
+                Para quem é ideal?
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {paraQuemItems.map((item) => {
+                const Icon = ICON_MAP[item.icone] ?? Star;
+                return (
+                  <div
+                    key={item.titulo}
+                    className="bg-white rounded-xl p-5 border border-neutral-100 hover:border-[rgba(201,168,76,0.4)] hover:shadow-sm transition-all"
+                  >
+                    <Icon size={24} className="text-[#C9A84C] mb-3" strokeWidth={1.5} />
+                    <p className="font-semibold text-neutral-800 text-sm mb-1.5">{item.titulo}</p>
+                    <p className="text-neutral-500 text-xs leading-relaxed font-sans">{item.descricao}</p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {PARA_QUEM.map(({ icon: Icon, titulo: t, descricao }) => (
-              <div
-                key={t}
-                className="bg-white rounded-xl p-5 border border-neutral-100 hover:border-[rgba(201,168,76,0.4)] hover:shadow-sm transition-all"
-              >
-                <Icon size={24} className="text-[#C9A84C] mb-3" strokeWidth={1.5} />
-                <p className="font-semibold text-neutral-800 text-sm mb-1.5">{t}</p>
-                <p className="text-neutral-500 text-xs leading-relaxed font-sans">{descricao}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 5 — GRID DE FOTOS (só renderiza se houver fotos tipo "grid")
@@ -479,22 +453,24 @@ export default async function MaquiagemSocialPage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 6 — FAQ
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-white border-t border-neutral-100 py-16">
-        <div className="max-w-3xl mx-auto px-5">
-          <div className="text-center mb-10">
-            <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
-              Dúvidas
-            </p>
-            <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
-              Perguntas frequentes
-            </h2>
-            <p className="text-neutral-500 font-sans text-sm mt-2">
-              Tudo o que você precisa saber antes de agendar
-            </p>
+      {faqs.length > 0 && (
+        <section className="bg-white border-t border-neutral-100 py-16">
+          <div className="max-w-3xl mx-auto px-5">
+            <div className="text-center mb-10">
+              <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
+                Dúvidas
+              </p>
+              <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
+                Perguntas frequentes
+              </h2>
+              <p className="text-neutral-500 font-sans text-sm mt-2">
+                Tudo o que você precisa saber antes de agendar
+              </p>
+            </div>
+            <FaqAccordion faqs={faqs} />
           </div>
-          <FaqAccordion faqs={faqs} />
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 7a — CTA FINAL

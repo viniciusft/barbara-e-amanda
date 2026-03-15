@@ -1,9 +1,10 @@
+import React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Check, ArrowRight, Sparkles, MessageCircle,
-  Heart, Users2, Camera,
+  PartyPopper, GraduationCap, Heart, Camera, Briefcase, Star, Users,
 } from "lucide-react";
 import Carrossel, { type CarrosselFoto } from "@/components/seo/Carrossel";
 import FaqAccordion, { type FaqItem } from "@/components/seo/FaqAccordion";
@@ -29,6 +30,18 @@ export const metadata: Metadata = {
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
+  party:      PartyPopper,
+  graduation: GraduationCap,
+  heart:      Heart,
+  camera:     Camera,
+  briefcase:  Briefcase,
+  star:       Star,
+  users:      Users,
+  sparkles:   Sparkles,
+};
+
 // ── Fallback content ──────────────────────────────────────────────────────────
 
 const SLUG = "casamento";
@@ -41,61 +54,6 @@ const DEFAULT_TEXTO = `O casamento é um dos momentos mais marcantes da vida, e 
 O processo começa com uma consulta detalhada e um teste de maquiagem e penteado, feitos com antecedência para garantir que o look do grande dia já foi validado e aprovado por você. Usamos produtos de altíssima fixação — à prova de lágrimas, calor e emoção — para que a maquiagem dure da cerimônia até a última dança.
 
 Além da noiva, atendemos madrinhas, mãe da noiva e convidadas, tornando a preparação do dia ainda mais especial e integrada. Cada detalhe é pensado para que você chegue ao altar se sentindo a versão mais radiante de si mesma.`;
-
-const DEFAULT_FAQS: FaqItem[] = [
-  {
-    question: "Com quanto tempo de antecedência devo reservar minha data?",
-    answer:
-      "Recomendamos reservar com pelo menos 3 a 6 meses de antecedência, especialmente para datas em alta temporada (outubro a dezembro). O teste de maquiagem e penteado é feito entre 30 e 60 dias antes do casamento.",
-  },
-  {
-    question: "O teste de maquiagem está incluído no pacote?",
-    answer:
-      "Sim! O teste faz parte do serviço de dia da noiva. É durante o teste que definimos o look final, os produtos ideais para o seu tipo de pele e o estilo do penteado. Recomendamos usar a roupa ou acessórios próximos ao visual do casamento.",
-  },
-  {
-    question: "Atendem também madrinhas e familiares no mesmo dia?",
-    answer:
-      "Sim! Montamos um cronograma completo para noiva, madrinhas, mãe da noiva e convidadas especiais. Quanto mais pessoas incluídas, mais cedo iniciamos o atendimento.",
-  },
-  {
-    question: "Fazem atendimento no local do casamento?",
-    answer:
-      "Atendemos tanto no Âmbar Beauty Studio em Passos MG quanto no local do casamento — hotel, haras, sítio ou salão. Consulte as condições de deslocamento para eventos fora de Passos.",
-  },
-  {
-    question: "Como funciona o valor do pacote de casamento?",
-    answer:
-      "O valor varia conforme o número de pessoas e os serviços contratados. Entre em contato para receber uma proposta personalizada para o seu casamento.",
-  },
-];
-
-const PARA_QUEM = [
-  {
-    icon: Heart,
-    titulo: "Noivas",
-    descricao:
-      "Para casamentos civis, religiosos ou ao ar livre. Look exclusivo com teste prévio e altíssima durabilidade.",
-  },
-  {
-    icon: Users2,
-    titulo: "Madrinhas e Familiares",
-    descricao:
-      "Atendimento integrado para toda a família da noiva, com cronograma organizado para o grande dia.",
-  },
-  {
-    icon: Sparkles,
-    titulo: "Cerimônia Especial",
-    descricao:
-      "Do casamento íntimo à grande festa, adaptamos o look ao estilo da sua celebração.",
-  },
-  {
-    icon: Camera,
-    titulo: "Ensaio Pre-Wedding",
-    descricao:
-      "Maquiagem profissional para fotos que ficam para a eternidade.",
-  },
-];
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
 
@@ -151,15 +109,19 @@ export default async function CasamentoPage() {
   const subtitulo: string = conteudo?.subtitulo ?? DEFAULT_SUBTITULO;
   const textoPrincipal: string = conteudo?.texto_principal ?? DEFAULT_TEXTO;
 
-  // Parse FAQ from conteudo (JSONB column) or fallback
-  let faqs: FaqItem[] = DEFAULT_FAQS;
+  // FAQ from DB
+  let faqs: FaqItem[] = [];
   if (conteudo?.faq) {
     try {
       const parsed =
         typeof conteudo.faq === "string" ? JSON.parse(conteudo.faq) : conteudo.faq;
-      if (Array.isArray(parsed) && parsed.length > 0) faqs = parsed;
-    } catch { /* keep default */ }
+      if (Array.isArray(parsed)) faqs = parsed;
+    } catch { /* keep empty */ }
   }
+
+  // Para quem from DB
+  interface ParaQuemDbItem { icone: string; titulo: string; descricao: string; }
+  const paraQuemItems: ParaQuemDbItem[] = conteudo?.para_quem ?? [];
 
   // Separate gallery by tipo_exibicao
   const heroFoto = galeria.find((f) => f.tipo_exibicao === "hero") ?? null;
@@ -191,7 +153,7 @@ export default async function CasamentoPage() {
     ],
   };
 
-  const faqSchema = {
+  const faqSchema = faqs.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: faqs.map((faq) => ({
@@ -199,7 +161,7 @@ export default async function CasamentoPage() {
       name: faq.question,
       acceptedAnswer: { "@type": "Answer", text: faq.answer },
     })),
-  };
+  } : null;
 
   const imageGallerySchema =
     carrosselFotos.length > 0
@@ -222,10 +184,12 @@ export default async function CasamentoPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 1 — HERO
@@ -393,30 +357,35 @@ export default async function CasamentoPage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 4 — PARA QUEM É IDEAL
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-neutral-50 py-16">
-        <div className="max-w-5xl mx-auto px-5">
-          <div className="text-center mb-10">
-            <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
-              Indicações
-            </p>
-            <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
-              Para quem é ideal?
-            </h2>
+      {paraQuemItems.length > 0 && (
+        <section className="bg-neutral-50 py-16">
+          <div className="max-w-5xl mx-auto px-5">
+            <div className="text-center mb-10">
+              <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
+                Indicações
+              </p>
+              <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
+                Para quem é ideal?
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {paraQuemItems.map((item) => {
+                const Icon = ICON_MAP[item.icone] ?? Star;
+                return (
+                  <div
+                    key={item.titulo}
+                    className="bg-white rounded-xl p-5 border border-neutral-100 hover:border-[rgba(201,168,76,0.4)] hover:shadow-sm transition-all"
+                  >
+                    <Icon size={24} className="text-[#C9A84C] mb-3" strokeWidth={1.5} />
+                    <p className="font-semibold text-neutral-800 text-sm mb-1.5">{item.titulo}</p>
+                    <p className="text-neutral-500 text-xs leading-relaxed font-sans">{item.descricao}</p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {PARA_QUEM.map(({ icon: Icon, titulo: t, descricao }) => (
-              <div
-                key={t}
-                className="bg-white rounded-xl p-5 border border-neutral-100 hover:border-[rgba(201,168,76,0.4)] hover:shadow-sm transition-all"
-              >
-                <Icon size={24} className="text-[#C9A84C] mb-3" strokeWidth={1.5} />
-                <p className="font-semibold text-neutral-800 text-sm mb-1.5">{t}</p>
-                <p className="text-neutral-500 text-xs leading-relaxed font-sans">{descricao}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 5 — GRID DE FOTOS (só renderiza se houver fotos tipo "grid")
@@ -476,22 +445,24 @@ export default async function CasamentoPage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 6 — FAQ
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-white border-t border-neutral-100 py-16">
-        <div className="max-w-3xl mx-auto px-5">
-          <div className="text-center mb-10">
-            <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
-              Dúvidas
-            </p>
-            <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
-              Perguntas frequentes
-            </h2>
-            <p className="text-neutral-500 font-sans text-sm mt-2">
-              Tudo o que você precisa saber antes de agendar
-            </p>
+      {faqs.length > 0 && (
+        <section className="bg-white border-t border-neutral-100 py-16">
+          <div className="max-w-3xl mx-auto px-5">
+            <div className="text-center mb-10">
+              <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
+                Dúvidas
+              </p>
+              <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
+                Perguntas frequentes
+              </h2>
+              <p className="text-neutral-500 font-sans text-sm mt-2">
+                Tudo o que você precisa saber antes de agendar
+              </p>
+            </div>
+            <FaqAccordion faqs={faqs} />
           </div>
-          <FaqAccordion faqs={faqs} />
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 7a — CTA FINAL

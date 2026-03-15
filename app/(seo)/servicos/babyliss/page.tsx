@@ -1,9 +1,10 @@
+import React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Clock, Check, ArrowRight, Sparkles, MessageCircle,
-  PartyPopper, Briefcase, Camera,
+  PartyPopper, GraduationCap, Heart, Camera, Briefcase, Star, Users,
 } from "lucide-react";
 import Carrossel, { type CarrosselFoto } from "@/components/seo/Carrossel";
 import FaqAccordion, { type FaqItem } from "@/components/seo/FaqAccordion";
@@ -13,6 +14,18 @@ export const dynamic = "force-static";
 
 const SLUG = "babyliss";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
+  party:      PartyPopper,
+  graduation: GraduationCap,
+  heart:      Heart,
+  camera:     Camera,
+  briefcase:  Briefcase,
+  star:       Star,
+  users:      Users,
+  sparkles:   Sparkles,
+};
 
 // ── Static metadata ───────────────────────────────────────────────────────────
 
@@ -40,57 +53,6 @@ const DEFAULT_TEXTO = `O babyliss é uma técnica de ondulação de cabelo que u
 Existem diferentes tipos de onda: ondas soltas e naturais, cachos definidos, beach waves e ondas soft para eventos formais. Cada estilo é adaptado ao seu tipo de cabelo e à ocasião, sempre com protetor térmico profissional para preservar a saúde dos fios.
 
 No Âmbar Beauty Studio, o babyliss é feito com protetor térmico profissional para preservar a saúde do cabelo, e fixado com produtos que garantem durabilidade por horas. O resultado é um cabelo com movimento, brilho e um acabamento que eleva qualquer produção.`;
-
-const DEFAULT_FAQS: FaqItem[] = [
-  {
-    question: "Quanto tempo dura o babyliss?",
-    answer:
-      "Com os produtos certos e dependendo do tipo de cabelo, o babyliss pode durar de 6 a 12 horas. Cabelos naturalmente mais lisos podem perder as ondas mais rápido — nesses casos, usamos técnicas de preparação e fixação específicas para prolongar a durabilidade.",
-  },
-  {
-    question: "Precisa usar algum produto no cabelo antes?",
-    answer:
-      "Não é necessário usar produto antes. Chegue com o cabelo limpo e seco. Nossa profissional aplica o protetor térmico profissional antes de iniciar o processo.",
-  },
-  {
-    question: "O babyliss serve para cabelo liso?",
-    answer:
-      "Sim! Na verdade, o babyliss é especialmente popular em quem tem cabelo liso, pois adiciona volume, movimento e textura de forma rápida. Para cabelos muito lisos, usamos técnicas de fixação adicionais.",
-  },
-  {
-    question: "Qual a diferença entre babyliss e ondas com chapinha?",
-    answer:
-      "O babyliss cria ondas cilíndricas, mais naturais e com mais volume. A chapinha cria ondas mais planas e angulares. O babyliss tende a dar um resultado mais 'solto' e descontraído.",
-  },
-  {
-    question: "Qual o valor do babyliss?",
-    answer:
-      "O valor varia conforme o comprimento e o volume do cabelo. Para verificar os preços atualizados e disponibilidade, acesse nosso sistema de agendamento online.",
-  },
-];
-
-const PARA_QUEM = [
-  {
-    icon: PartyPopper,
-    titulo: "Festas e Eventos",
-    descricao: "Para aniversários, casamentos e celebrações em que o visual precisa estar impecável.",
-  },
-  {
-    icon: Briefcase,
-    titulo: "Eventos Corporativos",
-    descricao: "Ondas sofisticadas e elegantes para confraternizações, premiações e eventos profissionais.",
-  },
-  {
-    icon: Camera,
-    titulo: "Ensaios Fotográficos",
-    descricao: "Movimento e volume que fotografam lindamente em qualquer tipo de iluminação.",
-  },
-  {
-    icon: Sparkles,
-    titulo: "Encontros Especiais",
-    descricao: "Para jantares, encontros e qualquer ocasião em que você quer se sentir especial.",
-  },
-];
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
 
@@ -150,15 +112,19 @@ export default async function BabylissPage() {
   const preco: number = servico?.preco ?? conteudo?.preco_a_partir_de ?? 80;
   const duracao: number = servico?.duracao_minutos ?? 45;
 
-  // Parse FAQ from conteudo (JSONB column) or fallback
-  let faqs: FaqItem[] = DEFAULT_FAQS;
+  // FAQ from DB
+  let faqs: FaqItem[] = [];
   if (conteudo?.faq) {
     try {
       const parsed =
         typeof conteudo.faq === "string" ? JSON.parse(conteudo.faq) : conteudo.faq;
-      if (Array.isArray(parsed) && parsed.length > 0) faqs = parsed;
-    } catch { /* keep default */ }
+      if (Array.isArray(parsed)) faqs = parsed;
+    } catch { /* keep empty */ }
   }
+
+  // Para quem from DB
+  interface ParaQuemDbItem { icone: string; titulo: string; descricao: string; }
+  const paraQuemItems: ParaQuemDbItem[] = conteudo?.para_quem ?? [];
 
   // Separate gallery by tipo_exibicao
   const heroFoto = galeria.find((f) => f.tipo_exibicao === "hero") ?? null;
@@ -190,7 +156,7 @@ export default async function BabylissPage() {
     ],
   };
 
-  const faqSchema = {
+  const faqSchema = faqs.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: faqs.map((faq) => ({
@@ -198,7 +164,7 @@ export default async function BabylissPage() {
       name: faq.question,
       acceptedAnswer: { "@type": "Answer", text: faq.answer },
     })),
-  };
+  } : null;
 
   const imageGallerySchema =
     carrosselFotos.length > 0
@@ -221,10 +187,12 @@ export default async function BabylissPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 1 — HERO
@@ -398,30 +366,35 @@ export default async function BabylissPage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 4 — PARA QUEM É IDEAL
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-neutral-50 py-16">
-        <div className="max-w-5xl mx-auto px-5">
-          <div className="text-center mb-10">
-            <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
-              Indicações
-            </p>
-            <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
-              Para quem é ideal?
-            </h2>
+      {paraQuemItems.length > 0 && (
+        <section className="bg-neutral-50 py-16">
+          <div className="max-w-5xl mx-auto px-5">
+            <div className="text-center mb-10">
+              <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
+                Indicações
+              </p>
+              <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
+                Para quem é ideal?
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {paraQuemItems.map((item) => {
+                const Icon = ICON_MAP[item.icone] ?? Star;
+                return (
+                  <div
+                    key={item.titulo}
+                    className="bg-white rounded-xl p-5 border border-neutral-100 hover:border-[rgba(201,168,76,0.4)] hover:shadow-sm transition-all"
+                  >
+                    <Icon size={24} className="text-[#C9A84C] mb-3" strokeWidth={1.5} />
+                    <p className="font-semibold text-neutral-800 text-sm mb-1.5">{item.titulo}</p>
+                    <p className="text-neutral-500 text-xs leading-relaxed font-sans">{item.descricao}</p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {PARA_QUEM.map(({ icon: Icon, titulo: t, descricao }) => (
-              <div
-                key={t}
-                className="bg-white rounded-xl p-5 border border-neutral-100 hover:border-[rgba(201,168,76,0.4)] hover:shadow-sm transition-all"
-              >
-                <Icon size={24} className="text-[#C9A84C] mb-3" strokeWidth={1.5} />
-                <p className="font-semibold text-neutral-800 text-sm mb-1.5">{t}</p>
-                <p className="text-neutral-500 text-xs leading-relaxed font-sans">{descricao}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 5 — GRID DE FOTOS (só renderiza se houver fotos tipo "grid")
@@ -481,22 +454,24 @@ export default async function BabylissPage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 6 — FAQ
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-white border-t border-neutral-100 py-16">
-        <div className="max-w-3xl mx-auto px-5">
-          <div className="text-center mb-10">
-            <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
-              Dúvidas
-            </p>
-            <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
-              Perguntas frequentes
-            </h2>
-            <p className="text-neutral-500 font-sans text-sm mt-2">
-              Tudo o que você precisa saber antes de agendar
-            </p>
+      {faqs.length > 0 && (
+        <section className="bg-white border-t border-neutral-100 py-16">
+          <div className="max-w-3xl mx-auto px-5">
+            <div className="text-center mb-10">
+              <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-2">
+                Dúvidas
+              </p>
+              <h2 className="font-display text-3xl md:text-4xl text-neutral-900 font-semibold">
+                Perguntas frequentes
+              </h2>
+              <p className="text-neutral-500 font-sans text-sm mt-2">
+                Tudo o que você precisa saber antes de agendar
+              </p>
+            </div>
+            <FaqAccordion faqs={faqs} />
           </div>
-          <FaqAccordion faqs={faqs} />
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SEÇÃO 7a — CTA FINAL
