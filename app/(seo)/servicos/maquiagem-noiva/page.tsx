@@ -10,7 +10,7 @@ import Carrossel, { type CarrosselFoto } from "@/components/seo/Carrossel";
 import FaqAccordion, { type FaqItem } from "@/components/seo/FaqAccordion";
 import { createServerSupabaseClient } from "@/lib/supabase";
 
-export const dynamic = "force-static";
+export const revalidate = 3600;
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
 
@@ -192,7 +192,7 @@ export default async function MaquiagemNoivaPage() {
             <ol className="flex items-center gap-2 text-sm text-white/70 flex-wrap">
               <li><Link href="/" className="hover:text-white transition-colors">Início</Link></li>
               <li className="text-white/40">/</li>
-              <li><Link href="/servicos" className="hover:text-white transition-colors">Serviços</Link></li>
+              <li className="text-white/70">Serviços</li>
               <li className="text-white/40">/</li>
               <li className="text-white/90">Maquiagem de Noiva</li>
             </ol>
