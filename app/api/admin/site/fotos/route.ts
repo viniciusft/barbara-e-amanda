@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
   const insertData: Record<string, unknown> = {
     pagina,
     tipo_exibicao: tipoExibicao,
-    url: publicUrl,
+    imagem_url: publicUrl,
     titulo,
     categoria: "maquiagem",
     ordem: nextOrdem,

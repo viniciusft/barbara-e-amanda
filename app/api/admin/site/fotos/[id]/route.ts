@@ -41,15 +41,15 @@ export async function DELETE(
   // Fetch URL to delete from storage
   const { data: foto } = await db
     .from("galeria")
-    .select("url")
+    .select("imagem_url")
     .eq("id", params.id)
     .single();
 
-  if (foto?.url) {
+  if (foto?.imagem_url) {
     const marker = "/storage/v1/object/public/studio-images/";
-    const idx = foto.url.indexOf(marker);
+    const idx = foto.imagem_url.indexOf(marker);
     if (idx !== -1) {
-      const storagePath = foto.url.slice(idx + marker.length);
+      const storagePath = foto.imagem_url.slice(idx + marker.length);
       await db.storage.from("studio-images").remove([storagePath]);
     }
   }

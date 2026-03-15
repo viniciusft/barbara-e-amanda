@@ -94,7 +94,7 @@ const PARA_QUEM = [
 
 interface GaleriaRow {
   id: string;
-  url: string;
+  imagem_url: string;
   titulo: string | null;
   tipo_exibicao: string | null;
 }
@@ -114,7 +114,7 @@ async function getData() {
         .single(),
       db
         .from("galeria")
-        .select("id, url, titulo, tipo_exibicao")
+        .select("id, imagem_url, titulo, tipo_exibicao")
         .eq("pagina", "maquiagem-social")
         .eq("ativo", true)
         .order("ordem", { ascending: true }),
@@ -168,7 +168,7 @@ export default async function MaquiagemSocialPage() {
   const heroFoto = galeria.find((f) => f.tipo_exibicao === "hero") ?? null;
   const carrosselFotos: CarrosselFoto[] = galeria
     .filter((f) => f.tipo_exibicao === "carrossel")
-    .map(({ id, url, titulo: t }) => ({ id, url, titulo: t }));
+    .map(({ id, imagem_url, titulo: t }) => ({ id, url: imagem_url, titulo: t }));
   const gridFotos = galeria.filter((f) => f.tipo_exibicao === "grid").slice(0, 6);
 
   // WhatsApp
@@ -238,7 +238,7 @@ export default async function MaquiagemSocialPage() {
         style={
           heroFoto
             ? {
-                backgroundImage: `url(${heroFoto.url})`,
+                backgroundImage: `url(${heroFoto.imagem_url})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
               }
@@ -452,14 +452,14 @@ export default async function MaquiagemSocialPage() {
                         __html: JSON.stringify({
                           "@context": "https://schema.org",
                           "@type": "ImageObject",
-                          contentUrl: foto.url,
+                          contentUrl: foto.imagem_url,
                           description: alt,
                         }),
                       }}
                     />
                     <div className="relative aspect-square rounded-xl overflow-hidden group">
                       <Image
-                        src={foto.url}
+                        src={foto.imagem_url}
                         alt={alt}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
