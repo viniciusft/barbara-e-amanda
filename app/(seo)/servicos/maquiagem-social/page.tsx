@@ -1,33 +1,39 @@
 import type { Metadata } from "next";
 import ServicePage from "@/components/seo/ServicePage";
 import ServicoLinks from "@/components/seo/ServicoLinks";
+import { getConteudo } from "@/lib/conteudo";
 
 export const dynamic = "force-static";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
 
-export const metadata: Metadata = {
-  title: "Maquiagem Social em Passos MG",
-  description:
-    "Maquiagem social profissional em Passos MG. Para festas, eventos, aniversários e ocasiões especiais. Agende online no Âmbar Beauty Studio.",
-  keywords: ["maquiagem social passos mg", "make social passos", "maquiagem para festa passos", "maquiagem eventos passos mg"],
-  openGraph: {
-    title: "Maquiagem Social em Passos MG | Âmbar Beauty Studio",
-    description: "Maquiagem social profissional em Passos MG. Agende online no Âmbar Beauty Studio.",
-    url: `${siteUrl}/servicos/maquiagem-social`,
-  },
-  alternates: { canonical: `${siteUrl}/servicos/maquiagem-social` },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getConteudo("maquiagem-social");
+  return {
+    title: "Maquiagem Social em Passos MG",
+    description:
+      c?.descricao_curta ??
+      "Maquiagem social profissional em Passos MG. Para festas, eventos, aniversários e ocasiões especiais. Agende online no Âmbar Beauty Studio.",
+    keywords: ["maquiagem social passos mg", "make social passos", "maquiagem para festa passos", "maquiagem eventos passos mg"],
+    openGraph: {
+      title: "Maquiagem Social em Passos MG | Âmbar Beauty Studio",
+      description: "Maquiagem social profissional em Passos MG. Agende online no Âmbar Beauty Studio.",
+      url: `${siteUrl}/servicos/maquiagem-social`,
+    },
+    alternates: { canonical: `${siteUrl}/servicos/maquiagem-social` },
+  };
+}
 
-export default function MaquiagemSocialPage() {
+export default async function MaquiagemSocialPage() {
+  const c = await getConteudo("maquiagem-social");
   return (
     <>
     <ServicePage
       serviceName="Maquiagem Social"
       serviceDescription="Serviço de maquiagem social profissional em Passos MG para festas, eventos, aniversários e ocasiões especiais."
       serviceUrl={`${siteUrl}/servicos/maquiagem-social`}
-      heroTitle="Maquiagem Social em Passos MG"
-      heroSubtitle="Look perfeito para festas, aniversários, formaturas e qualquer ocasião especial. Realce sua beleza natural com a maquiagem profissional do Âmbar Beauty Studio."
+      heroTitle={c?.titulo ?? "Maquiagem Social em Passos MG"}
+      heroSubtitle={c?.subtitulo ?? "Look perfeito para festas, aniversários, formaturas e qualquer ocasião especial. Realce sua beleza natural com a maquiagem profissional do Âmbar Beauty Studio."}
       whatIsText={`A maquiagem social é o serviço ideal para quem deseja um look impecável em eventos e ocasiões especiais sem o peso de uma maquiagem de noiva. É uma produção completa e profissional, porém com um toque mais leve e versátil, adaptada ao clima, ao tipo do evento e ao seu estilo pessoal.
 
 No Âmbar Beauty Studio, cada maquiagem social é personalizada de acordo com seu tom de pele, o horário do evento, a iluminação do ambiente e — claro — sua preferência de estilo. Trabalhamos com produtos de alta performance que garantem durabilidade e acabamento impecável por horas.

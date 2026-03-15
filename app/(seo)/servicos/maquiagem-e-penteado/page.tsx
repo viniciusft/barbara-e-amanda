@@ -1,33 +1,39 @@
 import type { Metadata } from "next";
 import ServicePage from "@/components/seo/ServicePage";
 import ServicoLinks from "@/components/seo/ServicoLinks";
+import { getConteudo } from "@/lib/conteudo";
 
 export const dynamic = "force-static";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
 
-export const metadata: Metadata = {
-  title: "Maquiagem e Penteado em Passos MG — Combo Completo",
-  description:
-    "Combo maquiagem + penteado em Passos MG. Atendimento completo para noivas, formaturas e eventos. Melhor custo-benefício. Agende no Âmbar Beauty Studio.",
-  keywords: ["maquiagem e penteado passos mg", "combo make penteado passos", "maquiagem penteado casamento passos", "producao completa passos mg"],
-  openGraph: {
-    title: "Maquiagem e Penteado em Passos MG | Âmbar Beauty Studio",
-    description: "Combo maquiagem + penteado em Passos MG para noivas, formaturas e eventos. Âmbar Beauty Studio.",
-    url: `${siteUrl}/servicos/maquiagem-e-penteado`,
-  },
-  alternates: { canonical: `${siteUrl}/servicos/maquiagem-e-penteado` },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getConteudo("maquiagem-e-penteado");
+  return {
+    title: "Maquiagem e Penteado em Passos MG — Combo Completo",
+    description:
+      c?.descricao_curta ??
+      "Combo maquiagem + penteado em Passos MG. Atendimento completo para noivas, formaturas e eventos. Melhor custo-benefício. Agende no Âmbar Beauty Studio.",
+    keywords: ["maquiagem e penteado passos mg", "combo make penteado passos", "maquiagem penteado casamento passos", "producao completa passos mg"],
+    openGraph: {
+      title: "Maquiagem e Penteado em Passos MG | Âmbar Beauty Studio",
+      description: "Combo maquiagem + penteado em Passos MG para noivas, formaturas e eventos. Âmbar Beauty Studio.",
+      url: `${siteUrl}/servicos/maquiagem-e-penteado`,
+    },
+    alternates: { canonical: `${siteUrl}/servicos/maquiagem-e-penteado` },
+  };
+}
 
-export default function MaquiagemPenteadoPage() {
+export default async function MaquiagemPenteadoPage() {
+  const c = await getConteudo("maquiagem-e-penteado");
   return (
     <>
     <ServicePage
       serviceName="Combo Maquiagem e Penteado"
       serviceDescription="Combo completo de maquiagem + penteado profissional em Passos MG para noivas, formaturas e eventos com coerência visual e melhor custo-benefício."
       serviceUrl={`${siteUrl}/servicos/maquiagem-e-penteado`}
-      heroTitle="Maquiagem e Penteado em Passos MG — Combo Completo"
-      heroSubtitle="O look completo — make + cabelo — em um só atendimento. Mais praticidade, mais economia e um resultado visualmente harmonioso do primeiro ao último detalhe."
+      heroTitle={c?.titulo ?? "Maquiagem e Penteado em Passos MG — Combo Completo"}
+      heroSubtitle={c?.subtitulo ?? "O look completo — make + cabelo — em um só atendimento. Mais praticidade, mais economia e um resultado visualmente harmonioso do primeiro ao último detalhe."}
       whatIsText={`O combo maquiagem + penteado é a solução completa para quem quer um visual impecável sem a preocupação de coordenar diferentes profissionais e studios. No Âmbar Beauty Studio, maquiagem e penteado são pensados juntos, garantindo que as cores, a textura e o estilo do cabelo complementem perfeitamente o look da maquiagem.
 
 A grande vantagem do combo está na coerência visual: quando a mesma equipe cria o penteado e a maquiagem, o resultado final é muito mais harmonioso. A maquiagem mais glamourosa pede um penteado mais elaborado; a make natural combina com um penteado mais solto e romântico. Essa sintonia é difícil de alcançar quando cada serviço é contratado em lugares diferentes.

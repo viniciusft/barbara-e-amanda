@@ -1,33 +1,39 @@
 import type { Metadata } from "next";
 import ServicePage from "@/components/seo/ServicePage";
 import ServicoLinks from "@/components/seo/ServicoLinks";
+import { getConteudo } from "@/lib/conteudo";
 
 export const dynamic = "force-static";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
 
-export const metadata: Metadata = {
-  title: "Babyliss em Passos MG — Cabelo com Ondas Perfeitas",
-  description:
-    "Babyliss profissional em Passos MG. Ondas perfeitas, naturais e duradouras para qualquer ocasião. Studio Âmbar Beauty em Passos MG.",
-  keywords: ["babyliss passos mg", "ondas babyliss passos", "cabelo ondulado passos", "babyliss profissional passos mg"],
-  openGraph: {
-    title: "Babyliss em Passos MG | Âmbar Beauty Studio",
-    description: "Babyliss profissional em Passos MG. Ondas naturais e duradouras. Agende no Âmbar Beauty Studio.",
-    url: `${siteUrl}/servicos/babyliss`,
-  },
-  alternates: { canonical: `${siteUrl}/servicos/babyliss` },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getConteudo("babyliss");
+  return {
+    title: "Babyliss em Passos MG — Cabelo com Ondas Perfeitas",
+    description:
+      c?.descricao_curta ??
+      "Babyliss profissional em Passos MG. Ondas perfeitas, naturais e duradouras para qualquer ocasião. Studio Âmbar Beauty em Passos MG.",
+    keywords: ["babyliss passos mg", "ondas babyliss passos", "cabelo ondulado passos", "babyliss profissional passos mg"],
+    openGraph: {
+      title: "Babyliss em Passos MG | Âmbar Beauty Studio",
+      description: "Babyliss profissional em Passos MG. Ondas naturais e duradouras. Agende no Âmbar Beauty Studio.",
+      url: `${siteUrl}/servicos/babyliss`,
+    },
+    alternates: { canonical: `${siteUrl}/servicos/babyliss` },
+  };
+}
 
-export default function BabylissPage() {
+export default async function BabylissPage() {
+  const c = await getConteudo("babyliss");
   return (
     <>
     <ServicePage
       serviceName="Babyliss"
       serviceDescription="Serviço profissional de babyliss em Passos MG com ondas naturais, duradouras e perfeitas para festas, eventos e o dia a dia."
       serviceUrl={`${siteUrl}/servicos/babyliss`}
-      heroTitle="Babyliss em Passos MG — Cabelo com Ondas Perfeitas"
-      heroSubtitle="Ondas naturais, volumosas e duradouras que transformam qualquer visual. O babyliss profissional é o toque final que faz toda a diferença no seu look."
+      heroTitle={c?.titulo ?? "Babyliss em Passos MG — Cabelo com Ondas Perfeitas"}
+      heroSubtitle={c?.subtitulo ?? "Ondas naturais, volumosas e duradouras que transformam qualquer visual. O babyliss profissional é o toque final que faz toda a diferença no seu look."}
       whatIsText={`O babyliss é uma técnica de ondulação de cabelo que utiliza um modelador de cachos ou ondas — o babyliss profissional — para criar ondas e cachos com aspecto natural e longa duração. Diferente da chapinha (que alisa) ou do secador comum, o babyliss cria volume, movimento e textura de forma suave e controlada.
 
 Existem diferentes tipos de onda que podem ser criadas com o babyliss: ondas soltas e naturais (mais leves e com movimento), cachos definidos (mais pronunciados e volumosos), beach waves (o estilo "saída da praia" descontraído), e ondas soft (suaves e elegantes para eventos formais). Cada estilo é adaptado ao seu tipo de cabelo e à ocasião.

@@ -1,33 +1,39 @@
 import type { Metadata } from "next";
 import ServicePage from "@/components/seo/ServicePage";
 import ServicoLinks from "@/components/seo/ServicoLinks";
+import { getConteudo } from "@/lib/conteudo";
 
 export const dynamic = "force-static";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
 
-export const metadata: Metadata = {
-  title: "Penteado em Passos MG",
-  description:
-    "Penteados profissionais em Passos MG. Para noivas, formaturas, festas e eventos. Penteado solto, preso, semi-preso e trança. Agende agora.",
-  keywords: ["penteado passos mg", "penteado para festa passos", "penteado noiva passos", "penteado formatura passos mg"],
-  openGraph: {
-    title: "Penteado Profissional em Passos MG | Âmbar Beauty Studio",
-    description: "Penteados profissionais em Passos MG para noivas, formaturas e festas. Agende no Âmbar Beauty Studio.",
-    url: `${siteUrl}/servicos/penteado`,
-  },
-  alternates: { canonical: `${siteUrl}/servicos/penteado` },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getConteudo("penteado");
+  return {
+    title: "Penteado em Passos MG",
+    description:
+      c?.descricao_curta ??
+      "Penteados profissionais em Passos MG. Para noivas, formaturas, festas e eventos. Penteado solto, preso, semi-preso e trança. Agende agora.",
+    keywords: ["penteado passos mg", "penteado para festa passos", "penteado noiva passos", "penteado formatura passos mg"],
+    openGraph: {
+      title: "Penteado Profissional em Passos MG | Âmbar Beauty Studio",
+      description: "Penteados profissionais em Passos MG para noivas, formaturas e festas. Agende no Âmbar Beauty Studio.",
+      url: `${siteUrl}/servicos/penteado`,
+    },
+    alternates: { canonical: `${siteUrl}/servicos/penteado` },
+  };
+}
 
-export default function PenteadoPage() {
+export default async function PenteadoPage() {
+  const c = await getConteudo("penteado");
   return (
     <>
     <ServicePage
       serviceName="Penteado Profissional"
       serviceDescription="Penteados profissionais em Passos MG para festas, formaturas, casamentos e eventos. Estilos preso, semi-preso, solto com ondas e tranças."
       serviceUrl={`${siteUrl}/servicos/penteado`}
-      heroTitle="Penteado Profissional em Passos MG"
-      heroSubtitle="Do elegante coque para noiva às ondas soltas para festa — criamos o penteado que combina com você, com o evento e dura a noite toda."
+      heroTitle={c?.titulo ?? "Penteado Profissional em Passos MG"}
+      heroSubtitle={c?.subtitulo ?? "Do elegante coque para noiva às ondas soltas para festa — criamos o penteado que combina com você, com o evento e dura a noite toda."}
       whatIsText={`O penteado profissional é muito mais do que apenas "arrumar o cabelo". É a finalização que completa o look, enquadra o rosto e garante que você esteja exatamente como imaginou para aquela ocasião especial. No Âmbar Beauty Studio, cada penteado é criado de forma personalizada, levando em conta seu tipo de cabelo, o estilo do evento e suas preferências.
 
 Trabalhamos com os principais estilos de penteado: o elegante coque clássico ou moderno (perfeito para noivas e formaturas), o semi-preso com cachos ou ondas, o solto com babyliss ou ondas de ferro, e as tranças embutidas ou decorativas. Cada técnica usa produtos de fixação profissional para garantir que o penteado se mantenha impecável por toda a festa.

@@ -4,30 +4,35 @@ import { ArrowRight, MessageCircle } from "lucide-react";
 import ServicePage from "@/components/seo/ServicePage";
 import ServicoLinks from "@/components/seo/ServicoLinks";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { getConteudo } from "@/lib/conteudo";
 
 export const dynamic = "force-static";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
 
-export const metadata: Metadata = {
-  title: "Maquiagem para Formatura em Passos MG | Âmbar Beauty Studio",
-  description:
-    "Maquiagem e penteado para formatura em Passos MG. Look completo para o dia mais especial da sua jornada acadêmica. Agende no Âmbar Beauty Studio.",
-  keywords: [
-    "maquiagem formatura passos mg",
-    "make formatura passos",
-    "penteado formatura passos mg",
-    "maquiagem colação grau passos",
-    "formatura make passos mg",
-  ],
-  openGraph: {
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getConteudo("formatura");
+  return {
     title: "Maquiagem para Formatura em Passos MG | Âmbar Beauty Studio",
     description:
-      "Look completo para formatura em Passos MG: maquiagem e penteado profissional para o dia mais especial da sua jornada acadêmica. Âmbar Beauty Studio.",
-    url: `${siteUrl}/ocasioes/formatura`,
-  },
-  alternates: { canonical: `${siteUrl}/ocasioes/formatura` },
-};
+      c?.descricao_curta ??
+      "Maquiagem e penteado para formatura em Passos MG. Look completo para o dia mais especial da sua jornada acadêmica. Agende no Âmbar Beauty Studio.",
+    keywords: [
+      "maquiagem formatura passos mg",
+      "make formatura passos",
+      "penteado formatura passos mg",
+      "maquiagem colação grau passos",
+      "formatura make passos mg",
+    ],
+    openGraph: {
+      title: "Maquiagem para Formatura em Passos MG | Âmbar Beauty Studio",
+      description:
+        "Look completo para formatura em Passos MG: maquiagem e penteado profissional para o dia mais especial da sua jornada acadêmica. Âmbar Beauty Studio.",
+      url: `${siteUrl}/ocasioes/formatura`,
+    },
+    alternates: { canonical: `${siteUrl}/ocasioes/formatura` },
+  };
+}
 
 async function getWhatsapp(): Promise<string | null> {
   try {
@@ -44,7 +49,7 @@ async function getWhatsapp(): Promise<string | null> {
 }
 
 export default async function FormaturaPage() {
-  const whatsapp = await getWhatsapp();
+  const [whatsapp, c] = await Promise.all([getWhatsapp(), getConteudo("formatura")]);
   const whatsappNumber = whatsapp?.replace(/\D/g, "") ?? "";
   const whatsappUrl = whatsappNumber
     ? `https://wa.me/55${whatsappNumber}?text=${encodeURIComponent("Olá! Gostaria de informações sobre maquiagem e penteado para formatura.")}`
@@ -56,8 +61,8 @@ export default async function FormaturaPage() {
         serviceName="Maquiagem para Formatura"
         serviceDescription="Serviço completo de maquiagem e penteado para formatura em Passos MG. Look impecável e duradouro para a colação de grau e a festa de formatura."
         serviceUrl={`${siteUrl}/ocasioes/formatura`}
-        heroTitle="Maquiagem para Formatura em Passos MG"
-        heroSubtitle="Anos de dedicação merecem um look à altura. Maquiagem e penteado profissional para a sua formatura — do palco da colação à última foto da festa."
+        heroTitle={c?.titulo ?? "Maquiagem para Formatura em Passos MG"}
+        heroSubtitle={c?.subtitulo ?? "Anos de dedicação merecem um look à altura. Maquiagem e penteado profissional para a sua formatura — do palco da colação à última foto da festa."}
         whatIsText={`A formatura é um marco inesquecível: o fim de uma jornada longa e o início de uma nova fase. E para um momento tão significativo, você merece um look que transmita exatamente isso — conquista, elegância e personalidade.
 
 No Âmbar Beauty Studio, atendemos formatandas que querem chegar à colação de grau e à festa radiantes, com uma maquiagem que dure horas sem retoque e um penteado que resista à emoção e à comemoração. Trabalhamos com diferentes estilos: do look mais clássico e sofisticado ao mais moderno e dramático — sempre respeitando o seu gosto e combinando com o seu vestido.

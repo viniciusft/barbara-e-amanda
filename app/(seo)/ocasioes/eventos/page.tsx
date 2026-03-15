@@ -4,30 +4,35 @@ import { ArrowRight, MessageCircle } from "lucide-react";
 import ServicePage from "@/components/seo/ServicePage";
 import ServicoLinks from "@/components/seo/ServicoLinks";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { getConteudo } from "@/lib/conteudo";
 
 export const dynamic = "force-static";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
 
-export const metadata: Metadata = {
-  title: "Maquiagem para Festas e Eventos em Passos MG | Âmbar Beauty Studio",
-  description:
-    "Maquiagem e penteado para festas, aniversários, eventos corporativos e ocasiões especiais em Passos MG. Agende com facilidade no Âmbar Beauty Studio.",
-  keywords: [
-    "maquiagem eventos passos mg",
-    "maquiagem festa passos mg",
-    "make aniversário passos",
-    "maquiagem evento corporativo passos",
-    "make ensaio fotográfico passos mg",
-  ],
-  openGraph: {
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getConteudo("eventos");
+  return {
     title: "Maquiagem para Festas e Eventos em Passos MG | Âmbar Beauty Studio",
     description:
-      "Maquiagem e penteado profissional para festas, aniversários, eventos corporativos e ocasiões especiais em Passos MG. Âmbar Beauty Studio.",
-    url: `${siteUrl}/ocasioes/eventos`,
-  },
-  alternates: { canonical: `${siteUrl}/ocasioes/eventos` },
-};
+      c?.descricao_curta ??
+      "Maquiagem e penteado para festas, aniversários, eventos corporativos e ocasiões especiais em Passos MG. Agende com facilidade no Âmbar Beauty Studio.",
+    keywords: [
+      "maquiagem eventos passos mg",
+      "maquiagem festa passos mg",
+      "make aniversário passos",
+      "maquiagem evento corporativo passos",
+      "make ensaio fotográfico passos mg",
+    ],
+    openGraph: {
+      title: "Maquiagem para Festas e Eventos em Passos MG | Âmbar Beauty Studio",
+      description:
+        "Maquiagem e penteado profissional para festas, aniversários, eventos corporativos e ocasiões especiais em Passos MG. Âmbar Beauty Studio.",
+      url: `${siteUrl}/ocasioes/eventos`,
+    },
+    alternates: { canonical: `${siteUrl}/ocasioes/eventos` },
+  };
+}
 
 async function getWhatsapp(): Promise<string | null> {
   try {
@@ -44,7 +49,7 @@ async function getWhatsapp(): Promise<string | null> {
 }
 
 export default async function EventosPage() {
-  const whatsapp = await getWhatsapp();
+  const [whatsapp, c] = await Promise.all([getWhatsapp(), getConteudo("eventos")]);
   const whatsappNumber = whatsapp?.replace(/\D/g, "") ?? "";
   const whatsappUrl = whatsappNumber
     ? `https://wa.me/55${whatsappNumber}?text=${encodeURIComponent("Olá! Gostaria de informações sobre maquiagem para um evento especial.")}`
@@ -56,8 +61,8 @@ export default async function EventosPage() {
         serviceName="Maquiagem para Eventos"
         serviceDescription="Serviço de maquiagem e penteado para festas, aniversários, eventos corporativos e ocasiões especiais em Passos MG, com produção adaptada a cada tipo de evento."
         serviceUrl={`${siteUrl}/ocasioes/eventos`}
-        heroTitle="Maquiagem para Eventos em Passos MG"
-        heroSubtitle="De festas de aniversário a eventos corporativos, de ensaios fotográficos a jantares especiais — um look profissional para cada ocasião, criado especialmente para você."
+        heroTitle={c?.titulo ?? "Maquiagem para Eventos em Passos MG"}
+        heroSubtitle={c?.subtitulo ?? "De festas de aniversário a eventos corporativos, de ensaios fotográficos a jantares especiais — um look profissional para cada ocasião, criado especialmente para você."}
         whatIsText={`Todo evento tem o seu tom, e a maquiagem certa transforma qualquer ocasião em um momento ainda mais especial. No Âmbar Beauty Studio, atendemos mulheres que querem chegar ao evento com o visual impecável — sem a correria de tentar se maquiar em casa na última hora.
 
 Cada tipo de evento pede um look diferente: um aniversário pede brilho e personalidade; um evento corporativo pede sofisticação discreta; um ensaio fotográfico exige produtos que fotografem bem sob qualquer luz. Nossa equipe entende essas nuances e adapta a maquiagem e o penteado ao estilo do evento e ao seu gosto pessoal.

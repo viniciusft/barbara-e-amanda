@@ -1,33 +1,39 @@
 import type { Metadata } from "next";
 import ServicePage from "@/components/seo/ServicePage";
 import ServicoLinks from "@/components/seo/ServicoLinks";
+import { getConteudo } from "@/lib/conteudo";
 
 export const dynamic = "force-static";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
 
-export const metadata: Metadata = {
-  title: "Maquiagem de Noiva em Passos MG",
-  description:
-    "Maquiagem de noiva profissional em Passos MG. Atendimento exclusivo, teste de maquiagem e dia da noiva completo. Âmbar Beauty Studio.",
-  keywords: ["maquiagem noiva passos mg", "maquiagem casamento passos", "dia da noiva passos mg", "make noiva passos"],
-  openGraph: {
-    title: "Maquiagem de Noiva em Passos MG | Âmbar Beauty Studio",
-    description: "Maquiagem de noiva profissional em Passos MG. Atendimento exclusivo com teste de make. Âmbar Beauty Studio.",
-    url: `${siteUrl}/servicos/maquiagem-noiva`,
-  },
-  alternates: { canonical: `${siteUrl}/servicos/maquiagem-noiva` },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getConteudo("maquiagem-noiva");
+  return {
+    title: "Maquiagem de Noiva em Passos MG",
+    description:
+      c?.descricao_curta ??
+      "Maquiagem de noiva profissional em Passos MG. Atendimento exclusivo, teste de maquiagem e dia da noiva completo. Âmbar Beauty Studio.",
+    keywords: ["maquiagem noiva passos mg", "maquiagem casamento passos", "dia da noiva passos mg", "make noiva passos"],
+    openGraph: {
+      title: "Maquiagem de Noiva em Passos MG | Âmbar Beauty Studio",
+      description: "Maquiagem de noiva profissional em Passos MG. Atendimento exclusivo com teste de make. Âmbar Beauty Studio.",
+      url: `${siteUrl}/servicos/maquiagem-noiva`,
+    },
+    alternates: { canonical: `${siteUrl}/servicos/maquiagem-noiva` },
+  };
+}
 
-export default function MaquiagemNoivaPage() {
+export default async function MaquiagemNoivaPage() {
+  const c = await getConteudo("maquiagem-noiva");
   return (
     <>
     <ServicePage
       serviceName="Maquiagem de Noiva"
       serviceDescription="Serviço especializado de maquiagem de noiva em Passos MG com teste de make, atendimento exclusivo e alta durabilidade."
       serviceUrl={`${siteUrl}/servicos/maquiagem-noiva`}
-      heroTitle="Maquiagem de Noiva em Passos MG"
-      heroSubtitle="O dia mais importante da sua vida merece a maquiagem mais especial. Atendimento exclusivo, com teste prévio e produtos premium de altíssima durabilidade."
+      heroTitle={c?.titulo ?? "Maquiagem de Noiva em Passos MG"}
+      heroSubtitle={c?.subtitulo ?? "O dia mais importante da sua vida merece a maquiagem mais especial. Atendimento exclusivo, com teste prévio e produtos premium de altíssima durabilidade."}
       whatIsText={`A maquiagem de noiva é um serviço diferenciado e exclusivo, pensado para um dos momentos mais emocionantes da vida de uma mulher. Diferente da maquiagem social, o atendimento de noiva inclui um processo mais detalhado, com teste de maquiagem prévio, uso de produtos premium e técnicas específicas para garantir durabilidade de 12 a 16 horas.
 
 No Âmbar Beauty Studio, entendemos que cada noiva é única. Por isso, o processo começa com uma conversa aprofundada sobre o estilo do casamento, a iluminação do espaço, a paleta de cores da festa e, claro, o que você sonha para o seu look. Trabalhamos para que você se sinta a versão mais linda de si mesma — reconhecível e autêntica.
