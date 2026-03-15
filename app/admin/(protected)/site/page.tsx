@@ -7,7 +7,7 @@ import Link from "next/link";
 import {
   Globe, GripVertical, Trash2, Eye, EyeOff, Check, X,
   AlertTriangle, Info, Upload, Plus, Monitor, Smartphone,
-  Star, ExternalLink,
+  Star, ExternalLink, RefreshCw,
 } from "lucide-react";
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor,
@@ -19,7 +19,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { revalidarPagina } from "@/app/actions/revalidate";
-import SitePreview from "@/components/admin/SitePreview";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -37,12 +36,6 @@ interface FaqItem {
   answer: string;
 }
 
-interface ParaQuemItem {
-  icone: string;
-  titulo: string;
-  descricao: string;
-}
-
 interface ConteudoData {
   titulo?: string | null;
   subtitulo?: string | null;
@@ -50,7 +43,6 @@ interface ConteudoData {
   meta_description?: string | null;
   descricao_curta?: string | null;
   faq?: FaqItem[] | null;
-  para_quem?: ParaQuemItem[] | null;
   updated_at?: string | null;
 }
 
@@ -317,8 +309,16 @@ export default function AdminSitePage() {
   const [toast, setToast] = useState<string | null>(null);
   const showToast = useCallback((msg: string) => setToast(msg), []);
 
-  // ── Preview ─────────────────────────────────────────────────────────────────
+  // ── Preview (iframe) ─────────────────────────────────────────────────────────
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [iframeLoading, setIframeLoading] = useState(true);
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  function recarregarPreview() {
+    setIframeLoading(true);
+    setPreviewUrl(`${PUBLIC_PATH}?preview=1&t=${Date.now()}`);
+  }
 
   // ── Textos ──────────────────────────────────────────────────────────────────
   const [titulo, setTitulo] = useState("");
@@ -328,7 +328,12 @@ export default function AdminSitePage() {
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [savingTextos, setSavingTextos] = useState(false);
   const [servico, setServico] = useState<ServicoData | null>(null);
-  const [paraQuem, setParaQuem] = useState<ParaQuemItem[]>([]);
+  const [camposAlterados, setCamposAlterados] = useState<Set<string>>(new Set());
+  const temMudancas = camposAlterados.size > 0;
+
+  function marcarAlterado(campo: string) {
+    setCamposAlterados((prev) => new Set(prev).add(campo));
+  }
 
   const wordCount = textoPrincipal.trim() ? textoPrincipal.trim().split(/\s+/).length : 0;
   const metaLen = metaDesc.length;
@@ -357,8 +362,6 @@ export default function AdminSitePage() {
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const heroFoto = fotos.find((f) => f.tipo_exibicao === "hero") ?? null;
-  const carrosselFotos = fotos.filter((f) => f.tipo_exibicao === "carrossel");
-  const gridFotos = fotos.filter((f) => f.tipo_exibicao === "grid");
   const fotosFiltradas = fotos.filter((f) => f.tipo_exibicao === tipoFoto);
   const LIMITE = 6;
   const atLimit = fotosFiltradas.length >= LIMITE;
@@ -384,11 +387,14 @@ export default function AdminSitePage() {
       setMetaDesc("");
       setLastSaved(null);
       setServico(null);
-      setParaQuem([]);
+      setCamposAlterados(new Set());
       setFotos([]);
       setFaqs([]);
       setShowUpload(false);
       setShowHeroUpload(false);
+      // Set preview URL immediately (before data loads)
+      setIframeLoading(true);
+      setPreviewUrl(`${PUBLIC_PATH}?preview=1`);
       try {
         const res = await fetch(`/api/admin/site/conteudo?pagina=${PAGINA}`);
         const data = await res.json();
@@ -403,9 +409,6 @@ export default function AdminSitePage() {
 
         const rawFaqs = c.faq ?? [];
         setFaqs(rawFaqs.map((f, i) => ({ ...f, _id: `faq-${i}-${Date.now()}` })));
-
-        const rawParaQuem = Array.isArray(c.para_quem) ? c.para_quem : [];
-        setParaQuem(rawParaQuem);
 
         setFotos(data.fotos ?? []);
       } catch {
@@ -432,13 +435,14 @@ export default function AdminSitePage() {
           texto_principal: textoPrincipal,
           meta_description: metaDesc,
           descricao_curta: metaDesc,
-          para_quem: paraQuem,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erro ao salvar");
       setLastSaved(data.conteudo?.updated_at ?? new Date().toISOString());
+      setCamposAlterados(new Set());
       await revalidarPagina(PUBLIC_PATH);
+      recarregarPreview();
       showToast("Página atualizada com sucesso ✓");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Erro ao salvar");
@@ -611,6 +615,7 @@ export default function AdminSitePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erro ao salvar");
       await revalidarPagina(PUBLIC_PATH);
+      recarregarPreview();
       showToast("FAQ atualizado com sucesso ✓");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Erro ao salvar FAQ");
@@ -707,8 +712,8 @@ export default function AdminSitePage() {
                         </label>
                         <input
                           value={titulo}
-                          onChange={(e) => setTitulo(e.target.value)}
-                          className="input-luxury text-sm"
+                          onChange={(e) => { setTitulo(e.target.value); marcarAlterado("titulo"); }}
+                          className={`input-luxury text-sm ${camposAlterados.has("titulo") ? "ring-1 ring-gold/50" : ""}`}
                           placeholder="Maquiagem Social em Passos MG"
                         />
                         <p className={SEO_HINT_CLASS}>
@@ -724,8 +729,8 @@ export default function AdminSitePage() {
                         </label>
                         <input
                           value={subtitulo}
-                          onChange={(e) => setSubtitulo(e.target.value)}
-                          className="input-luxury text-sm"
+                          onChange={(e) => { setSubtitulo(e.target.value); marcarAlterado("subtitulo"); }}
+                          className={`input-luxury text-sm ${camposAlterados.has("subtitulo") ? "ring-1 ring-gold/50" : ""}`}
                           placeholder="Para festas, formaturas e eventos especiais"
                         />
                         <p className={SEO_HINT_CLASS}>
@@ -741,10 +746,10 @@ export default function AdminSitePage() {
                         </label>
                         <textarea
                           value={textoPrincipal}
-                          onChange={(e) => setTextoPrincipal(e.target.value)}
+                          onChange={(e) => { setTextoPrincipal(e.target.value); marcarAlterado("texto"); }}
                           rows={5}
                           style={{ height: 120 }}
-                          className="input-luxury text-sm resize-none"
+                          className={`input-luxury text-sm resize-none ${camposAlterados.has("texto") ? "ring-1 ring-gold/50" : ""}`}
                           placeholder="Descreva o serviço em detalhe..."
                         />
                         {/* Word count indicator */}
@@ -792,54 +797,6 @@ export default function AdminSitePage() {
                         </div>
                       )}
 
-                      {/* Para quem é ideal */}
-                      <div>
-                        <label className="block text-xs font-medium text-foreground mb-1 font-sans">
-                          Para quem é ideal (4 cards)
-                        </label>
-                        <div className="space-y-3">
-                          {(paraQuem.length > 0 ? paraQuem : Array(4).fill({ icone: "star", titulo: "", descricao: "" })).slice(0, 4).map((item, i) => (
-                            <div key={i} className="border border-surface-border rounded-card p-3 space-y-2 bg-surface-card">
-                              <div className="flex items-center gap-2">
-                                <select
-                                  value={item.icone}
-                                  onChange={(e) => {
-                                    const updated = (paraQuem.length > 0 ? [...paraQuem] : Array(4).fill({ icone: "star", titulo: "", descricao: "" }).map(x => ({ ...x })));
-                                    updated[i] = { ...updated[i], icone: e.target.value };
-                                    setParaQuem(updated);
-                                  }}
-                                  className="input-luxury text-xs py-1 w-28 shrink-0"
-                                >
-                                  {["party", "graduation", "heart", "camera", "briefcase", "star", "users"].map(k => (
-                                    <option key={k} value={k}>{k}</option>
-                                  ))}
-                                </select>
-                                <input
-                                  value={item.titulo}
-                                  onChange={(e) => {
-                                    const updated = (paraQuem.length > 0 ? [...paraQuem] : Array(4).fill({ icone: "star", titulo: "", descricao: "" }).map(x => ({ ...x })));
-                                    updated[i] = { ...updated[i], titulo: e.target.value };
-                                    setParaQuem(updated);
-                                  }}
-                                  className="input-luxury text-xs py-1 flex-1"
-                                  placeholder={`Título ${i + 1}`}
-                                />
-                              </div>
-                              <input
-                                value={item.descricao}
-                                onChange={(e) => {
-                                  const updated = (paraQuem.length > 0 ? [...paraQuem] : Array(4).fill({ icone: "star", titulo: "", descricao: "" }).map(x => ({ ...x })));
-                                  updated[i] = { ...updated[i], descricao: e.target.value };
-                                  setParaQuem(updated);
-                                }}
-                                className="input-luxury text-xs py-1 w-full"
-                                placeholder="Descrição curta"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
                       {/* Meta description */}
                       <div>
                         <div className="flex items-center justify-between mb-1">
@@ -854,10 +811,10 @@ export default function AdminSitePage() {
                         </div>
                         <textarea
                           value={metaDesc}
-                          onChange={(e) => setMetaDesc(e.target.value)}
+                          onChange={(e) => { setMetaDesc(e.target.value); marcarAlterado("meta"); }}
                           rows={2}
                           style={{ height: 60, resize: "none" }}
-                          className="input-luxury text-sm"
+                          className={`input-luxury text-sm ${camposAlterados.has("meta") ? "ring-1 ring-gold/50" : ""}`}
                           placeholder="Maquiagem social profissional em Passos MG..."
                           maxLength={170}
                         />
@@ -871,12 +828,16 @@ export default function AdminSitePage() {
                       <button
                         onClick={handleSaveTextos}
                         disabled={savingTextos}
-                        className="w-full btn-gold flex items-center justify-center gap-2 text-sm py-3 disabled:opacity-50"
+                        className={`w-full flex items-center justify-center gap-2 text-sm py-3 disabled:opacity-50 rounded-btn font-semibold transition-colors ${
+                          temMudancas
+                            ? "bg-gold text-[#111] hover:bg-gold-light"
+                            : "btn-gold"
+                        }`}
                       >
                         {savingTextos
                           ? <span className="w-4 h-4 border-2 border-[#111]/30 border-t-[#111] rounded-full animate-spin" />
                           : <Check size={14} />}
-                        Salvar e publicar
+                        {temMudancas ? "Salvar e visualizar" : "Salvar e visualizar"}
                       </button>
 
                       {lastSaved && (
@@ -1310,8 +1271,15 @@ export default function AdminSitePage() {
                 </div>
               </div>
 
-              {/* Desktop / Mobile toggle */}
-              <div className="flex gap-1 shrink-0">
+              {/* Reload + Desktop/Mobile toggle */}
+              <div className="flex gap-1 shrink-0 items-center">
+                <button
+                  onClick={recarregarPreview}
+                  className="p-1.5 rounded text-gray-500 hover:text-foreground transition-colors"
+                  title="Recarregar preview"
+                >
+                  <RefreshCw size={13} />
+                </button>
                 <button
                   onClick={() => setPreviewMode("desktop")}
                   className={`p-1.5 rounded transition-colors ${
@@ -1337,28 +1305,38 @@ export default function AdminSitePage() {
               </div>
             </div>
 
-            {/* Live preview */}
-            <div className="flex-1 border-x border-b border-surface-border rounded-b-card overflow-hidden flex">
-              <SitePreview
-                key={selectedSlug}
-                titulo={titulo}
-                subtitulo={subtitulo}
-                texto_principal={textoPrincipal}
-                meta_description={metaDesc}
-                fotos_carrossel={carrosselFotos}
-                fotos_grid={gridFotos}
-                foto_hero={heroFoto}
-                faq={faqs.map(({ question, answer }) => ({ question, answer }))}
-                para_quem={paraQuem}
-                servico={servico}
-                modo={previewMode}
-                loading={loading}
-              />
+            {/* Iframe preview */}
+            <div
+              className="flex-1 border-x border-b border-surface-border rounded-b-card overflow-hidden relative"
+              style={{ background: previewMode === "mobile" ? "#1a1a1a" : undefined }}
+            >
+              {/* Loading overlay */}
+              {iframeLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-surface-elevated z-10">
+                  <span className="w-6 h-6 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+                </div>
+              )}
+              {previewUrl && (
+                <iframe
+                  ref={iframeRef}
+                  src={previewUrl}
+                  title="Preview da página"
+                  onLoad={() => setIframeLoading(false)}
+                  style={{
+                    border: "none",
+                    height: "100%",
+                    width: previewMode === "mobile" ? "390px" : "100%",
+                    display: "block",
+                    marginLeft: previewMode === "mobile" ? "auto" : undefined,
+                    marginRight: previewMode === "mobile" ? "auto" : undefined,
+                  }}
+                />
+              )}
             </div>
 
             {/* Footer note */}
             <p className="text-[10px] text-gray-600 font-sans text-center mt-2 shrink-0">
-              Preview ao vivo · atualiza enquanto você edita · clique &ldquo;Salvar&rdquo; para publicar
+              Preview real da página publicada · clique &ldquo;Salvar e visualizar&rdquo; para atualizar
             </p>
           </div>
 
