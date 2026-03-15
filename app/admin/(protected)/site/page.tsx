@@ -37,6 +37,12 @@ interface FaqItem {
   answer: string;
 }
 
+interface ParaQuemItem {
+  icone: string;
+  titulo: string;
+  descricao: string;
+}
+
 interface ConteudoData {
   titulo?: string | null;
   subtitulo?: string | null;
@@ -44,6 +50,7 @@ interface ConteudoData {
   meta_description?: string | null;
   descricao_curta?: string | null;
   faq?: FaqItem[] | null;
+  para_quem?: ParaQuemItem[] | null;
   updated_at?: string | null;
 }
 
@@ -321,6 +328,7 @@ export default function AdminSitePage() {
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [savingTextos, setSavingTextos] = useState(false);
   const [servico, setServico] = useState<ServicoData | null>(null);
+  const [paraQuem, setParaQuem] = useState<ParaQuemItem[]>([]);
 
   const wordCount = textoPrincipal.trim() ? textoPrincipal.trim().split(/\s+/).length : 0;
   const metaLen = metaDesc.length;
@@ -376,6 +384,7 @@ export default function AdminSitePage() {
       setMetaDesc("");
       setLastSaved(null);
       setServico(null);
+      setParaQuem([]);
       setFotos([]);
       setFaqs([]);
       setShowUpload(false);
@@ -394,6 +403,9 @@ export default function AdminSitePage() {
 
         const rawFaqs = c.faq ?? [];
         setFaqs(rawFaqs.map((f, i) => ({ ...f, _id: `faq-${i}-${Date.now()}` })));
+
+        const rawParaQuem = Array.isArray(c.para_quem) ? c.para_quem : [];
+        setParaQuem(rawParaQuem);
 
         setFotos(data.fotos ?? []);
       } catch {
@@ -420,6 +432,7 @@ export default function AdminSitePage() {
           texto_principal: textoPrincipal,
           meta_description: metaDesc,
           descricao_curta: metaDesc,
+          para_quem: paraQuem,
         }),
       });
       const data = await res.json();
@@ -755,27 +768,77 @@ export default function AdminSitePage() {
                       </div>
 
                       {/* Preço e Duração — somente leitura, vem de Serviços */}
-                      {paginaConfig.temServico && <div className="bg-surface-elevated border border-surface-border rounded-card p-4 space-y-2">
-                        <p className="text-xs font-medium text-foreground font-sans">Preço e duração</p>
-                        <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
-                          Esses dados vêm do cadastro do serviço e não podem ser editados aqui.
-                        </p>
-                        <div className="flex items-center gap-4 py-1">
-                          <span className="text-sm font-semibold text-gold font-sans">
-                            {servico?.preco != null ? `R$ ${servico.preco}` : "—"}
-                          </span>
-                          <span className="text-[10px] text-gray-400 font-sans">
-                            {servico?.duracao_minutos != null ? `${servico.duracao_minutos} min` : "—"}
-                          </span>
+                      {(servico?.preco != null || servico?.duracao_minutos != null) && (
+                        <div className="bg-surface-elevated border border-surface-border rounded-card p-4 space-y-2">
+                          <p className="text-xs font-medium text-foreground font-sans">Preço e duração</p>
+                          <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
+                            Esses dados vêm do cadastro do serviço e não podem ser editados aqui.
+                          </p>
+                          <div className="flex items-center gap-4 py-1">
+                            <span className="text-sm font-semibold text-gold font-sans">
+                              {servico?.preco != null ? `R$ ${servico.preco}` : "—"}
+                            </span>
+                            <span className="text-[10px] text-gray-400 font-sans">
+                              {servico?.duracao_minutos != null ? `${servico.duracao_minutos} min` : "—"}
+                            </span>
+                          </div>
+                          <Link
+                            href="/admin/servicos"
+                            className="inline-flex items-center gap-1 text-[10px] text-gold hover:text-gold-light font-sans transition-colors"
+                          >
+                            <ExternalLink size={10} />
+                            Editar em Admin → Serviços
+                          </Link>
                         </div>
-                        <Link
-                          href="/admin/servicos"
-                          className="inline-flex items-center gap-1 text-[10px] text-gold hover:text-gold-light font-sans transition-colors"
-                        >
-                          <ExternalLink size={10} />
-                          Editar em Admin → Serviços
-                        </Link>
-                      </div>}
+                      )}
+
+                      {/* Para quem é ideal */}
+                      <div>
+                        <label className="block text-xs font-medium text-foreground mb-1 font-sans">
+                          Para quem é ideal (4 cards)
+                        </label>
+                        <div className="space-y-3">
+                          {(paraQuem.length > 0 ? paraQuem : Array(4).fill({ icone: "star", titulo: "", descricao: "" })).slice(0, 4).map((item, i) => (
+                            <div key={i} className="border border-surface-border rounded-card p-3 space-y-2 bg-surface-card">
+                              <div className="flex items-center gap-2">
+                                <select
+                                  value={item.icone}
+                                  onChange={(e) => {
+                                    const updated = (paraQuem.length > 0 ? [...paraQuem] : Array(4).fill({ icone: "star", titulo: "", descricao: "" }).map(x => ({ ...x })));
+                                    updated[i] = { ...updated[i], icone: e.target.value };
+                                    setParaQuem(updated);
+                                  }}
+                                  className="input-luxury text-xs py-1 w-28 shrink-0"
+                                >
+                                  {["party", "graduation", "heart", "camera", "briefcase", "star", "users"].map(k => (
+                                    <option key={k} value={k}>{k}</option>
+                                  ))}
+                                </select>
+                                <input
+                                  value={item.titulo}
+                                  onChange={(e) => {
+                                    const updated = (paraQuem.length > 0 ? [...paraQuem] : Array(4).fill({ icone: "star", titulo: "", descricao: "" }).map(x => ({ ...x })));
+                                    updated[i] = { ...updated[i], titulo: e.target.value };
+                                    setParaQuem(updated);
+                                  }}
+                                  className="input-luxury text-xs py-1 flex-1"
+                                  placeholder={`Título ${i + 1}`}
+                                />
+                              </div>
+                              <input
+                                value={item.descricao}
+                                onChange={(e) => {
+                                  const updated = (paraQuem.length > 0 ? [...paraQuem] : Array(4).fill({ icone: "star", titulo: "", descricao: "" }).map(x => ({ ...x })));
+                                  updated[i] = { ...updated[i], descricao: e.target.value };
+                                  setParaQuem(updated);
+                                }}
+                                className="input-luxury text-xs py-1 w-full"
+                                placeholder="Descrição curta"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
 
                       {/* Meta description */}
                       <div>
@@ -1277,6 +1340,7 @@ export default function AdminSitePage() {
             {/* Live preview */}
             <div className="flex-1 border-x border-b border-surface-border rounded-b-card overflow-hidden flex">
               <SitePreview
+                key={selectedSlug}
                 titulo={titulo}
                 subtitulo={subtitulo}
                 texto_principal={textoPrincipal}
@@ -1285,7 +1349,10 @@ export default function AdminSitePage() {
                 fotos_grid={gridFotos}
                 foto_hero={heroFoto}
                 faq={faqs.map(({ question, answer }) => ({ question, answer }))}
+                para_quem={paraQuem}
+                servico={servico}
                 modo={previewMode}
+                loading={loading}
               />
             </div>
 

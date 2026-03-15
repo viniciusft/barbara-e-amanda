@@ -111,10 +111,10 @@ async function getData() {
   try {
     const db = createServerSupabaseClient();
 
-    const [conteudoRes, galeriaRes, configRes, servicoRes] = await Promise.allSettled([
+    const [conteudoRes, galeriaRes, configRes] = await Promise.allSettled([
       db
         .from("conteudo_paginas")
-        .select("*")
+        .select("*, servico:servico_id(preco, duracao_minutos)")
         .eq("pagina", "penteado")
         .single(),
       db
@@ -124,23 +124,16 @@ async function getData() {
         .eq("ativo", true)
         .order("ordem", { ascending: true }),
       db.from("admin_config").select("whatsapp, nome_studio").limit(1).single(),
-      db
-        .from("servicos")
-        .select("preco, duracao_minutos")
-        .ilike("nome", "%penteado%")
-        .eq("categoria", "cabelo")
-        .limit(1)
-        .single(),
     ]);
 
-    const conteudo: ConteudoRow =
+    const rawConteudo =
       conteudoRes.status === "fulfilled" ? conteudoRes.value.data : null;
+    const conteudo: ConteudoRow = rawConteudo;
     const galeria: GaleriaRow[] =
       galeriaRes.status === "fulfilled" ? (galeriaRes.value.data ?? []) : [];
     const config =
       configRes.status === "fulfilled" ? configRes.value.data : null;
-    const servico =
-      servicoRes.status === "fulfilled" ? servicoRes.value.data : null;
+    const servico = rawConteudo?.servico ?? null;
 
     return { conteudo, galeria, config, servico };
   } catch {
