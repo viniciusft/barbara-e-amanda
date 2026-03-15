@@ -3,10 +3,11 @@
 import {
   useEffect, useState, useRef, useCallback,
 } from "react";
+import Link from "next/link";
 import {
   Globe, GripVertical, Trash2, Eye, EyeOff, Check, X,
   AlertTriangle, Info, Upload, Plus, Monitor, Smartphone,
-  Star, ChevronDown,
+  Star, ExternalLink,
 } from "lucide-react";
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor,
@@ -18,13 +19,14 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { revalidarPagina } from "@/app/actions/revalidate";
+import SitePreview from "@/components/admin/SitePreview";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 interface FotoItem {
   id: string;
   titulo: string | null;
-  url: string;
+  imagem_url: string;
   tipo_exibicao: string;
   ativo: boolean;
   ordem: number;
@@ -39,12 +41,17 @@ interface ConteudoData {
   titulo?: string | null;
   subtitulo?: string | null;
   texto_principal?: string | null;
-  preco_a_partir_de?: number | null;
-  duracao_minutos?: number | null;
   meta_description?: string | null;
   descricao_curta?: string | null;
   faq?: FaqItem[] | null;
   updated_at?: string | null;
+}
+
+interface ServicoData {
+  id?: string;
+  nome?: string;
+  preco?: number | null;
+  duracao_minutos?: number | null;
 }
 
 // ── Toast ──────────────────────────────────────────────────────────────────────
@@ -118,7 +125,7 @@ function SortablePhotoCard({ foto, onTitleSave, onToggle, onDelete }: SortablePh
       {/* Thumbnail */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={foto.url}
+        src={foto.imagem_url}
         alt={foto.titulo ?? "foto"}
         className="w-14 h-14 rounded object-cover shrink-0 bg-surface-elevated"
       />
@@ -290,24 +297,15 @@ export default function AdminSitePage() {
 
   // ── Preview ─────────────────────────────────────────────────────────────────
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
-  const [iframeLoading, setIframeLoading] = useState(true);
-  const [iframeKey, setIframeKey] = useState(0);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  function reloadPreview() {
-    setIframeLoading(true);
-    setIframeKey((k) => k + 1);
-  }
 
   // ── Textos ──────────────────────────────────────────────────────────────────
   const [titulo, setTitulo] = useState("");
   const [subtitulo, setSubtitulo] = useState("");
   const [textoPrincipal, setTextoPrincipal] = useState("");
-  const [preco, setPreco] = useState<string>("");
-  const [duracao, setDuracao] = useState<string>("");
   const [metaDesc, setMetaDesc] = useState("");
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [savingTextos, setSavingTextos] = useState(false);
+  const [servico, setServico] = useState<ServicoData | null>(null);
 
   const wordCount = textoPrincipal.trim() ? textoPrincipal.trim().split(/\s+/).length : 0;
   const metaLen = metaDesc.length;
@@ -326,6 +324,18 @@ export default function AdminSitePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mobileFileInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Hero foto upload ─────────────────────────────────────────────────────────
+  const [showHeroUpload, setShowHeroUpload] = useState(false);
+  const [heroUploadFile, setHeroUploadFile] = useState<File | null>(null);
+  const [heroUploadPreview, setHeroUploadPreview] = useState<string | null>(null);
+  const [heroUploadLoading, setHeroUploadLoading] = useState(false);
+  const [heroUploadError, setHeroUploadError] = useState<string | null>(null);
+  const heroFileInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Derived ─────────────────────────────────────────────────────────────────
+  const heroFoto = fotos.find((f) => f.tipo_exibicao === "hero") ?? null;
+  const carrosselFotos = fotos.filter((f) => f.tipo_exibicao === "carrossel");
+  const gridFotos = fotos.filter((f) => f.tipo_exibicao === "grid");
   const fotosFiltradas = fotos.filter((f) => f.tipo_exibicao === tipoFoto);
   const LIMITE = 6;
   const atLimit = fotosFiltradas.length >= LIMITE;
@@ -352,10 +362,9 @@ export default function AdminSitePage() {
         setTitulo(c.titulo ?? "");
         setSubtitulo(c.subtitulo ?? "");
         setTextoPrincipal(c.texto_principal ?? "");
-        setPreco(c.preco_a_partir_de != null ? String(c.preco_a_partir_de) : "");
-        setDuracao(c.duracao_minutos != null ? String(c.duracao_minutos) : "");
         setMetaDesc(c.meta_description ?? c.descricao_curta ?? "");
         setLastSaved(c.updated_at ?? null);
+        setServico(data.servico ?? null);
 
         const rawFaqs = c.faq ?? [];
         setFaqs(rawFaqs.map((f, i) => ({ ...f, _id: `faq-${i}-${Date.now()}` })));
@@ -382,8 +391,6 @@ export default function AdminSitePage() {
           titulo,
           subtitulo,
           texto_principal: textoPrincipal,
-          preco_a_partir_de: preco ? Number(preco) : null,
-          duracao_minutos: duracao ? Number(duracao) : null,
           meta_description: metaDesc,
           descricao_curta: metaDesc,
         }),
@@ -392,7 +399,6 @@ export default function AdminSitePage() {
       if (!res.ok) throw new Error(data.error ?? "Erro ao salvar");
       setLastSaved(data.conteudo?.updated_at ?? new Date().toISOString());
       await revalidarPagina(PUBLIC_PATH);
-      reloadPreview();
       showToast("Página atualizada com sucesso ✓");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Erro ao salvar");
@@ -484,13 +490,63 @@ export default function AdminSitePage() {
       setShowMobileUpload(false);
       setUploadTitulo("");
       await revalidarPagina(PUBLIC_PATH);
-      reloadPreview();
       showToast("Foto adicionada com sucesso ✓");
     } catch (e) {
       setUploadError(e instanceof Error ? e.message : "Erro desconhecido");
     } finally {
       setUploadLoading(false);
     }
+  }
+
+  // ── Hero foto handlers ────────────────────────────────────────────────────────
+  function handleHeroFileSelect(f: File) {
+    if (!["image/jpeg", "image/png", "image/webp"].includes(f.type)) {
+      setHeroUploadError("Use JPG, PNG ou WebP"); return;
+    }
+    if (f.size > 5 * 1024 * 1024) { setHeroUploadError("Máximo 5MB"); return; }
+    setHeroUploadFile(f);
+    setHeroUploadError(null);
+    setHeroUploadPreview(URL.createObjectURL(f));
+  }
+
+  async function handleSaveHeroUpload() {
+    if (!heroUploadFile) { setHeroUploadError("Selecione uma imagem"); return; }
+    setHeroUploadLoading(true);
+    setHeroUploadError(null);
+    try {
+      // Delete existing hero first
+      if (heroFoto) {
+        await fetch(`/api/admin/site/fotos/${heroFoto.id}`, { method: "DELETE" });
+        setFotos((prev) => prev.filter((f) => f.id !== heroFoto.id));
+      }
+      const fd = new FormData();
+      fd.append("file", heroUploadFile);
+      fd.append("pagina", PAGINA);
+      fd.append("tipo_exibicao", "hero");
+
+      const res = await fetch("/api/admin/site/fotos", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Erro ao salvar");
+
+      setFotos((prev) => [...prev, data.foto]);
+      setShowHeroUpload(false);
+      setHeroUploadFile(null);
+      setHeroUploadPreview(null);
+      await revalidarPagina(PUBLIC_PATH);
+      showToast("Foto de fundo atualizada ✓");
+    } catch (e) {
+      setHeroUploadError(e instanceof Error ? e.message : "Erro desconhecido");
+    } finally {
+      setHeroUploadLoading(false);
+    }
+  }
+
+  async function handleDeleteHero() {
+    if (!heroFoto) return;
+    setFotos((prev) => prev.filter((f) => f.id !== heroFoto.id));
+    await fetch(`/api/admin/site/fotos/${heroFoto.id}`, { method: "DELETE" });
+    await revalidarPagina(PUBLIC_PATH);
+    showToast("Foto de fundo removida");
   }
 
   // ── Reordenar FAQ ────────────────────────────────────────────────────────────
@@ -515,7 +571,6 @@ export default function AdminSitePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erro ao salvar");
       await revalidarPagina(PUBLIC_PATH);
-      reloadPreview();
       showToast("FAQ atualizado com sucesso ✓");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Erro ao salvar FAQ");
@@ -663,34 +718,27 @@ export default function AdminSitePage() {
                         </p>
                       </div>
 
-                      {/* Preço e Duração */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-medium text-foreground mb-1 font-sans">
-                            Preço a partir de (R$)
-                          </label>
-                          <input
-                            type="number"
-                            value={preco}
-                            onChange={(e) => setPreco(e.target.value)}
-                            className="input-luxury text-sm"
-                            placeholder="180"
-                            min={0}
-                          />
+                      {/* Preço e Duração — somente leitura, vem de Serviços */}
+                      <div className="bg-surface-elevated border border-surface-border rounded-card p-4 space-y-2">
+                        <p className="text-xs font-medium text-foreground font-sans">Preço e duração</p>
+                        <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
+                          Esses dados vêm do cadastro do serviço e não podem ser editados aqui.
+                        </p>
+                        <div className="flex items-center gap-4 py-1">
+                          <span className="text-sm font-semibold text-gold font-sans">
+                            {servico?.preco != null ? `R$ ${servico.preco}` : "—"}
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-sans">
+                            {servico?.duracao_minutos != null ? `${servico.duracao_minutos} min` : "—"}
+                          </span>
                         </div>
-                        <div>
-                          <label className="block text-xs font-medium text-foreground mb-1 font-sans">
-                            Duração (min)
-                          </label>
-                          <input
-                            type="number"
-                            value={duracao}
-                            onChange={(e) => setDuracao(e.target.value)}
-                            className="input-luxury text-sm"
-                            placeholder="60"
-                            min={0}
-                          />
-                        </div>
+                        <Link
+                          href="/admin/servicos"
+                          className="inline-flex items-center gap-1 text-[10px] text-gold hover:text-gold-light font-sans transition-colors"
+                        >
+                          <ExternalLink size={10} />
+                          Editar em Admin → Serviços
+                        </Link>
                       </div>
 
                       {/* Meta description */}
@@ -743,6 +791,138 @@ export default function AdminSitePage() {
                   {/* ─── ABA FOTOS ─── */}
                   {tab === "fotos" && (
                     <div className="px-4 py-5 space-y-4">
+
+                      {/* ── Foto de fundo do Hero ── */}
+                      <div className="border border-gold/40 rounded-card p-4 space-y-3 bg-gold-muted/5">
+                        <div>
+                          <p className="text-xs font-medium text-foreground font-sans mb-0.5">
+                            Foto de fundo do Hero
+                          </p>
+                          <p className="text-[10px] text-gray-500 font-sans leading-relaxed">
+                            Aparece como fundo da seção principal com overlay escuro automático.
+                          </p>
+                        </div>
+
+                        {/* Preview atual */}
+                        {heroFoto ? (
+                          <div className="relative rounded-btn overflow-hidden bg-surface-elevated" style={{ aspectRatio: "16/5" }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={heroFoto.imagem_url}
+                              alt="Hero"
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
+                              <p className="text-white/70 text-[9px] font-sans">
+                                {heroFoto.titulo || "Foto do hero"}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            className="rounded-btn bg-surface-elevated border border-dashed border-gold/20 flex flex-col items-center justify-center gap-1.5 py-6"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-gold-muted flex items-center justify-center">
+                              <Upload size={14} className="text-gold" strokeWidth={1.5} />
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-sans">Nenhuma foto de fundo</p>
+                            <p className="text-[9px] text-gray-600 font-sans">
+                              O hero usará fundo escuro padrão
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Upload panel do Hero */}
+                        {showHeroUpload && (
+                          <div className="border border-gold/20 rounded-btn p-3 space-y-3 bg-surface-card">
+                            <div
+                              onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleHeroFileSelect(f); }}
+                              onDragOver={(e) => e.preventDefault()}
+                              onClick={() => heroFileInputRef.current?.click()}
+                              className="border-2 border-dashed border-gold/30 hover:border-gold/60 rounded-btn p-4 cursor-pointer text-center transition-colors"
+                            >
+                              {heroUploadPreview ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={heroUploadPreview} alt="preview" className="max-h-32 mx-auto rounded object-contain" />
+                              ) : (
+                                <>
+                                  <Upload size={20} className="text-gold/60 mx-auto mb-1" strokeWidth={1.5} />
+                                  <p className="text-[10px] text-gray-400 font-sans">Arraste ou clique para selecionar</p>
+                                  <p className="text-[9px] text-gray-600 mt-0.5 font-sans">Dimensão ideal: 1920×600px</p>
+                                </>
+                              )}
+                              <input
+                                ref={heroFileInputRef}
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                className="hidden"
+                                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleHeroFileSelect(f); }}
+                              />
+                            </div>
+                            {heroUploadError && (
+                              <p className="text-[10px] text-red-400 font-sans flex items-center gap-1">
+                                <AlertTriangle size={10} /> {heroUploadError}
+                              </p>
+                            )}
+                            <p className="text-[9px] text-gray-500 font-sans flex items-center gap-1">
+                              <Info size={9} className="text-gold" />
+                              O overlay escuro é aplicado automaticamente — não precisa editar a foto.
+                            </p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => { setShowHeroUpload(false); setHeroUploadFile(null); setHeroUploadPreview(null); setHeroUploadError(null); }}
+                                className="flex-1 btn-outline-gold text-xs py-2"
+                              >
+                                Cancelar
+                              </button>
+                              <button
+                                onClick={handleSaveHeroUpload}
+                                disabled={heroUploadLoading || !heroUploadFile}
+                                className="flex-1 btn-gold text-xs py-2 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                              >
+                                {heroUploadLoading
+                                  ? <span className="w-3 h-3 border-2 border-[#111]/30 border-t-[#111] rounded-full animate-spin" />
+                                  : <Check size={12} />}
+                                Salvar
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Action buttons */}
+                        {!showHeroUpload && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => { setShowHeroUpload(true); setHeroUploadFile(null); setHeroUploadPreview(null); setHeroUploadError(null); }}
+                              className="flex-1 btn-outline-gold text-xs py-2 flex items-center justify-center gap-1.5"
+                            >
+                              <Upload size={12} />
+                              {heroFoto ? "Trocar foto" : "Adicionar foto"}
+                            </button>
+                            {heroFoto && (
+                              <button
+                                onClick={handleDeleteHero}
+                                className="px-3 py-2 text-xs text-red-400 hover:text-red-300 border border-red-900/40 hover:border-red-700/60 rounded-btn transition-colors font-sans flex items-center gap-1"
+                              >
+                                <Trash2 size={11} />
+                                Remover
+                              </button>
+                            )}
+                          </div>
+                        )}
+
+                        <p className="text-[9px] text-gray-600 font-sans">
+                          Dimensão ideal: 1920×600px · JPG, PNG ou WebP · Máx. 5MB
+                        </p>
+                      </div>
+
+                      {/* Separador */}
+                      <div className="border-t border-surface-border pt-4">
+                        <p className="text-[10px] text-gray-500 font-sans uppercase tracking-wider mb-3">
+                          Galeria e portfólio
+                        </p>
+                      </div>
+
                       {/* Tipo pills */}
                       <div>
                         <div className="flex gap-2">
@@ -1058,46 +1238,30 @@ export default function AdminSitePage() {
               </div>
             </div>
 
-            {/* iframe area */}
-            <div
-              className={`flex-1 border-x border-b border-surface-border rounded-b-card overflow-hidden relative ${
-                previewMode === "mobile" ? "flex justify-center bg-surface" : ""
-              }`}
-            >
-              {/* Loading spinner */}
-              {iframeLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-surface z-10">
-                  <span className="w-8 h-8 border-2 border-gold/20 border-t-gold rounded-full animate-spin" />
-                </div>
-              )}
-
-              <iframe
-                key={iframeKey}
-                ref={iframeRef}
-                src={PUBLIC_PATH}
-                title="Preview da página"
-                onLoad={() => setIframeLoading(false)}
-                className={`transition-opacity duration-300 ${
-                  iframeLoading ? "opacity-0" : "opacity-100"
-                } ${
-                  previewMode === "desktop"
-                    ? "w-full h-full"
-                    : "w-[390px] h-full shadow-[4px_0_20px_rgba(0,0,0,0.3),-4px_0_20px_rgba(0,0,0,0.3)]"
-                }`}
+            {/* Live preview */}
+            <div className="flex-1 border-x border-b border-surface-border rounded-b-card overflow-hidden flex">
+              <SitePreview
+                titulo={titulo}
+                subtitulo={subtitulo}
+                texto_principal={textoPrincipal}
+                meta_description={metaDesc}
+                fotos_carrossel={carrosselFotos}
+                fotos_grid={gridFotos}
+                foto_hero={heroFoto}
+                faq={faqs.map(({ question, answer }) => ({ question, answer }))}
+                modo={previewMode}
               />
             </div>
 
             {/* Footer note */}
             <p className="text-[10px] text-gray-600 font-sans text-center mt-2 shrink-0">
-              O preview mostra a versão publicada atual. Clique em &ldquo;Salvar e publicar&rdquo; para atualizar.
+              Preview ao vivo · atualiza enquanto você edita · clique &ldquo;Salvar&rdquo; para publicar
             </p>
           </div>
 
         </div>
       </div>
 
-      {/* Suppress unused import warning for ChevronDown */}
-      {false && <ChevronDown />}
     </>
   );
 }

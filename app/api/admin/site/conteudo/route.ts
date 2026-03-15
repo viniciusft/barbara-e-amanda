@@ -12,19 +12,27 @@ export async function GET(req: NextRequest) {
   const pagina = req.nextUrl.searchParams.get("pagina") ?? "maquiagem-social";
   const db = createServerSupabaseClient();
 
-  const [conteudoRes, fotosRes] = await Promise.allSettled([
+  const [conteudoRes, fotosRes, servicoRes] = await Promise.allSettled([
     db.from("conteudo_paginas").select("*").eq("pagina", pagina).single(),
     db
       .from("galeria")
-      .select("id, titulo, url, tipo_exibicao, ativo, ordem")
+      .select("id, titulo, imagem_url, tipo_exibicao, ativo, ordem")
       .eq("pagina", pagina)
       .order("ordem", { ascending: true }),
+    db
+      .from("servicos")
+      .select("id, nome, preco, duracao_minutos")
+      .ilike("nome", "%social%")
+      .eq("categoria", "maquiagem")
+      .limit(1)
+      .single(),
   ]);
 
   const conteudo = conteudoRes.status === "fulfilled" ? conteudoRes.value.data : null;
   const fotos = fotosRes.status === "fulfilled" ? (fotosRes.value.data ?? []) : [];
+  const servico = servicoRes.status === "fulfilled" ? servicoRes.value.data : null;
 
-  return NextResponse.json({ conteudo, fotos });
+  return NextResponse.json({ conteudo, fotos, servico });
 }
 
 // PATCH /api/admin/site/conteudo
