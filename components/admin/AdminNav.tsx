@@ -6,7 +6,7 @@ import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import {
   CalendarDays, Scissors, Clock, Ban, User, LogOut,
-  TrendingUp, Users, Sun, Moon, Bell, UserRound, LayoutDashboard,
+  TrendingUp, Users, Sun, Moon, Bell, UserRound, LayoutDashboard, Globe,
 } from "lucide-react";
 import { useTema } from "@/hooks/use-tema";
 
@@ -21,6 +21,7 @@ const NAV_LINKS = [
   { href: "/admin/horarios",  label: "Horários",     icon: Clock,           exact: false },
   { href: "/admin/bloqueios", label: "Bloqueios",    icon: Ban,             exact: false },
   { href: "/admin/perfil",    label: "Perfil",       icon: User,            exact: false },
+  { href: "/admin/site",      label: "Site",         icon: Globe,           exact: false },
 ];
 
 // Mobile bottom nav: show the most relevant subset
@@ -44,6 +45,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/admin/horarios": "Horários",
   "/admin/bloqueios": "Bloqueios",
   "/admin/perfil": "Perfil",
+  "/admin/site":   "Site",
 };
 
 function NavLink({

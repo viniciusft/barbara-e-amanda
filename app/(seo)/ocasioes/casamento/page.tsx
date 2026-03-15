@@ -4,30 +4,35 @@ import { ArrowRight, MessageCircle } from "lucide-react";
 import ServicePage from "@/components/seo/ServicePage";
 import ServicoLinks from "@/components/seo/ServicoLinks";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { getConteudo } from "@/lib/conteudo";
 
 export const dynamic = "force-static";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
 
-export const metadata: Metadata = {
-  title: "Maquiagem para Casamento em Passos MG | Âmbar Beauty Studio",
-  description:
-    "Maquiagem e penteado para noivas em Passos MG. Dia da noiva completo, teste de maquiagem, atendimento exclusivo. Reserve sua data no Âmbar Beauty Studio.",
-  keywords: [
-    "maquiagem casamento passos mg",
-    "dia da noiva passos mg",
-    "maquiagem noiva passos",
-    "penteado noiva passos mg",
-    "casamento passos mg make",
-  ],
-  openGraph: {
-    title: "Maquiagem e Penteado para Casamento em Passos MG | Âmbar Beauty Studio",
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getConteudo("casamento");
+  return {
+    title: "Maquiagem para Casamento em Passos MG | Âmbar Beauty Studio",
     description:
-      "Dia da noiva completo com maquiagem e penteado profissional em Passos MG. Teste de make, atendimento exclusivo. Âmbar Beauty Studio.",
-    url: `${siteUrl}/ocasioes/casamento`,
-  },
-  alternates: { canonical: `${siteUrl}/ocasioes/casamento` },
-};
+      c?.descricao_curta ??
+      "Maquiagem e penteado para noivas em Passos MG. Dia da noiva completo, teste de maquiagem, atendimento exclusivo. Reserve sua data no Âmbar Beauty Studio.",
+    keywords: [
+      "maquiagem casamento passos mg",
+      "dia da noiva passos mg",
+      "maquiagem noiva passos",
+      "penteado noiva passos mg",
+      "casamento passos mg make",
+    ],
+    openGraph: {
+      title: "Maquiagem e Penteado para Casamento em Passos MG | Âmbar Beauty Studio",
+      description:
+        "Dia da noiva completo com maquiagem e penteado profissional em Passos MG. Teste de make, atendimento exclusivo. Âmbar Beauty Studio.",
+      url: `${siteUrl}/ocasioes/casamento`,
+    },
+    alternates: { canonical: `${siteUrl}/ocasioes/casamento` },
+  };
+}
 
 async function getWhatsapp(): Promise<string | null> {
   try {
@@ -44,7 +49,7 @@ async function getWhatsapp(): Promise<string | null> {
 }
 
 export default async function CasamentoPage() {
-  const whatsapp = await getWhatsapp();
+  const [whatsapp, c] = await Promise.all([getWhatsapp(), getConteudo("casamento")]);
   const whatsappNumber = whatsapp?.replace(/\D/g, "") ?? "";
   const whatsappUrl = whatsappNumber
     ? `https://wa.me/55${whatsappNumber}?text=${encodeURIComponent("Olá! Gostaria de informações sobre maquiagem e penteado para casamento.")}`
@@ -56,8 +61,8 @@ export default async function CasamentoPage() {
         serviceName="Maquiagem e Penteado para Casamento"
         serviceDescription="Serviço completo de dia da noiva em Passos MG: maquiagem e penteado com teste prévio, atendimento exclusivo e produtos de altíssima durabilidade."
         serviceUrl={`${siteUrl}/ocasioes/casamento`}
-        heroTitle="Maquiagem e Penteado para Casamento em Passos MG"
-        heroSubtitle="O seu dia mais especial merece um atendimento à altura. Dia da noiva completo — maquiagem e penteado — com teste prévio, produtos premium e dedicação exclusiva ao seu look."
+        heroTitle={c?.titulo ?? "Maquiagem e Penteado para Casamento em Passos MG"}
+        heroSubtitle={c?.subtitulo ?? "O seu dia mais especial merece um atendimento à altura. Dia da noiva completo — maquiagem e penteado — com teste prévio, produtos premium e dedicação exclusiva ao seu look."}
         whatIsText={`O casamento é um dos momentos mais marcantes da vida, e o visual da noiva precisa ser impecável do início ao fim da celebração. O serviço de dia da noiva no Âmbar Beauty Studio é pensado para que você viva cada instante com leveza e confiança, sabendo que sua beleza está em boas mãos.
 
 O processo começa com uma consulta detalhada e um teste de maquiagem e penteado, feitos com antecedência para garantir que o look do grande dia já foi validado e aprovado por você. Usamos produtos de altíssima fixação — à prova de lágrimas, calor e emoção — para que a maquiagem dure da cerimônia até a última dança.
