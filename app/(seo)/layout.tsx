@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
+import { Suspense } from "react";
+import PreviewBanner from "@/components/seo/PreviewBanner";
 
 export default function SeoLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#F5F0E8] flex flex-col">
+      {/* Preview mode banner (only visible when ?preview=1) */}
+      <Suspense fallback={null}>
+        <PreviewBanner />
+      </Suspense>
       {/* Header */}
       <header className="sticky top-0 z-50 bg-[rgba(10,10,10,0.95)] backdrop-blur-md border-b border-[rgba(201,168,76,0.12)]">
         <div className="max-w-5xl mx-auto px-5 py-4 flex items-center justify-between">
