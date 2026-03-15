@@ -36,6 +36,12 @@ interface FaqItem {
   answer: string;
 }
 
+interface ParaQuemItem {
+  icone: string;
+  titulo: string;
+  descricao: string;
+}
+
 interface ConteudoData {
   titulo?: string | null;
   subtitulo?: string | null;
@@ -43,6 +49,7 @@ interface ConteudoData {
   meta_description?: string | null;
   descricao_curta?: string | null;
   faq?: FaqItem[] | null;
+  para_quem?: ParaQuemItem[] | null;
   updated_at?: string | null;
 }
 
@@ -328,8 +335,20 @@ export default function AdminSitePage() {
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [savingTextos, setSavingTextos] = useState(false);
   const [servico, setServico] = useState<ServicoData | null>(null);
+  const [paraQuem, setParaQuem] = useState<ParaQuemItem[]>([]);
   const [camposAlterados, setCamposAlterados] = useState<Set<string>>(new Set());
   const temMudancas = camposAlterados.size > 0;
+
+  const OPCOES_ICONE = [
+    { value: "party",      label: "🎉 Festa/Evento" },
+    { value: "graduation", label: "🎓 Formatura" },
+    { value: "heart",      label: "💛 Casamento/Noiva" },
+    { value: "camera",     label: "📷 Ensaio/Foto" },
+    { value: "briefcase",  label: "💼 Corporativo" },
+    { value: "star",       label: "⭐ Ocasião Especial" },
+    { value: "users",      label: "👥 Grupo/Família" },
+    { value: "sparkles",   label: "✨ Especial" },
+  ];
 
   function marcarAlterado(campo: string) {
     setCamposAlterados((prev) => new Set(prev).add(campo));
@@ -387,6 +406,7 @@ export default function AdminSitePage() {
       setMetaDesc("");
       setLastSaved(null);
       setServico(null);
+      setParaQuem([]);
       setCamposAlterados(new Set());
       setFotos([]);
       setFaqs([]);
@@ -407,6 +427,7 @@ export default function AdminSitePage() {
         setLastSaved(c.updated_at ?? null);
         setServico(data.servico ?? null);
 
+        setParaQuem(c.para_quem ?? []);
         const rawFaqs = c.faq ?? [];
         setFaqs(rawFaqs.map((f, i) => ({ ...f, _id: `faq-${i}-${Date.now()}` })));
 
@@ -435,6 +456,7 @@ export default function AdminSitePage() {
           texto_principal: textoPrincipal,
           meta_description: metaDesc,
           descricao_curta: metaDesc,
+          para_quem: paraQuem,
         }),
       });
       const data = await res.json();
@@ -770,6 +792,91 @@ export default function AdminSitePage() {
                           <Info size={10} className="text-gold mt-0.5 shrink-0" />
                           Mencione: &quot;maquiagem social Passos&quot;, &quot;maquiagem para festa&quot;. Mínimo 100 palavras.
                         </p>
+                      </div>
+
+                      {/* Para quem é ideal */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-xs font-medium text-foreground font-sans">
+                            Para quem é ideal
+                          </label>
+                          {paraQuem.length < 4 && (
+                            <button
+                              onClick={() => {
+                                setParaQuem((prev) => [
+                                  ...prev,
+                                  { icone: "sparkles", titulo: "", descricao: "" },
+                                ]);
+                                marcarAlterado("para_quem");
+                              }}
+                              className="flex items-center gap-1 text-[10px] text-gold hover:text-gold-light font-sans transition-colors"
+                            >
+                              <Plus size={11} /> Adicionar card
+                            </button>
+                          )}
+                        </div>
+                        {paraQuem.length === 0 && (
+                          <p className="text-[10px] text-gray-500 font-sans italic">
+                            Nenhum card ainda. Adicione até 4 cards.
+                          </p>
+                        )}
+                        <div className="space-y-3">
+                          {paraQuem.map((item, idx) => (
+                            <div
+                              key={idx}
+                              className="border border-surface-border rounded-card p-3 space-y-2 bg-surface-card"
+                            >
+                              <div className="flex items-center justify-between">
+                                <select
+                                  value={item.icone}
+                                  onChange={(e) => {
+                                    setParaQuem((prev) =>
+                                      prev.map((it, i) => i === idx ? { ...it, icone: e.target.value } : it)
+                                    );
+                                    marcarAlterado("para_quem");
+                                  }}
+                                  className="input-luxury text-xs py-1 px-2 flex-1"
+                                >
+                                  {OPCOES_ICONE.map((o) => (
+                                    <option key={o.value} value={o.value}>{o.label}</option>
+                                  ))}
+                                </select>
+                                <button
+                                  onClick={() => {
+                                    setParaQuem((prev) => prev.filter((_, i) => i !== idx));
+                                    marcarAlterado("para_quem");
+                                  }}
+                                  className="ml-2 p-1 text-gray-600 hover:text-red-400 transition-colors shrink-0"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                              <input
+                                value={item.titulo}
+                                onChange={(e) => {
+                                  setParaQuem((prev) =>
+                                    prev.map((it, i) => i === idx ? { ...it, titulo: e.target.value } : it)
+                                  );
+                                  marcarAlterado("para_quem");
+                                }}
+                                placeholder="Título do card"
+                                className="input-luxury text-xs py-1 px-2"
+                              />
+                              <textarea
+                                value={item.descricao}
+                                onChange={(e) => {
+                                  setParaQuem((prev) =>
+                                    prev.map((it, i) => i === idx ? { ...it, descricao: e.target.value } : it)
+                                  );
+                                  marcarAlterado("para_quem");
+                                }}
+                                placeholder="Descrição curta"
+                                rows={2}
+                                className="input-luxury text-xs py-1 px-2 resize-none"
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
                       {/* Preço e Duração — somente leitura, vem de Serviços */}
