@@ -48,11 +48,11 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
 
   return (
     <div>
-      <h2 className="font-display text-3xl text-[#F5F0E8] font-light mb-2">
-        Escolha o Servico
+      <h2 className="font-display text-3xl text-[#111111] font-light mb-2">
+        Escolha o Serviço
       </h2>
-      <p className="text-[rgba(245,240,232,0.5)] font-sans text-sm mb-8">
-        Selecione o servico que deseja agendar
+      <p className="text-[#6B7280] font-sans text-sm mb-8">
+        Selecione o serviço que deseja agendar
       </p>
 
       {loading && (
@@ -62,14 +62,14 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
       )}
 
       {error && (
-        <div className="border border-red-800 bg-red-950/20 p-4 text-red-400 text-sm font-sans">
+        <div className="border border-red-300 bg-red-50 p-4 text-red-600 text-sm font-sans rounded-lg">
           {error}
         </div>
       )}
 
       {!loading && !error && servicos.length === 0 && (
-        <p className="text-[rgba(245,240,232,0.4)] font-sans text-center py-12">
-          Nenhum servico disponivel no momento.
+        <p className="text-[#9CA3AF] font-sans text-center py-12">
+          Nenhum serviço disponível no momento.
         </p>
       )}
 
@@ -80,16 +80,16 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
             <button
               key={s.id}
               onClick={() => onSelect(s)}
-              className={`text-left border overflow-hidden transition-all duration-200 flex ${
+              className={`text-left border overflow-hidden transition-all duration-200 flex rounded-xl ${
                 isSelected
-                  ? "border-[#C9A84C] bg-[rgba(201,168,76,0.06)]"
-                  : "border-[rgba(201,168,76,0.2)] bg-[#141414] hover:border-[rgba(201,168,76,0.5)] hover:bg-[rgba(201,168,76,0.03)]"
+                  ? "border-2 border-[#C9A84C] bg-[#C9A84C]/5 shadow-sm"
+                  : "border border-[#E5E0D8] bg-white hover:border-[#C9A84C] hover:shadow-sm"
               }`}
             >
               {/* Left: info (65%) */}
               <div className="flex-1 p-5 min-w-0">
                 <div className="flex items-start justify-between gap-3 mb-2">
-                  <h3 className="font-display text-xl text-[#F5F0E8] font-medium leading-tight">
+                  <h3 className="font-display text-xl text-[#111111] font-medium leading-tight">
                     {s.nome}
                   </h3>
                   {isSelected && (
@@ -101,23 +101,23 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
                   )}
                 </div>
                 {s.descricao && (
-                  <p className="text-[rgba(245,240,232,0.5)] text-sm font-sans mb-3 leading-relaxed">
+                  <p className="text-[#6B7280] text-sm font-sans mb-3 leading-relaxed">
                     {s.descricao}
                   </p>
                 )}
                 <div className="flex items-center gap-4">
-                  <span className="flex items-center gap-1.5 text-[rgba(245,240,232,0.4)] text-xs font-sans">
+                  <span className="flex items-center gap-1.5 text-[#6B7280] text-xs font-sans">
                     <Clock size={12} strokeWidth={1.5} />
                     {formatDuration(s.duracao_minutos)}
                   </span>
-                  <span className="font-display text-lg text-[#C9A84C]">
+                  <span className="font-display text-lg text-[#A07830] font-semibold">
                     {formatCurrency(s.preco)}
                   </span>
                 </div>
               </div>
 
               {/* Right: image (35%) */}
-              <div className="w-[35%] shrink-0 bg-[#1a1a1a] overflow-hidden relative" style={{ aspectRatio: "9/16" }}>
+              <div className="w-[35%] shrink-0 bg-[#EDEAE4] overflow-hidden relative" style={{ aspectRatio: "9/16" }}>
                 {s.imagem_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -130,13 +130,13 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
                   <div className="w-full h-full flex items-center justify-center">
                     <Scissors
                       size={28}
-                      className="text-[rgba(201,168,76,0.15)]"
+                      className="text-[#C9A84C]/40"
                       strokeWidth={1}
                     />
                   </div>
                 )}
                 {isSelected && (
-                  <div className="absolute inset-0 bg-[rgba(201,168,76,0.12)]" />
+                  <div className="absolute inset-0 bg-[#C9A84C]/10" />
                 )}
               </div>
             </button>
@@ -150,22 +150,21 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => registrarContato("casamento")}
-            className="text-left border border-[rgba(201,168,76,0.4)] bg-[#141414] hover:border-[#C9A84C] hover:bg-[rgba(201,168,76,0.05)] transition-all duration-200 overflow-hidden relative block"
+            className="text-left border-2 border-[#C9A84C] bg-amber-50/50 hover:bg-amber-50 transition-all duration-200 overflow-hidden relative block rounded-xl"
           >
-            <div className="h-[2px] w-full bg-gradient-to-r from-[rgba(201,168,76,0.0)] via-[#C9A84C] to-[rgba(201,168,76,0.0)]" />
             <div className="p-5">
               <div className="flex items-start justify-between gap-3 mb-2">
-                <h3 className="font-display text-xl text-[#F5F0E8] font-medium leading-tight">
+                <h3 className="font-display text-xl text-[#111111] font-medium leading-tight">
                   {config.titulo_casamento}
                 </h3>
-                <span className="shrink-0 border border-[rgba(201,168,76,0.5)] text-[#C9A84C] text-[9px] font-sans tracking-[0.15em] uppercase px-2 py-0.5">
+                <span className="shrink-0 bg-[#C9A84C]/15 text-[#A07830] text-[9px] font-sans tracking-[0.15em] uppercase px-2 py-0.5 rounded">
                   Personalizado
                 </span>
               </div>
-              <p className="text-[rgba(245,240,232,0.5)] text-sm font-sans mb-4 leading-relaxed">
+              <p className="text-[#6B7280] text-sm font-sans mb-4 leading-relaxed">
                 {config.descricao_casamento}
               </p>
-              <div className="flex items-center gap-2 text-[#C9A84C] text-xs font-sans">
+              <div className="flex items-center gap-2 text-[#C9A84C] text-xs font-sans font-medium">
                 <MessageCircle size={13} strokeWidth={1.5} />
                 Falar pelo WhatsApp
               </div>
@@ -180,22 +179,21 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => registrarContato("destination_beauty")}
-            className="text-left border border-[rgba(201,168,76,0.4)] bg-[#141414] hover:border-[#C9A84C] hover:bg-[rgba(201,168,76,0.05)] transition-all duration-200 overflow-hidden relative block"
+            className="text-left border-2 border-[#C9A84C] bg-amber-50/50 hover:bg-amber-50 transition-all duration-200 overflow-hidden relative block rounded-xl"
           >
-            <div className="h-[2px] w-full bg-gradient-to-r from-[rgba(201,168,76,0.0)] via-[#C9A84C] to-[rgba(201,168,76,0.0)]" />
             <div className="p-5">
               <div className="flex items-start justify-between gap-3 mb-2">
-                <h3 className="font-display text-xl text-[#F5F0E8] font-medium leading-tight">
+                <h3 className="font-display text-xl text-[#111111] font-medium leading-tight">
                   {config.titulo_destination_beauty}
                 </h3>
-                <span className="shrink-0 border border-[rgba(201,168,76,0.5)] text-[#C9A84C] text-[9px] font-sans tracking-[0.15em] uppercase px-2 py-0.5">
+                <span className="shrink-0 bg-[#C9A84C]/15 text-[#A07830] text-[9px] font-sans tracking-[0.15em] uppercase px-2 py-0.5 rounded">
                   Especial
                 </span>
               </div>
-              <p className="text-[rgba(245,240,232,0.5)] text-sm font-sans mb-4 leading-relaxed">
+              <p className="text-[#6B7280] text-sm font-sans mb-4 leading-relaxed">
                 {config.descricao_destination_beauty}
               </p>
-              <div className="flex items-center gap-2 text-[#C9A84C] text-xs font-sans">
+              <div className="flex items-center gap-2 text-[#C9A84C] text-xs font-sans font-medium">
                 <Plane size={13} strokeWidth={1.5} />
                 Falar pelo WhatsApp
               </div>
@@ -205,19 +203,19 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
 
         {/* ── Suporte / "Falar com a equipe" ── */}
         {!loading && !error && (
-          <div className="mt-2 pt-5 border-t border-[rgba(255,255,255,0.06)] flex flex-col items-center gap-3">
-            <p className="text-[rgba(245,240,232,0.35)] text-xs font-sans">
-              Duvidas sobre seu agendamento?
+          <div className="mt-2 pt-5 border-t border-[#E5E0D8] flex flex-col items-center gap-3">
+            <p className="text-[#9CA3AF] text-xs font-sans">
+              Dúvidas sobre seu agendamento?
             </p>
             <a
               href={waUrl(SUPORTE_MSG)}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => registrarContato("duvida")}
-              className="inline-flex items-center gap-2 text-[#25D366] hover:text-[#20bc5a] transition-colors text-sm font-sans"
+              className="inline-flex items-center gap-2 border border-[#E5E0D8] text-[#6B7280] hover:border-[#C9A84C] hover:text-[#A07830] transition-colors text-sm font-sans px-4 py-2 rounded-lg"
             >
-              <MessageCircle size={15} strokeWidth={1.5} className="shrink-0" />
-              Falar com alguem da equipe
+              <MessageCircle size={15} strokeWidth={1.5} className="shrink-0 text-[#25D366]" />
+              Falar com alguém da equipe
             </a>
           </div>
         )}

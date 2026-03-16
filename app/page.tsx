@@ -137,38 +137,40 @@ export default async function HomePage() {
       </section>
 
       {/* NOSSO TRABALHO */}
-      <section className="max-w-5xl mx-auto px-6 py-20">
-        <div className="mb-10 text-center">
-          <p className="text-[#C9A84C] text-[10px] tracking-[0.5em] uppercase font-sans mb-3">
-            Portfólio
-          </p>
-          <h2 className="font-display text-4xl md:text-5xl text-[#F5F0E8] font-light mb-3">
-            Nosso Trabalho
-          </h2>
-          <p className="text-[#F5F0E8]/40 font-sans text-sm">
-            Cada detalhe pensado para você
-          </p>
-        </div>
-        <Galeria pagina="home" limite={6} />
-        <div className="mt-10 text-center">
-          <Link
-            href="/servicos/maquiagem-social"
-            className="inline-flex items-center gap-3 border border-[rgba(201,168,76,0.4)] text-[#C9A84C] px-8 py-4 font-sans font-semibold text-sm uppercase tracking-widest hover:bg-[rgba(201,168,76,0.08)] transition-colors rounded-btn"
-          >
-            Ver todos os serviços
-            <ArrowRight size={16} />
-          </Link>
+      <section className="bg-[#F5F4F0] px-6 py-20">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-10 text-center">
+            <p className="text-[#A07830] text-[10px] tracking-[0.5em] uppercase font-sans mb-3">
+              Galeria
+            </p>
+            <h2 className="font-display text-4xl md:text-5xl text-[#111111] font-light mb-3">
+              Nosso Trabalho
+            </h2>
+            <p className="text-[#6B7280] font-sans text-sm">
+              Cada detalhe pensado para você
+            </p>
+          </div>
+          <Galeria pagina="home" limite={6} />
+          <div className="mt-10 text-center">
+            <Link
+              href="/servicos/maquiagem-social"
+              className="inline-flex items-center gap-3 border border-[#E5E0D8] text-[#6B7280] px-8 py-4 font-sans font-semibold text-sm uppercase tracking-widest hover:border-[#C9A84C] hover:text-[#A07830] transition-colors rounded-btn"
+            >
+              Ver todos os serviços
+              <ArrowRight size={16} />
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-[rgba(201,168,76,0.1)] py-10 px-6">
+      <footer className="bg-[#111111] border-t border-[rgba(201,168,76,0.1)] py-10 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
             <p className="text-[#C9A84C] text-[9px] tracking-[0.4em] uppercase font-sans mb-1">
               Studio
             </p>
-            <h2 className="font-display text-lg text-[#F5F0E8] font-light">
+            <h2 className="font-display text-lg text-white font-light">
               {studioName}
             </h2>
           </div>
@@ -179,7 +181,7 @@ export default async function HomePage() {
                 href={`https://wa.me/55${whatsappNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-[rgba(245,240,232,0.45)] hover:text-[#C9A84C] transition-colors font-sans text-sm"
+                className="flex items-center gap-2 text-white/50 hover:text-[#C9A84C] transition-colors font-sans text-sm"
               >
                 <Phone size={15} strokeWidth={1.5} />
                 WhatsApp
@@ -190,7 +192,7 @@ export default async function HomePage() {
                 href={`https://instagram.com/${config.instagram.replace("@", "")}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-[rgba(245,240,232,0.45)] hover:text-[#C9A84C] transition-colors font-sans text-sm"
+                className="flex items-center gap-2 text-white/50 hover:text-[#C9A84C] transition-colors font-sans text-sm"
               >
                 <Instagram size={15} strokeWidth={1.5} />
                 Instagram
@@ -198,7 +200,7 @@ export default async function HomePage() {
             )}
           </div>
 
-          <p className="text-[rgba(245,240,232,0.2)] text-xs font-sans">
+          <p className="text-white/30 text-xs font-sans">
             &copy; {new Date().getFullYear()} {studioName}
           </p>
         </div>
