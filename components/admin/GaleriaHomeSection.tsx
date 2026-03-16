@@ -21,7 +21,7 @@ import { CSS } from "@dnd-kit/utilities";
 
 interface FotoGaleria {
   id: string;
-  url: string;
+  imagem_url: string;
   titulo: string | null;
   ativo: boolean;
   ordem: number;
@@ -94,7 +94,7 @@ function SortableCard({ foto, onTituloChange, onToggleAtivo, onDelete }: CardPro
         }`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={foto.url} alt={foto.titulo ?? ""} className="w-full h-full object-cover" />
+        <img src={foto.imagem_url} alt={foto.titulo ?? ""} className="w-full h-full object-cover" />
 
         {/* Controls — shown on hover */}
         <div className="absolute inset-0 bg-black/0 hover:bg-black/50 transition-colors group flex">
