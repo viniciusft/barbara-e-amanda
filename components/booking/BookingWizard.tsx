@@ -98,23 +98,23 @@ export default function BookingWizard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
+    <div className="min-h-screen bg-[#F5F4F0] flex flex-col">
       {/* Header */}
-      <header className="border-b border-[rgba(201,168,76,0.2)] py-8 px-6 text-center">
-        <p className="text-[#C9A84C] text-sm tracking-[0.3em] uppercase font-sans mb-2">
+      <header className="bg-white border-b border-[#E5E0D8] py-8 px-6 text-center">
+        <p className="text-[#A07830] text-sm tracking-[0.3em] uppercase font-sans mb-2">
           Studio
         </p>
-        <h1 className="font-display text-4xl md:text-5xl text-[#F5F0E8] font-light tracking-wide">
+        <h1 className="font-display text-4xl md:text-5xl text-[#111111] font-light tracking-wide">
           Amanda & Barbara
         </h1>
-        <p className="text-[rgba(245,240,232,0.5)] text-sm mt-2 font-sans">
+        <p className="text-[#6B7280] text-sm mt-2 font-sans">
           Maquiagem • Cabelo
         </p>
       </header>
 
       {/* Progress */}
       {!booked && (
-        <div className="border-b border-[rgba(201,168,76,0.1)] py-6 px-6">
+        <div className="bg-white border-b border-[#E5E0D8] py-6 px-6">
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center justify-between gap-2">
               {STEPS.map((label, i) => (
@@ -123,10 +123,10 @@ export default function BookingWizard() {
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-sans font-medium border transition-all duration-300 ${
                         i < step
-                          ? "bg-[#C9A84C] border-[#C9A84C] text-[#0a0a0a]"
+                          ? "bg-[#C9A84C] border-[#C9A84C] text-[#111111]"
                           : i === step
-                          ? "border-[#C9A84C] text-[#C9A84C]"
-                          : "border-[rgba(201,168,76,0.2)] text-[rgba(245,240,232,0.3)]"
+                          ? "border-[#C9A84C] text-[#C9A84C] bg-white"
+                          : "border-[#E5E0D8] text-[#9CA3AF] bg-white"
                       }`}
                     >
                       {i < step ? "✓" : i + 1}
@@ -134,10 +134,10 @@ export default function BookingWizard() {
                     <span
                       className={`text-xs mt-1 font-sans hidden sm:block transition-colors ${
                         i === step
-                          ? "text-[#C9A84C]"
+                          ? "text-[#C9A84C] font-semibold"
                           : i < step
-                          ? "text-[rgba(245,240,232,0.6)]"
-                          : "text-[rgba(245,240,232,0.3)]"
+                          ? "text-[#A07830]"
+                          : "text-[#9CA3AF]"
                       }`}
                     >
                       {label}
@@ -146,9 +146,7 @@ export default function BookingWizard() {
                   {i < STEPS.length - 1 && (
                     <div
                       className={`h-px flex-1 mx-2 transition-colors duration-300 ${
-                        i < step
-                          ? "bg-[#C9A84C]"
-                          : "bg-[rgba(201,168,76,0.2)]"
+                        i < step ? "bg-[#C9A84C]" : "bg-[#E5E0D8]"
                       }`}
                     />
                   )}
@@ -176,7 +174,7 @@ export default function BookingWizard() {
           {step === 1 && (
             <>
               {slotTakenMsg && (
-                <div className="mb-4 border border-amber-700/40 bg-amber-950/20 px-4 py-3 text-sm font-sans text-amber-300">
+                <div className="mb-4 border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-sans text-amber-700 rounded-lg">
                   {slotTakenMsg}
                 </div>
               )}
@@ -249,8 +247,8 @@ export default function BookingWizard() {
         </div>
       </main>
 
-      <footer className="border-t border-[rgba(201,168,76,0.1)] py-6 text-center">
-        <p className="text-[rgba(245,240,232,0.3)] text-xs font-sans">
+      <footer className="bg-white border-t border-[#E5E0D8] py-6 text-center">
+        <p className="text-[#9CA3AF] text-xs font-sans">
           Studio Amanda & Barbara — Todos os direitos reservados
         </p>
       </footer>

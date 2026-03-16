@@ -145,11 +145,11 @@ export default function StepAgenda({
 
   return (
     <div>
-      <h2 className="font-display text-3xl text-[#F5F0E8] font-light mb-2">
-        Data &amp; Horario
+      <h2 className="font-display text-3xl text-[#111111] font-light mb-2">
+        Data & Horário
       </h2>
-      <p className="text-[rgba(245,240,232,0.5)] font-sans text-sm mb-6">
-        Servico: <span className="text-[#C9A84C]">{servico.nome}</span>
+      <p className="text-[#6B7280] font-sans text-sm mb-6">
+        Serviço: <span className="text-[#A07830] font-medium">{servico.nome}</span>
       </p>
 
       {/* Calendar */}
@@ -157,8 +157,8 @@ export default function StepAgenda({
         {loadingCalendar ? (
           <div className="flex items-center gap-3 py-10">
             <div className="w-5 h-5 border border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
-            <span className="text-[rgba(245,240,232,0.4)] font-sans text-sm">
-              Carregando calendario...
+            <span className="text-[#9CA3AF] font-sans text-sm">
+              Carregando calendário...
             </span>
           </div>
         ) : (
@@ -168,17 +168,17 @@ export default function StepAgenda({
               <button
                 onClick={() => setCurrentMonth((prev) => subMonths(prev, 1))}
                 disabled={isBefore(prevMonthEnd, today)}
-                className="p-2 text-[rgba(245,240,232,0.5)] hover:text-[rgba(245,240,232,0.9)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                className="p-2 text-[#6B7280] hover:text-[#111111] disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft size={18} />
               </button>
-              <h3 className="font-display text-xl text-[#F5F0E8] font-light capitalize">
+              <h3 className="font-display text-xl text-[#111111] font-semibold capitalize">
                 {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
               </h3>
               <button
                 onClick={() => setCurrentMonth((prev) => addMonths(prev, 1))}
                 disabled={isAfter(nextMonthStart, maxDate)}
-                className="p-2 text-[rgba(245,240,232,0.5)] hover:text-[rgba(245,240,232,0.9)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                className="p-2 text-[#6B7280] hover:text-[#111111] disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight size={18} />
               </button>
@@ -189,7 +189,7 @@ export default function StepAgenda({
               {DAY_HEADERS.map((d) => (
                 <div
                   key={d}
-                  className="text-center text-[9px] font-sans text-[rgba(245,240,232,0.35)] uppercase tracking-widest py-1.5"
+                  className="text-center text-[9px] font-sans text-[#9CA3AF] uppercase tracking-widest py-1.5"
                 >
                   {d}
                 </div>
@@ -214,12 +214,12 @@ export default function StepAgenda({
                       "relative h-10 sm:h-11 text-sm font-sans transition-all duration-150 rounded-sm",
                       !inMonth ? "opacity-20" : "",
                       isSelected
-                        ? "bg-[#C9A84C] text-[#0a0a0a] font-semibold"
+                        ? "bg-[#111111] text-white font-semibold rounded-full"
                         : disabled
-                        ? "text-[rgba(245,240,232,0.2)] cursor-not-allowed"
+                        ? "text-[#D4CFC5] cursor-not-allowed"
                         : isToday
-                        ? "border border-[rgba(201,168,76,0.5)] text-[#C9A84C] hover:bg-[rgba(201,168,76,0.1)]"
-                        : "text-[rgba(245,240,232,0.8)] hover:bg-[rgba(201,168,76,0.08)] hover:text-[#F5F0E8] cursor-pointer",
+                        ? "border border-[#C9A84C] text-[#C9A84C] hover:bg-[#F5F4F0] rounded-full"
+                        : "text-[#111111] hover:bg-[#EDEAE4] cursor-pointer",
                     ]
                       .filter(Boolean)
                       .join(" ")}
@@ -232,12 +232,12 @@ export default function StepAgenda({
 
             {/* Legend */}
             <div className="flex items-center gap-5 mt-3 pl-1">
-              <span className="flex items-center gap-1.5 text-[10px] font-sans text-[rgba(245,240,232,0.3)]">
-                <span className="inline-block w-3 h-3 border border-[rgba(201,168,76,0.5)]" />
+              <span className="flex items-center gap-1.5 text-[10px] font-sans text-[#9CA3AF]">
+                <span className="inline-block w-3 h-3 border border-[#C9A84C] rounded-sm" />
                 Hoje
               </span>
-              <span className="flex items-center gap-1.5 text-[10px] font-sans text-[rgba(245,240,232,0.3)]">
-                <span className="inline-block w-3 h-3 bg-[#C9A84C]" />
+              <span className="flex items-center gap-1.5 text-[10px] font-sans text-[#9CA3AF]">
+                <span className="inline-block w-3 h-3 bg-[#111111] rounded-sm" />
                 Selecionado
               </span>
             </div>
@@ -248,22 +248,22 @@ export default function StepAgenda({
       {/* Slots */}
       {activeDate && !loadingCalendar && (
         <div>
-          <p className="text-[rgba(245,240,232,0.4)] text-xs font-sans uppercase tracking-widest mb-4">
-            Horarios disponíveis — {format(parseISO(activeDate + "T12:00:00"), "dd 'de' MMMM", { locale: ptBR })}
+          <p className="text-[#9CA3AF] text-xs font-sans uppercase tracking-widest mb-4">
+            Horários disponíveis — {format(parseISO(activeDate + "T12:00:00"), "dd 'de' MMMM", { locale: ptBR })}
           </p>
 
           {loadingSlots && (
             <div className="flex items-center gap-3 py-6">
               <div className="w-5 h-5 border border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
-              <span className="text-[rgba(245,240,232,0.4)] text-sm font-sans">
-                Carregando horarios...
+              <span className="text-[#9CA3AF] text-sm font-sans">
+                Carregando horários...
               </span>
             </div>
           )}
 
           {!loadingSlots && slots.length === 0 && (
-            <p className="text-[rgba(245,240,232,0.4)] font-sans text-sm py-4 border border-[rgba(201,168,76,0.1)] px-4">
-              Nenhum horario disponivel para esta data. Escolha outro dia.
+            <p className="text-[#6B7280] font-sans text-sm py-4 border border-[#E5E0D8] px-4 rounded-lg">
+              Nenhum horário disponível para esta data. Escolha outro dia.
             </p>
           )}
 
@@ -275,10 +275,10 @@ export default function StepAgenda({
                 <button
                   key={slot.hora_inicio}
                   onClick={() => handleSlotSelect(slot)}
-                  className={`py-3 text-sm font-sans border transition-all duration-200 ${
+                  className={`py-3 text-sm font-sans border rounded-lg transition-all duration-200 ${
                     isSelected
-                      ? "border-[#C9A84C] bg-[#C9A84C] text-[#0a0a0a] font-medium"
-                      : "border-[rgba(201,168,76,0.2)] text-[rgba(245,240,232,0.7)] hover:border-[rgba(201,168,76,0.5)]"
+                      ? "border-[#C9A84C] bg-[#C9A84C] text-white font-medium"
+                      : "border-[#E5E0D8] bg-white text-[#111111] hover:border-[#C9A84C]"
                   }`}
                 >
                   {slot.hora_inicio}
@@ -289,17 +289,16 @@ export default function StepAgenda({
 
           {/* Combo schedule summary — shown after selecting a combo slot */}
           {selectedSlotLocal?.combo_ordem && (
-            <div className="mt-4 p-4 border border-[rgba(201,168,76,0.25)] bg-[rgba(201,168,76,0.04)]">
-              <p className="text-[rgba(245,240,232,0.5)] font-sans text-xs uppercase tracking-widest mb-3">
+            <div className="mt-4 p-4 border border-[#E5E0D8] bg-white rounded-lg">
+              <p className="text-[#9CA3AF] font-sans text-xs uppercase tracking-widest mb-3">
                 Seu atendimento será organizado assim:
               </p>
               <div className="space-y-2">
-                {/* Ordem A: maquiagem ends at hora_cabelo; Ordem B: maquiagem ends at hora_fim */}
                 <div className="flex items-center gap-3">
                   <span className="text-lg">💄</span>
                   <div>
-                    <p className="font-sans text-sm text-[#F5F0E8]">Maquiagem</p>
-                    <p className="font-sans text-xs text-[#C9A84C]">
+                    <p className="font-sans text-sm text-[#111111]">Maquiagem</p>
+                    <p className="font-sans text-xs text-[#A07830]">
                       {selectedSlotLocal.hora_maquiagem} –{" "}
                       {selectedSlotLocal.combo_ordem === "maquiagem_primeiro"
                         ? selectedSlotLocal.hora_cabelo
@@ -307,12 +306,11 @@ export default function StepAgenda({
                     </p>
                   </div>
                 </div>
-                {/* Ordem A: cabelo ends at hora_fim; Ordem B: cabelo ends at hora_maquiagem */}
                 <div className="flex items-center gap-3">
                   <span className="text-lg">💇</span>
                   <div>
-                    <p className="font-sans text-sm text-[#F5F0E8]">Cabelo</p>
-                    <p className="font-sans text-xs text-[#C9A84C]">
+                    <p className="font-sans text-sm text-[#111111]">Cabelo</p>
+                    <p className="font-sans text-xs text-[#A07830]">
                       {selectedSlotLocal.hora_cabelo} –{" "}
                       {selectedSlotLocal.combo_ordem === "cabelo_primeiro"
                         ? selectedSlotLocal.hora_maquiagem
@@ -327,17 +325,17 @@ export default function StepAgenda({
       )}
 
       {!activeDate && !loadingCalendar && (
-        <div className="border border-[rgba(201,168,76,0.1)] p-8 text-center">
-          <p className="text-[rgba(245,240,232,0.3)] font-sans text-sm">
-            Selecione um dia no calendario para ver os horarios disponíveis
+        <div className="border border-[#E5E0D8] p-8 text-center rounded-lg">
+          <p className="text-[#9CA3AF] font-sans text-sm">
+            Selecione um dia no calendário para ver os horários disponíveis
           </p>
         </div>
       )}
 
       {/* Horário personalizado */}
       {!loadingCalendar && (
-        <div className="mt-8 pt-6 border-t border-[rgba(255,255,255,0.06)] text-center">
-          <p className="text-[rgba(245,240,232,0.35)] text-xs font-sans mb-3">
+        <div className="mt-8 pt-6 border-t border-[#E5E0D8] text-center">
+          <p className="text-[#9CA3AF] text-xs font-sans mb-3">
             Não encontrou um horário disponível?
           </p>
           <a
@@ -348,7 +346,7 @@ export default function StepAgenda({
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-[rgba(245,240,232,0.5)] hover:text-[rgba(245,240,232,0.8)] border border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)] px-4 py-2.5 text-sm font-sans transition-colors"
+            className="inline-flex items-center gap-2 text-[#6B7280] hover:text-[#A07830] text-sm font-sans underline transition-colors"
           >
             <MessageCircle size={14} strokeWidth={1.5} />
             Solicitar horário personalizado
@@ -360,7 +358,7 @@ export default function StepAgenda({
       <div className="flex gap-3 mt-6">
         <button
           onClick={onBack}
-          className="border border-[rgba(201,168,76,0.3)] text-[rgba(245,240,232,0.6)] px-6 py-3 font-sans text-sm hover:border-[rgba(201,168,76,0.5)] transition-colors"
+          className="border border-[#E5E0D8] text-[#6B7280] px-6 py-3 font-sans text-sm hover:border-[#C9A84C] hover:text-[#A07830] transition-colors rounded-lg"
         >
           Voltar
         </button>
