@@ -32,8 +32,8 @@ interface FotoItem {
 }
 
 interface FaqItem {
-  question: string;
-  answer: string;
+  pergunta: string;
+  resposta: string;
 }
 
 interface ParaQuemItem {
@@ -216,13 +216,13 @@ function SortablePhotoCard({ foto, onTitleSave, onToggle, onDelete }: SortablePh
 
 interface SortableFaqItemProps {
   id: string;
-  question: string;
-  answer: string;
-  onChange: (field: "question" | "answer", value: string) => void;
+  pergunta: string;
+  resposta: string;
+  onChange: (field: "pergunta" | "resposta", value: string) => void;
   onDelete: () => void;
 }
 
-function SortableFaqItem({ id, question, answer, onChange, onDelete }: SortableFaqItemProps) {
+function SortableFaqItem({ id, pergunta, resposta, onChange, onDelete }: SortableFaqItemProps) {
   const {
     attributes, listeners, setNodeRef, setActivatorNodeRef,
     transform, transition, isDragging,
@@ -251,14 +251,14 @@ function SortableFaqItem({ id, question, answer, onChange, onDelete }: SortableF
         </div>
         <div className="flex-1 space-y-2">
           <input
-            value={question}
-            onChange={(e) => onChange("question", e.target.value)}
+            value={pergunta}
+            onChange={(e) => onChange("pergunta", e.target.value)}
             placeholder="Pergunta"
             className="input-luxury text-xs py-1.5 px-2"
           />
           <textarea
-            value={answer}
-            onChange={(e) => onChange("answer", e.target.value)}
+            value={resposta}
+            onChange={(e) => onChange("resposta", e.target.value)}
             placeholder="Resposta"
             rows={3}
             className="input-luxury text-xs py-1.5 px-2 resize-none"
@@ -429,7 +429,11 @@ export default function AdminSitePage() {
 
         setParaQuem(c.para_quem ?? []);
         const rawFaqs = c.faq ?? [];
-        setFaqs(rawFaqs.map((f, i) => ({ ...f, _id: `faq-${i}-${Date.now()}` })));
+        setFaqs(rawFaqs.map((f: Record<string, string>, i: number) => ({
+          pergunta: f.pergunta ?? f.question ?? "",
+          resposta: f.resposta ?? f.answer ?? "",
+          _id: `faq-${i}-${Date.now()}`,
+        })));
 
         setFotos(data.fotos ?? []);
       } catch {
@@ -628,7 +632,7 @@ export default function AdminSitePage() {
   async function handleSaveFaq() {
     setSavingFaq(true);
     try {
-      const payload = faqs.map(({ question, answer }) => ({ question, answer }));
+      const payload = faqs.map(({ pergunta, resposta }) => ({ pergunta, resposta }));
       const res = await fetch("/api/admin/site/conteudo", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -1301,8 +1305,8 @@ export default function AdminSitePage() {
                               <SortableFaqItem
                                 key={faq._id}
                                 id={faq._id}
-                                question={faq.question}
-                                answer={faq.answer}
+                                pergunta={faq.pergunta}
+                                resposta={faq.resposta}
                                 onChange={(field, value) =>
                                   setFaqs((prev) =>
                                     prev.map((f, idx) =>
@@ -1324,7 +1328,7 @@ export default function AdminSitePage() {
                             if (faqs.length < 8)
                               setFaqs((prev) => [
                                 ...prev,
-                                { question: "", answer: "", _id: `faq-new-${Date.now()}` },
+                                { pergunta: "", resposta: "", _id: `faq-new-${Date.now()}` },
                               ]);
                           }}
                           disabled={faqs.length >= 8}
