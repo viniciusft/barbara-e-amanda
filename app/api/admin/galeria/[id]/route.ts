@@ -41,16 +41,16 @@ export async function DELETE(
   // Fetch item to get storage URL
   const { data: foto } = await supabase
     .from("galeria")
-    .select("url")
+    .select("imagem_url")
     .eq("id", params.id)
     .single();
 
-  if (foto?.url) {
+  if (foto?.imagem_url) {
     // Extract storage path from public URL
     const marker = "/storage/v1/object/public/studio-images/";
-    const idx = foto.url.indexOf(marker);
+    const idx = foto.imagem_url.indexOf(marker);
     if (idx !== -1) {
-      const storagePath = foto.url.slice(idx + marker.length);
+      const storagePath = foto.imagem_url.slice(idx + marker.length);
       // Best-effort delete from storage (ignore errors)
       await supabase.storage.from("studio-images").remove([storagePath]);
     }

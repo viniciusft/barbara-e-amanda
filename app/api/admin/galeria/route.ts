@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const supabase = createServerSupabaseClient();
   let query = supabase
     .from("galeria")
-    .select("id, pagina, url, titulo, ativo, ordem")
+    .select("id, pagina, imagem_url, titulo, ativo, ordem")
     .order("ordem", { ascending: true });
 
   if (pagina) query = query.eq("pagina", pagina);
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
 
   const { data: foto, error: insertError } = await supabase
     .from("galeria")
-    .insert({ pagina, url: publicUrl, titulo, ativo: true, ordem: nextOrdem })
+    .insert({ pagina, imagem_url: publicUrl, titulo, ativo: true, ordem: nextOrdem })
     .select()
     .single();
 

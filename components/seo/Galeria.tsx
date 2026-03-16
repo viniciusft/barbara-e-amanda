@@ -4,7 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 
 interface GaleriaItem {
   id: string;
-  url: string;
+  imagem_url: string;
   titulo: string | null;
   pagina: string;
   ordem: number;
@@ -29,7 +29,7 @@ export default async function Galeria({
     const db = createServerSupabaseClient();
     let query = db
       .from("galeria")
-      .select("id, url, titulo, pagina, ordem")
+      .select("id, imagem_url, titulo, pagina, ordem")
       .eq("pagina", pagina)
       .eq("ativo", true)
       .order("ordem", { ascending: true });
@@ -52,7 +52,7 @@ export default async function Galeria({
           name: subtitulo ?? titulo,
           associatedMedia: fotos.map((foto) => ({
             "@type": "ImageObject",
-            contentUrl: foto.url,
+            contentUrl: foto.imagem_url,
             description:
               foto.titulo ?? `${pagina} - Âmbar Beauty Studio - Passos MG`,
           })),
@@ -118,7 +118,7 @@ export default async function Galeria({
                 }`}
               >
                 <Image
-                  src={foto.url}
+                  src={foto.imagem_url}
                   alt={altText}
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-105"

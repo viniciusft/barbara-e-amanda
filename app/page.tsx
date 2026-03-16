@@ -40,13 +40,14 @@ export default async function HomePage() {
         .single(),
       db
         .from("galeria")
-        .select("id, url, titulo")
+        .select("id, imagem_url, titulo")
         .eq("pagina", "home")
         .eq("ativo", true)
         .order("ordem", { ascending: true }),
     ]);
     if (configRes.data) config = configRes.data;
-    if (galeriaRes.data) fotosHome = galeriaRes.data;
+    if (galeriaRes.data)
+      fotosHome = galeriaRes.data.map((f) => ({ id: f.id, url: f.imagem_url, titulo: f.titulo }));
   } catch {
     // graceful fallback with defaults
   }
