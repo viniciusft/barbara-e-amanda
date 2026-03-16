@@ -32,8 +32,11 @@ interface FotoItem {
 }
 
 interface FaqItem {
-  pergunta: string;
-  resposta: string;
+  pergunta?: string;
+  resposta?: string;
+  question?: string;
+  answer?: string;
+  _id?: string;
 }
 
 interface ParaQuemItem {
@@ -429,7 +432,7 @@ export default function AdminSitePage() {
 
         setParaQuem(c.para_quem ?? []);
         const rawFaqs = c.faq ?? [];
-        setFaqs(rawFaqs.map((f: Record<string, string>, i: number) => ({
+        setFaqs(rawFaqs.map((f, i) => ({
           pergunta: f.pergunta ?? f.question ?? "",
           resposta: f.resposta ?? f.answer ?? "",
           _id: `faq-${i}-${Date.now()}`,
