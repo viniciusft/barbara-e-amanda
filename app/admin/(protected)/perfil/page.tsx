@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Save, Instagram, Phone, MapPin, CreditCard, MessageCircle, RefreshCw, Image as ImageIcon, Star, Link as LinkIcon } from "lucide-react";
 import ImageUpload from "@/components/admin/ImageUpload";
+import GaleriaHomeSection from "@/components/admin/GaleriaHomeSection";
 
 const DEFAULT_SINAL_TEMPLATE = `Ola {nome_cliente}! Sou {nome_secretaria} do {nome_studio}.
 
@@ -276,6 +277,9 @@ export default function PerfilPage() {
                 />
               </div>
             </div>
+
+            {/* Galeria da Home */}
+            <GaleriaHomeSection />
             <div>
               <label className="block text-xs font-sans text-foreground/50 uppercase tracking-widest mb-2">
                 Nome do Studio
