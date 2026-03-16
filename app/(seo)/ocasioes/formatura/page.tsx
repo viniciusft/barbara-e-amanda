@@ -152,7 +152,11 @@ export default async function FormaturaPage() {
     try {
       const parsed =
         typeof conteudo.faq === "string" ? JSON.parse(conteudo.faq) : conteudo.faq;
-      if (Array.isArray(parsed) && parsed.length > 0) faqs = parsed;
+      if (Array.isArray(parsed) && parsed.length > 0)
+        faqs = parsed.map((item: Record<string, string>) => ({
+          question: item.question ?? item.pergunta ?? "",
+          answer: item.answer ?? item.resposta ?? "",
+        }));
     } catch { /* keep default */ }
   }
 
