@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { ArrowRight, Instagram, Phone } from "lucide-react";
-import Galeria from "@/components/seo/Galeria";
+import Carrossel from "@/components/seo/Carrossel";
 
 // NOTE: Add NEXT_PUBLIC_SITE_URL in Vercel → Settings → Environment Variables
 // e.g. NEXT_PUBLIC_SITE_URL=https://ambar.com.br
@@ -28,14 +28,25 @@ export default async function HomePage() {
     foto_header_mobile_url?: string | null;
   } = {};
 
+  let fotosHome: { id: string; url: string; titulo: string | null }[] = [];
+
   try {
     const db = createServerSupabaseClient();
-    const { data } = await db
-      .from("admin_config")
-      .select("nome_studio, instagram, whatsapp, foto_header_url, foto_header_mobile_url")
-      .limit(1)
-      .single();
-    if (data) config = data;
+    const [configRes, galeriaRes] = await Promise.all([
+      db
+        .from("admin_config")
+        .select("nome_studio, instagram, whatsapp, foto_header_url, foto_header_mobile_url")
+        .limit(1)
+        .single(),
+      db
+        .from("galeria")
+        .select("id, url, titulo")
+        .eq("pagina", "home")
+        .eq("ativo", true)
+        .order("ordem", { ascending: true }),
+    ]);
+    if (configRes.data) config = configRes.data;
+    if (galeriaRes.data) fotosHome = galeriaRes.data;
   } catch {
     // graceful fallback with defaults
   }
@@ -150,7 +161,7 @@ export default async function HomePage() {
               Cada detalhe pensado para você
             </p>
           </div>
-          <Galeria pagina="home" limite={6} />
+          <Carrossel fotos={fotosHome} />
           <div className="mt-10 text-center">
             <Link
               href="/servicos/maquiagem-social"
