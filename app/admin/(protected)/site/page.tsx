@@ -1306,10 +1306,10 @@ export default function AdminSitePage() {
                           <div className="space-y-3">
                             {faqs.map((faq, i) => (
                               <SortableFaqItem
-                                key={faq._id}
-                                id={faq._id}
-                                pergunta={faq.pergunta}
-                                resposta={faq.resposta}
+                                key={faq._id ?? ''}
+                                id={faq._id ?? ''}
+                                pergunta={faq.pergunta ?? ''}
+                                resposta={faq.resposta ?? ''}
                                 onChange={(field, value) =>
                                   setFaqs((prev) =>
                                     prev.map((f, idx) =>
