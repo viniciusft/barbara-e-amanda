@@ -211,6 +211,20 @@ export default function BookingWizard() {
               data={data}
               booked={booked}
               onConfirm={async () => {
+                // Capturar cookies do Facebook para matching no CAPI
+                const fbCookies = (() => {
+                  try {
+                    const map: Record<string, string> = {};
+                    document.cookie.split(";").forEach((c) => {
+                      const idx = c.indexOf("=");
+                      if (idx > 0) map[c.slice(0, idx).trim()] = c.slice(idx + 1).trim();
+                    });
+                    return { fbp: map["_fbp"] ?? null, fbc: map["_fbc"] ?? null };
+                  } catch {
+                    return { fbp: null, fbc: null };
+                  }
+                })();
+
                 const res = await fetch("/api/agendamentos", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -227,6 +241,8 @@ export default function BookingWizard() {
                       hora_maquiagem: data.slot!.hora_maquiagem,
                       hora_cabelo: data.slot!.hora_cabelo,
                     }),
+                    meta_fbp: fbCookies.fbp ?? undefined,
+                    meta_fbc: fbCookies.fbc ?? undefined,
                   }),
                 });
                 if (!res.ok) {

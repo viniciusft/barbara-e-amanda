@@ -103,6 +103,9 @@ export async function POST(req: NextRequest) {
       hora_maquiagem,
       hora_cabelo,
       combo_ordem: comboOrdem,
+      // Facebook CAPI matching
+      meta_fbp,
+      meta_fbc,
     } = body;
 
     if (!servico_id || !nome_cliente || !telefone_cliente || !data || !hora_inicio) {
@@ -217,6 +220,8 @@ export async function POST(req: NextRequest) {
       data_hora_fim: overallEndUTC.toISOString(),
       categoria_servico: categoria,
       status: statusInicial,
+      meta_fbp: meta_fbp || null,
+      meta_fbc: meta_fbc || null,
     };
 
     if (cabStartUTC) {
@@ -301,7 +306,10 @@ export async function POST(req: NextRequest) {
     if (!session) {
       // Only for public bookings — admin bookings don't count as leads
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
-      console.log("[CAPI] tentando enviar evento Lead para:", servico.nome);
+      const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? undefined;
+      const ua = req.headers.get("user-agent") ?? undefined;
+      const cidade = req.headers.get("cf-ipcity") ?? undefined; // Cloudflare header disponível na Vercel
+      console.log("[CAPI] tentando enviar evento Lead para:", servico.nome, { ip: ip ? "OK" : "none", cidade: cidade ?? "none", fbp: meta_fbp ? "OK" : "none" });
       metaEvents.agendamentoConcluido(
         servico.nome,
         servico.preco ?? 0,
@@ -310,6 +318,13 @@ export async function POST(req: NextRequest) {
           email: email_cliente,
           telefone: telefone_cliente,
           nome: nome_cliente,
+          cidade,
+        },
+        {
+          fbp: meta_fbp ?? undefined,
+          fbc: meta_fbc ?? undefined,
+          client_ip_address: ip,
+          client_user_agent: ua,
         }
       ).then(() => {
         console.log("[CAPI] evento Lead enviado com sucesso");

@@ -90,7 +90,7 @@ export default function StepDados({
         {/* Email (optional) */}
         <div>
           <label className="block text-sm font-sans text-[#6B7280] font-medium mb-1.5">
-            Email <span className="text-[#9CA3AF] font-normal">(opcional)</span>
+            E-mail <span className="text-[#9CA3AF] font-normal">(opcional) — para receber confirmação</span>
           </label>
           <input
             type="email"
