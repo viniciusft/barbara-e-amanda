@@ -3,21 +3,23 @@
 
 const PIXEL_ID = process.env.META_PIXEL_ID;
 const CAPI_TOKEN = process.env.META_CAPI_TOKEN;
-const CAPI_URL = `https://graph.facebook.com/v18.0/${PIXEL_ID}/events`;
+// NOTA: CAPI_URL é construída dentro da função para garantir que PIXEL_ID
+// já esteja resolvido no momento da chamada (evita "undefined" em cold starts)
 
 interface CAPIEvent {
   event_name: string;
   event_time: number;
   event_source_url?: string;
   user_data?: {
-    em?: string;   // email hasheado SHA-256
-    ph?: string;   // telefone hasheado SHA-256
-    fn?: string;   // primeiro nome hasheado SHA-256
-    ln?: string;   // sobrenome hasheado SHA-256
+    em?: string;               // email hasheado SHA-256
+    ph?: string;               // telefone hasheado SHA-256
+    fn?: string;               // primeiro nome hasheado SHA-256
+    ln?: string;               // sobrenome hasheado SHA-256
+    ct?: string;               // cidade hasheada SHA-256
     client_ip_address?: string;
     client_user_agent?: string;
-    fbc?: string;  // cookie _fbc
-    fbp?: string;  // cookie _fbp
+    fbc?: string;              // cookie _fbc do navegador
+    fbp?: string;              // cookie _fbp do navegador
   };
   custom_data?: {
     value?: number;
@@ -26,6 +28,13 @@ interface CAPIEvent {
     content_category?: string;
     content_ids?: string[];
   };
+}
+
+interface UserDataOverrides {
+  fbp?: string;
+  fbc?: string;
+  client_ip_address?: string;
+  client_user_agent?: string;
 }
 
 // Hash SHA-256 obrigatório pela Meta para dados pessoais
@@ -38,14 +47,18 @@ async function hashData(data: string): Promise<string> {
 
 export async function enviarEventoCAPI(
   evento: CAPIEvent,
-  dados?: { email?: string; telefone?: string; nome?: string }
+  dados?: { email?: string; telefone?: string; nome?: string; cidade?: string },
+  overrides?: UserDataOverrides
 ) {
+  const capiUrl = `https://graph.facebook.com/v18.0/${PIXEL_ID}/events`;
+
   console.log("[CAPI] config:", {
     pixelId: PIXEL_ID ? "OK" : "MISSING",
     token: CAPI_TOKEN ? "OK" : "MISSING",
-    capiUrl: CAPI_URL,
+    capiUrl,
     event: evento.event_name,
   });
+
   if (!PIXEL_ID || !CAPI_TOKEN) {
     console.log("[CAPI] abortando — variáveis de ambiente ausentes");
     return;
@@ -54,6 +67,7 @@ export async function enviarEventoCAPI(
   try {
     const userData: CAPIEvent["user_data"] = { ...evento.user_data };
 
+    // Dados pessoais — hashing obrigatório pela Meta
     if (dados?.email) {
       userData.em = await hashData(dados.email);
     }
@@ -68,6 +82,15 @@ export async function enviarEventoCAPI(
         userData.ln = await hashData(partes[partes.length - 1]);
       }
     }
+    if (dados?.cidade) {
+      userData.ct = await hashData(dados.cidade);
+    }
+
+    // Cookies e dados de rede (não precisam de hash)
+    if (overrides?.fbp) userData.fbp = overrides.fbp;
+    if (overrides?.fbc) userData.fbc = overrides.fbc;
+    if (overrides?.client_ip_address) userData.client_ip_address = overrides.client_ip_address;
+    if (overrides?.client_user_agent) userData.client_user_agent = overrides.client_user_agent;
 
     const payload: Record<string, unknown> = {
       data: [
@@ -85,8 +108,8 @@ export async function enviarEventoCAPI(
       payload.test_event_code = "TEST12345";
     }
 
-    console.log("[CAPI] enviando para:", CAPI_URL);
-    const res = await fetch(CAPI_URL, {
+    console.log("[CAPI] enviando para:", capiUrl);
+    const res = await fetch(capiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -137,7 +160,8 @@ export const metaEvents = {
     servico: string,
     preco: number,
     url: string,
-    dados: { email?: string; telefone?: string; nome?: string }
+    dados: { email?: string; telefone?: string; nome?: string; cidade?: string },
+    overrides?: UserDataOverrides
   ) =>
     enviarEventoCAPI(
       {
@@ -151,14 +175,16 @@ export const metaEvents = {
           currency: "BRL",
         },
       },
-      dados
+      dados,
+      overrides
     ),
 
   // Serviço executado — receita real confirmada (Purchase)
   servicoExecutado: (
     servico: string,
     preco: number,
-    dados: { email?: string; telefone?: string; nome?: string }
+    dados: { email?: string; telefone?: string; nome?: string },
+    overrides?: UserDataOverrides
   ) =>
     enviarEventoCAPI(
       {
@@ -170,6 +196,7 @@ export const metaEvents = {
           currency: "BRL",
         },
       },
-      dados
+      dados,
+      overrides
     ),
 };

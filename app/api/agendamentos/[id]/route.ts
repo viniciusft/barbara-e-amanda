@@ -186,6 +186,12 @@ export async function PATCH(
         email: agendamento.email,
         telefone: agendamento.telefone,
         nome: agendamento.nome_cliente,
+      },
+      {
+        fbp: agendamento.meta_fbp ?? undefined,
+        fbc: agendamento.meta_fbc ?? undefined,
+        client_ip_address: req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? undefined,
+        client_user_agent: req.headers.get("user-agent") ?? undefined,
       }
     ).catch(() => { /* non-fatal */ });
   }
