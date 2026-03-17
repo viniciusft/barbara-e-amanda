@@ -301,6 +301,7 @@ export async function POST(req: NextRequest) {
     if (!session) {
       // Only for public bookings — admin bookings don't count as leads
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
+      console.log("[CAPI] tentando enviar evento Lead para:", servico.nome);
       metaEvents.agendamentoConcluido(
         servico.nome,
         servico.preco ?? 0,
@@ -310,7 +311,13 @@ export async function POST(req: NextRequest) {
           telefone: telefone_cliente,
           nome: nome_cliente,
         }
-      ).catch(() => { /* non-fatal */ });
+      ).then(() => {
+        console.log("[CAPI] evento Lead enviado com sucesso");
+      }).catch((err) => {
+        console.error("[CAPI] erro ao enviar evento Lead:", err);
+      });
+    } else {
+      console.log("[CAPI] agendamento via admin — evento Lead não disparado");
     }
 
     // Create lead record

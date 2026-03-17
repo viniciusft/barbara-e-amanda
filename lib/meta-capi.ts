@@ -40,7 +40,16 @@ export async function enviarEventoCAPI(
   evento: CAPIEvent,
   dados?: { email?: string; telefone?: string; nome?: string }
 ) {
-  if (!PIXEL_ID || !CAPI_TOKEN) return;
+  console.log("[CAPI] config:", {
+    pixelId: PIXEL_ID ? "OK" : "MISSING",
+    token: CAPI_TOKEN ? "OK" : "MISSING",
+    capiUrl: CAPI_URL,
+    event: evento.event_name,
+  });
+  if (!PIXEL_ID || !CAPI_TOKEN) {
+    console.log("[CAPI] abortando — variáveis de ambiente ausentes");
+    return;
+  }
 
   try {
     const userData: CAPIEvent["user_data"] = { ...evento.user_data };
@@ -76,11 +85,14 @@ export async function enviarEventoCAPI(
       payload.test_event_code = "TEST12345";
     }
 
-    await fetch(CAPI_URL, {
+    console.log("[CAPI] enviando para:", CAPI_URL);
+    const res = await fetch(CAPI_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+    const resText = await res.text();
+    console.log("[CAPI] resposta:", res.status, resText);
   } catch (error) {
     // Nunca deixar erro de analytics quebrar o fluxo principal
     console.error("CAPI error:", error);
