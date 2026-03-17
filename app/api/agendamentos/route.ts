@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { createCalendarEvent } from "@/lib/google-calendar";
 import { addMinutes, addDays, parseISO, format } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
+import { metaEvents } from "@/lib/meta-capi";
 
 const TZ = "America/Sao_Paulo";
 
@@ -294,6 +295,22 @@ export async function POST(req: NextRequest) {
           lida: false,
         });
       } catch { /* non-fatal */ }
+    }
+
+    // Facebook CAPI: Lead event (agendamento concluído)
+    if (!session) {
+      // Only for public bookings — admin bookings don't count as leads
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
+      metaEvents.agendamentoConcluido(
+        servico.nome,
+        servico.preco ?? 0,
+        `${siteUrl}/agendar`,
+        {
+          email: email_cliente,
+          telefone: telefone_cliente,
+          nome: nome_cliente,
+        }
+      ).catch(() => { /* non-fatal */ });
     }
 
     // Create lead record

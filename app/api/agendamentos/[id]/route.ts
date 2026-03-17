@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { deleteCalendarEvent, updateCalendarEvent } from "@/lib/google-calendar";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
+import { metaEvents } from "@/lib/meta-capi";
 
 const TZ = "America/Sao_Paulo";
 
@@ -173,6 +174,20 @@ export async function PATCH(
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  // Facebook CAPI: Purchase event quando serviço é marcado como executado
+  if (rest.servico_executado === true && !agendamento.servico_executado) {
+    const preco = rest.preco_cobrado ?? agendamento.preco_cobrado ?? agendamento.servico_preco ?? 0;
+    metaEvents.servicoExecutado(
+      agendamento.servico_nome,
+      preco,
+      {
+        email: agendamento.email,
+        telefone: agendamento.telefone,
+        nome: agendamento.nome_cliente,
+      }
+    ).catch(() => { /* non-fatal */ });
   }
 
   return NextResponse.json(updated);
