@@ -5,6 +5,7 @@ import { Servico } from "@/types";
 import { formatCurrency, formatDuration } from "@/lib/utils";
 import { Scissors, Clock, CheckCircle, MessageCircle, Plane } from "lucide-react";
 import { PublicConfig } from "./BookingWizard";
+import { analytics } from "@/lib/analytics";
 
 interface Props {
   selected: Servico | null;
@@ -149,7 +150,7 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
             href={waUrl(config.mensagem_casamento)}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => registrarContato("casamento")}
+            onClick={() => { registrarContato("casamento"); analytics.clicouCasamento(); }}
             className="text-left border-2 border-[#C9A84C] bg-amber-50/50 hover:bg-amber-50 transition-all duration-200 overflow-hidden relative block rounded-xl"
           >
             <div className="p-5">
@@ -178,7 +179,7 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
             href={waUrl(config.mensagem_destination_beauty)}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => registrarContato("destination_beauty")}
+            onClick={() => { registrarContato("destination_beauty"); analytics.clicouDestinationBeauty(); }}
             className="text-left border-2 border-[#C9A84C] bg-amber-50/50 hover:bg-amber-50 transition-all duration-200 overflow-hidden relative block rounded-xl"
           >
             <div className="p-5">
@@ -211,7 +212,7 @@ export default function StepServicos({ selected, config, onSelect }: Props) {
               href={waUrl(SUPORTE_MSG)}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => registrarContato("duvida")}
+              onClick={() => { registrarContato("duvida"); analytics.clicouFalarEquipe(); }}
               className="inline-flex items-center gap-2 border border-[#E5E0D8] text-[#6B7280] hover:border-[#C9A84C] hover:text-[#A07830] transition-colors text-sm font-sans px-4 py-2 rounded-lg"
             >
               <MessageCircle size={15} strokeWidth={1.5} className="shrink-0 text-[#25D366]" />

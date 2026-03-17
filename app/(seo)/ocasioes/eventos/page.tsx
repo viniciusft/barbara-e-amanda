@@ -8,6 +8,7 @@ import {
 import Carrossel, { type CarrosselFoto } from "@/components/seo/Carrossel";
 import FaqAccordion, { type FaqItem } from "@/components/seo/FaqAccordion";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { SeoAgendarLink, SeoWhatsAppLink } from "@/components/analytics/SeoCtaLinks";
 
 export const revalidate = 3600;
 
@@ -124,8 +125,8 @@ export default async function EventosPage() {
           <h1 className="font-display text-4xl md:text-5xl text-white font-semibold leading-tight mb-3 max-w-2xl">{titulo}</h1>
           <p className="text-lg text-white/80 mb-6 max-w-xl font-sans">{subtitulo}</p>
           <div className="flex flex-wrap gap-3">
-            <Link href="/agendar" className="inline-flex items-center gap-2 bg-[#C9A84C] text-black font-semibold rounded-lg px-6 py-3 text-sm hover:bg-[#E2C97E] transition-colors"><Sparkles size={15} />Agendar agora</Link>
-            <a href={waUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border border-white/50 text-white rounded-lg px-6 py-3 text-sm hover:bg-white/10 transition-colors font-sans"><MessageCircle size={15} />Falar pelo WhatsApp</a>
+            <SeoAgendarLink pagina="eventos" className="inline-flex items-center gap-2 bg-[#C9A84C] text-black font-semibold rounded-lg px-6 py-3 text-sm hover:bg-[#E2C97E] transition-colors"><Sparkles size={15} />Agendar agora</SeoAgendarLink>
+            <SeoWhatsAppLink href={waUrl} pagina="eventos" className="inline-flex items-center gap-2 border border-white/50 text-white rounded-lg px-6 py-3 text-sm hover:bg-white/10 transition-colors font-sans"><MessageCircle size={15} />Falar pelo WhatsApp</SeoWhatsAppLink>
           </div>
         </div>
       </section>
@@ -158,8 +159,8 @@ export default async function EventosPage() {
                 <p className="font-semibold text-neutral-900 text-lg mb-1">Maquiagem para Eventos</p>
                 <p className="text-neutral-500 font-sans text-sm mb-5">Consulte disponibilidade</p>
                 <hr className="border-neutral-100 mb-5" />
-                <Link href="/agendar" className="flex items-center justify-center gap-2 w-full bg-[#C9A84C] text-black font-semibold rounded-lg py-3 text-sm hover:bg-[#E2C97E] transition-colors mb-3"><Sparkles size={14} />Agendar agora</Link>
-                <a href={waUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full border border-[#C9A84C] text-[#C9A84C] rounded-lg py-3 text-sm hover:bg-[rgba(201,168,76,0.06)] transition-colors font-sans"><MessageCircle size={14} />Tirar dúvidas</a>
+                <SeoAgendarLink pagina="eventos" className="flex items-center justify-center gap-2 w-full bg-[#C9A84C] text-black font-semibold rounded-lg py-3 text-sm hover:bg-[#E2C97E] transition-colors mb-3"><Sparkles size={14} />Agendar agora</SeoAgendarLink>
+                <SeoWhatsAppLink href={waUrl} pagina="eventos" className="flex items-center justify-center gap-2 w-full border border-[#C9A84C] text-[#C9A84C] rounded-lg py-3 text-sm hover:bg-[rgba(201,168,76,0.06)] transition-colors font-sans"><MessageCircle size={14} />Tirar dúvidas</SeoWhatsAppLink>
                 <p className="text-xs text-neutral-400 text-center mt-4 font-sans">Agendamento 100% online · Sem taxa</p>
               </div>
             </div>
@@ -198,7 +199,7 @@ export default async function EventosPage() {
         <div className="max-w-5xl mx-auto px-5 text-center">
           <h2 className="font-display text-3xl md:text-4xl text-white font-semibold mb-3">Pronta para arrasar?</h2>
           <p className="text-white/70 font-sans mb-8 max-w-md mx-auto">Agende sua maquiagem para eventos em Passos MG com facilidade</p>
-          <Link href="/agendar" className="inline-flex items-center gap-2 bg-[#C9A84C] text-black font-semibold rounded-lg px-8 py-4 text-sm hover:bg-[#E2C97E] transition-colors"><Sparkles size={16} />Agendar agora<ArrowRight size={16} /></Link>
+          <SeoAgendarLink pagina="eventos" className="inline-flex items-center gap-2 bg-[#C9A84C] text-black font-semibold rounded-lg px-8 py-4 text-sm hover:bg-[#E2C97E] transition-colors"><Sparkles size={16} />Agendar agora<ArrowRight size={16} /></SeoAgendarLink>
         </div>
       </section>
 
