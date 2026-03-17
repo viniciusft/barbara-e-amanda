@@ -9,6 +9,7 @@ import {
 import Carrossel, { type CarrosselFoto } from "@/components/seo/Carrossel";
 import FaqAccordion, { type FaqItem } from "@/components/seo/FaqAccordion";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { SeoAgendarLink, SeoWhatsAppLink } from "@/components/analytics/SeoCtaLinks";
 
 export const revalidate = 3600;
 
@@ -242,22 +243,21 @@ export default async function CasamentoPage() {
           <p className="text-lg text-white/80 mb-6 max-w-xl font-sans">{subtitulo}</p>
 
           <div className="flex flex-wrap gap-3">
-            <Link
-              href="/agendar"
+            <SeoAgendarLink
+              pagina="casamento"
               className="inline-flex items-center gap-2 bg-[#C9A84C] text-black font-semibold rounded-lg px-6 py-3 text-sm hover:bg-[#E2C97E] transition-colors"
             >
               <Sparkles size={15} />
               Agendar agora
-            </Link>
-            <a
+            </SeoAgendarLink>
+            <SeoWhatsAppLink
               href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              pagina="casamento"
               className="inline-flex items-center gap-2 border border-white/50 text-white rounded-lg px-6 py-3 text-sm hover:bg-white/10 transition-colors font-sans"
             >
               <MessageCircle size={15} />
               Falar pelo WhatsApp
-            </a>
+            </SeoWhatsAppLink>
           </div>
         </div>
       </section>
@@ -332,22 +332,21 @@ export default async function CasamentoPage() {
                 </p>
                 <p className="text-neutral-500 font-sans text-sm mb-5">Consulte disponibilidade</p>
                 <hr className="border-neutral-100 mb-5" />
-                <Link
-                  href="/agendar"
+                <SeoAgendarLink
+                  pagina="casamento"
                   className="flex items-center justify-center gap-2 w-full bg-[#C9A84C] text-black font-semibold rounded-lg py-3 text-sm hover:bg-[#E2C97E] transition-colors mb-3"
                 >
                   <Sparkles size={14} />
                   Agendar agora
-                </Link>
-                <a
+                </SeoAgendarLink>
+                <SeoWhatsAppLink
                   href={waUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  pagina="casamento"
                   className="flex items-center justify-center gap-2 w-full border border-[#C9A84C] text-[#C9A84C] rounded-lg py-3 text-sm hover:bg-[rgba(201,168,76,0.06)] transition-colors font-sans"
                 >
                   <MessageCircle size={14} />
                   Tirar dúvidas
-                </a>
+                </SeoWhatsAppLink>
                 <p className="text-xs text-neutral-400 text-center mt-4 font-sans">
                   Agendamento 100% online · Sem taxa
                 </p>
@@ -478,14 +477,14 @@ export default async function CasamentoPage() {
           <p className="text-white/70 font-sans mb-8 max-w-md mx-auto">
             Reserve sua data e garanta o look perfeito para o seu casamento em Passos MG
           </p>
-          <Link
-            href="/agendar"
+          <SeoAgendarLink
+            pagina="casamento"
             className="inline-flex items-center gap-2 bg-[#C9A84C] text-black font-semibold rounded-lg px-8 py-4 text-sm hover:bg-[#E2C97E] transition-colors"
           >
             <Sparkles size={16} />
             Agendar agora
             <ArrowRight size={16} />
-          </Link>
+          </SeoAgendarLink>
         </div>
       </section>
 

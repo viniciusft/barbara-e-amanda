@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { ArrowRight, Instagram, Phone } from "lucide-react";
 import Carrossel from "@/components/seo/Carrossel";
+import { HomeAgendarLink } from "@/components/analytics/SeoCtaLinks";
 
 // NOTE: Add NEXT_PUBLIC_SITE_URL in Vercel → Settings → Environment Variables
 // e.g. NEXT_PUBLIC_SITE_URL=https://ambar.com.br
@@ -67,16 +68,13 @@ export default async function HomePage() {
             {studioName}
           </h1>
         </div>
-        <Link
-          href="/agendar"
-          className="btn-gold text-sm px-5 py-2.5 flex items-center gap-2 group"
-        >
+        <HomeAgendarLink className="btn-gold text-sm px-5 py-2.5 flex items-center gap-2 group">
           Agendar
           <ArrowRight
             size={14}
             className="transition-transform group-hover:translate-x-0.5"
           />
-        </Link>
+        </HomeAgendarLink>
       </nav>
 
       {/* HERO */}
@@ -134,16 +132,13 @@ export default async function HomePage() {
             Experiencia exclusiva de beleza com atencao a cada detalhe.
             Maquiagem e cabelo para o seu dia mais especial.
           </p>
-          <Link
-            href="/agendar"
-            className="inline-flex items-center gap-3 btn-gold text-base px-8 py-4 group"
-          >
+          <HomeAgendarLink className="inline-flex items-center gap-3 btn-gold text-base px-8 py-4 group">
             Agendar agora
             <ArrowRight
               size={18}
               className="transition-transform group-hover:translate-x-1"
             />
-          </Link>
+          </HomeAgendarLink>
         </div>
 
       </section>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Servico, SlotDisponivel } from "@/types";
 import { tocarSom } from "@/lib/sons";
+import { analytics } from "@/lib/analytics";
 import StepServicos from "./StepServicos";
 import StepAgenda from "./StepAgenda";
 import StepDados from "./StepDados";
@@ -165,6 +166,7 @@ export default function BookingWizard() {
               selected={data.servico}
               config={config}
               onSelect={(servico) => {
+                analytics.selecionouServico(servico.nome);
                 tocarSom("selecao");
                 updateData({ servico, slot: null, data: "" });
                 goNext();
@@ -237,6 +239,7 @@ export default function BookingWizard() {
                   throw new Error("Erro ao realizar agendamento. Tente novamente.");
                 }
                 setBooked(true);
+                analytics.agendamentoConcluido(data.servico!.nome, data.servico!.preco);
                 tocarSom("sucesso");
                 setSlotTakenMsg("");
               }}

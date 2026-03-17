@@ -20,6 +20,7 @@ import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
 import { Servico, SlotDisponivel, HorarioDisponivel, Bloqueio } from "@/types";
 import { PublicConfig } from "./BookingWizard";
+import { analytics } from "@/lib/analytics";
 
 interface Props {
   servico: Servico;
@@ -131,10 +132,13 @@ export default function StepAgenda({
 
   function handleDayClick(date: Date) {
     if (isDayDisabled(date)) return;
-    setActiveDate(format(date, "yyyy-MM-dd"));
+    const ds = format(date, "yyyy-MM-dd");
+    analytics.selecionouData(ds);
+    setActiveDate(ds);
   }
 
   function handleSlotSelect(slot: SlotDisponivel) {
+    analytics.selecionouHorario(slot.hora_inicio);
     setSelectedSlotLocal(slot);
     onSelect(activeDate, slot);
   }
@@ -347,6 +351,7 @@ export default function StepAgenda({
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-[#6B7280] hover:text-[#A07830] text-sm font-sans underline transition-colors"
+            onClick={() => analytics.clicouHorarioPersonalizado()}
           >
             <MessageCircle size={14} strokeWidth={1.5} />
             Solicitar horário personalizado

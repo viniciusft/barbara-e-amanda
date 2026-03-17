@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
 
@@ -111,6 +112,7 @@ export default function RootLayout({
         )}
       </head>
       <body className="antialiased bg-[#0a0a0a] text-[#F5F0E8]">
+        <GoogleAnalytics />
         {children}
       </body>
     </html>
