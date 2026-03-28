@@ -26,7 +26,6 @@ declare global {
         }
       ) => void;
     };
-    fbAsyncInit?: () => void;
   }
 }
 
@@ -46,47 +45,30 @@ export default function WhatsAppSetupPage() {
 
   const sessionInfoRef = useRef<{ wabaId: string; phoneNumberId: string } | null>(null);
 
-  const appId = process.env.NEXT_PUBLIC_WHATSAPP_APP_ID!;
   const configId = "2205757726897177";
 
-  /* ── Inicializar o Facebook SDK ───────────────────────────────── */
+  /* ── Carregar e inicializar o Facebook SDK diretamente ───────── */
   useEffect(() => {
-    let initialized = false;
-
-    function initFB() {
-      if (initialized) return;
-      initialized = true;
+    const script = document.createElement("script");
+    script.src = "https://connect.facebook.net/pt_BR/sdk.js";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
       window.FB.init({
-        appId,
-        autoLogAppEvents: true,
+        appId: "1642748973646659",
+        cookie: true,
         xfbml: true,
         version: "v22.0",
       });
       setSdkReady(true);
-    }
-
-    // SDK já carregado (ex.: navegação entre páginas admin)
-    if (window.FB) {
-      initFB();
-      return;
-    }
-
-    // Callback padrão do SDK ao terminar o carregamento
-    window.fbAsyncInit = initFB;
-
-    // Fallback: polling para cobrir casos onde o SDK já carregou
-    // sem chamar fbAsyncInit (ex.: script em cache pelo browser)
-    const poll = setInterval(() => {
-      if (window.FB) {
-        clearInterval(poll);
-        initFB();
-      }
-    }, 300);
+    };
+    document.body.appendChild(script);
 
     return () => {
-      clearInterval(poll);
+      document.body.removeChild(script);
     };
-  }, [appId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ── Trocar code pelo token via API route ─────────────────────── */
   async function exchangeToken(
