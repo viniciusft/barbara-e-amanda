@@ -51,7 +51,11 @@ export default function WhatsAppSetupPage() {
 
   /* ── Inicializar o Facebook SDK ───────────────────────────────── */
   useEffect(() => {
+    let initialized = false;
+
     function initFB() {
+      if (initialized) return;
+      initialized = true;
       window.FB.init({
         appId,
         autoLogAppEvents: true,
@@ -61,11 +65,27 @@ export default function WhatsAppSetupPage() {
       setSdkReady(true);
     }
 
+    // SDK já carregado (ex.: navegação entre páginas admin)
     if (window.FB) {
       initFB();
-    } else {
-      window.fbAsyncInit = initFB;
+      return;
     }
+
+    // Callback padrão do SDK ao terminar o carregamento
+    window.fbAsyncInit = initFB;
+
+    // Fallback: polling para cobrir casos onde o SDK já carregou
+    // sem chamar fbAsyncInit (ex.: script em cache pelo browser)
+    const poll = setInterval(() => {
+      if (window.FB) {
+        clearInterval(poll);
+        initFB();
+      }
+    }, 300);
+
+    return () => {
+      clearInterval(poll);
+    };
   }, [appId]);
 
   /* ── Trocar code pelo token via API route ─────────────────────── */
@@ -98,12 +118,6 @@ export default function WhatsAppSetupPage() {
 
   /* ── Abrir fluxo Embedded Signup ──────────────────────────────── */
   function launchEmbeddedSignup() {
-    if (!sdkReady) {
-      setErrorMsg("SDK do Facebook ainda não carregado. Aguarde alguns segundos e tente novamente.");
-      setStatus("error");
-      return;
-    }
-
     sessionInfoRef.current = null;
     setStatus("idle");
     setErrorMsg("");
@@ -234,34 +248,32 @@ export default function WhatsAppSetupPage() {
         </div>
       )}
 
-      {/* Botão principal */}
+      {/* Botão principal — desabilitado até o FB.init() completar */}
       <button
         onClick={launchEmbeddedSignup}
-        disabled={status === "loading"}
+        disabled={!sdkReady || status === "loading"}
         className="flex items-center gap-2.5 px-6 py-3 rounded-lg font-medium text-sm
           bg-[var(--gold)] text-[#111] hover:bg-[var(--gold-light)] active:bg-[var(--gold-dark)]
           disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {status === "loading" ? (
-          <Loader2 size={16} className="animate-spin" />
+        {!sdkReady ? (
+          <>
+            <Loader2 size={16} className="animate-spin" />
+            Aguardando SDK…
+          </>
+        ) : status === "loading" ? (
+          <>
+            <Loader2 size={16} className="animate-spin" />
+            Processando…
+          </>
         ) : (
-          <MessageCircle size={16} />
+          <>
+            <MessageCircle size={16} />
+            {status === "success" ? "Reconectar WhatsApp" : "Conectar WhatsApp via Coexistência"}
+            <ArrowRight size={14} />
+          </>
         )}
-        {status === "loading"
-          ? "Processando…"
-          : status === "success"
-          ? "Reconectar WhatsApp"
-          : "Conectar WhatsApp via Coexistência"}
-        {status !== "loading" && <ArrowRight size={14} />}
       </button>
-
-      {/* SDK status */}
-      {!sdkReady && (
-        <p className="text-xs text-[var(--text-muted)] flex items-center gap-1.5">
-          <Loader2 size={11} className="animate-spin" />
-          Carregando SDK do Facebook…
-        </p>
-      )}
     </div>
   );
 }
