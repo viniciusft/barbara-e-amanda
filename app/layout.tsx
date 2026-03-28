@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import Script from "next/script";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://barbara-e-amanda.vercel.app";
 
@@ -114,6 +115,14 @@ export default function RootLayout({
       <body className="antialiased bg-[#0a0a0a] text-[#F5F0E8]">
         <GoogleAnalytics />
         {children}
+        {/* Facebook JS SDK — carregado apenas em rotas admin (lazyOnload não bloqueia o site público) */}
+        {isAdmin && (
+          <Script
+            id="facebook-jssdk"
+            src="https://connect.facebook.net/en_US/sdk.js"
+            strategy="lazyOnload"
+          />
+        )}
       </body>
     </html>
   );
