@@ -56,7 +56,7 @@ export default function WhatsAppSetupPage() {
     script.onload = () => {
       window.FB.init({
         appId: "1642748973646659",
-        cookie: true,
+        autoLogAppEvents: true,
         xfbml: true,
         version: "v22.0",
       });
