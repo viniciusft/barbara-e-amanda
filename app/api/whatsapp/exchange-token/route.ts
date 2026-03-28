@@ -1,0 +1,86 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { createServerSupabaseClient } from "@/lib/supabase";
+
+export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
+  const body = await req.json();
+  const { code, wabaId, phoneNumberId } = body as {
+    code: string;
+    wabaId?: string;
+    phoneNumberId?: string;
+  };
+
+  if (!code) {
+    return NextResponse.json({ error: "code obrigatório" }, { status: 400 });
+  }
+
+  const appId = process.env.NEXT_PUBLIC_WHATSAPP_APP_ID;
+  const appSecret = process.env.WHATSAPP_APP_SECRET;
+
+  if (!appId || !appSecret) {
+    return NextResponse.json(
+      { error: "NEXT_PUBLIC_WHATSAPP_APP_ID e WHATSAPP_APP_SECRET não configurados" },
+      { status: 500 }
+    );
+  }
+
+  // Trocar o code pelo access token
+  const params = new URLSearchParams({ client_id: appId, client_secret: appSecret, code });
+  const tokenRes = await fetch(
+    `https://graph.facebook.com/v22.0/oauth/access_token?${params.toString()}`,
+    { cache: "no-store" }
+  );
+
+  if (!tokenRes.ok) {
+    const errBody = await tokenRes.json().catch(() => ({}));
+    console.error("[WhatsApp] Falha ao trocar token:", errBody);
+    return NextResponse.json(
+      { error: "Falha ao trocar token com a Meta", details: errBody },
+      { status: 502 }
+    );
+  }
+
+  const tokenData = (await tokenRes.json()) as {
+    access_token: string;
+    token_type: string;
+  };
+
+  // Salvar WABA ID e Phone Number ID no banco
+  if (wabaId || phoneNumberId) {
+    const supabase = createServerSupabaseClient();
+    const { data: existing } = await supabase
+      .from("admin_config")
+      .select("id")
+      .limit(1)
+      .single();
+
+    const updates: Record<string, string> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (wabaId) updates.whatsapp_waba_id = wabaId;
+    if (phoneNumberId) updates.whatsapp_phone_number_id = phoneNumberId;
+
+    const op = existing
+      ? supabase.from("admin_config").update(updates).eq("id", existing.id)
+      : supabase.from("admin_config").insert(updates);
+
+    const { error: dbError } = await op;
+    if (dbError) {
+      console.error("[WhatsApp] Erro ao salvar no banco:", dbError.message);
+    }
+  }
+
+  return NextResponse.json({
+    success: true,
+    access_token: tokenData.access_token,
+    token_type: tokenData.token_type,
+    waba_id: wabaId ?? null,
+    phone_number_id: phoneNumberId ?? null,
+  });
+}
