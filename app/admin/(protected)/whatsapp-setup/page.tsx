@@ -81,7 +81,12 @@ export default function WhatsAppSetupPage() {
       const res = await fetch("/api/whatsapp/exchange-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, wabaId, phoneNumberId }),
+        body: JSON.stringify({
+            code,
+            wabaId,
+            phoneNumberId,
+            redirect_uri: "https://barbara-e-amanda.vercel.app/admin/whatsapp-setup",
+          }),
       });
 
       const data = await res.json();

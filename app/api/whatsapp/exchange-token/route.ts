@@ -10,10 +10,11 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { code, wabaId, phoneNumberId } = body as {
+  const { code, wabaId, phoneNumberId, redirect_uri } = body as {
     code: string;
     wabaId?: string;
     phoneNumberId?: string;
+    redirect_uri?: string;
   };
 
   if (!code) {
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
     client_id: appId,
     client_secret: appSecret,
     code,
-    redirect_uri: "https://barbara-e-amanda.vercel.app/admin/whatsapp-setup",
+    ...(redirect_uri ? { redirect_uri } : {}),
   });
   const tokenUrl = `https://graph.facebook.com/v22.0/oauth/access_token?${params.toString()}`;
 
