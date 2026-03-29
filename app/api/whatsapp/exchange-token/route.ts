@@ -32,24 +32,42 @@ export async function POST(req: NextRequest) {
 
   // Trocar o code pelo access token
   const params = new URLSearchParams({ client_id: appId, client_secret: appSecret, code });
-  const tokenRes = await fetch(
-    `https://graph.facebook.com/v22.0/oauth/access_token?${params.toString()}`,
-    { cache: "no-store" }
-  );
+  const tokenUrl = `https://graph.facebook.com/v22.0/oauth/access_token?${params.toString()}`;
 
-  if (!tokenRes.ok) {
-    const errBody = await tokenRes.json().catch(() => ({}));
-    console.error("[WhatsApp] Falha ao trocar token:", errBody);
+  let tokenRes: Response;
+  try {
+    tokenRes = await fetch(tokenUrl, { cache: "no-store" });
+  } catch (fetchErr) {
+    const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+    console.error("[WhatsApp] Erro de rede ao chamar Graph API:", msg);
     return NextResponse.json(
-      { error: "Falha ao trocar token com a Meta", details: errBody },
+      { error: "Erro de rede ao contatar a Meta", details: msg },
       { status: 502 }
     );
   }
 
-  const tokenData = (await tokenRes.json()) as {
-    access_token: string;
-    token_type: string;
-  };
+  const rawBody = await tokenRes.text();
+  console.log(`[WhatsApp] Graph API status: ${tokenRes.status}`);
+  console.log("[WhatsApp] Graph API body:", rawBody);
+
+  let tokenData: { access_token?: string; token_type?: string; error?: unknown };
+  try {
+    tokenData = JSON.parse(rawBody);
+  } catch {
+    console.error("[WhatsApp] Resposta não é JSON:", rawBody);
+    return NextResponse.json(
+      { error: "Resposta inesperada da Meta (não é JSON)", raw: rawBody },
+      { status: 502 }
+    );
+  }
+
+  if (!tokenRes.ok || !tokenData.access_token) {
+    console.error("[WhatsApp] Falha ao trocar token:", tokenData);
+    return NextResponse.json(
+      { error: "Falha ao trocar token com a Meta", meta_error: tokenData, http_status: tokenRes.status },
+      { status: 502 }
+    );
+  }
 
   // Salvar WABA ID e Phone Number ID no banco
   if (wabaId || phoneNumberId) {
