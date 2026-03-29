@@ -31,7 +31,12 @@ export async function POST(req: NextRequest) {
   }
 
   // Trocar o code pelo access token
-  const params = new URLSearchParams({ client_id: appId, client_secret: appSecret, code });
+  const params = new URLSearchParams({
+    client_id: appId,
+    client_secret: appSecret,
+    code,
+    redirect_uri: "https://barbara-e-amanda.vercel.app/admin/whatsapp-setup",
+  });
   const tokenUrl = `https://graph.facebook.com/v22.0/oauth/access_token?${params.toString()}`;
 
   let tokenRes: Response;
@@ -61,12 +66,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // DEBUG TEMPORÁRIO — sempre retorna 200 com resposta bruta da Meta
   if (!tokenRes.ok || !tokenData.access_token) {
     console.error("[WhatsApp] Falha ao trocar token:", tokenData);
     return NextResponse.json(
-      { debug: true, http_status: tokenRes.status, meta_response: tokenData },
-      { status: 200 }
+      { error: "Falha ao trocar token com a Meta", meta_error: tokenData, http_status: tokenRes.status },
+      { status: 502 }
     );
   }
 
