@@ -61,11 +61,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // DEBUG TEMPORÁRIO — sempre retorna 200 com resposta bruta da Meta
   if (!tokenRes.ok || !tokenData.access_token) {
     console.error("[WhatsApp] Falha ao trocar token:", tokenData);
     return NextResponse.json(
-      { error: "Falha ao trocar token com a Meta", meta_error: tokenData, http_status: tokenRes.status },
-      { status: 502 }
+      { debug: true, http_status: tokenRes.status, meta_response: tokenData },
+      { status: 200 }
     );
   }
 
