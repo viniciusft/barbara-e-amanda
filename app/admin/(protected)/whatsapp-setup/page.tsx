@@ -74,7 +74,8 @@ export default function WhatsAppSetupPage() {
   async function exchangeToken(
     code: string,
     wabaId?: string,
-    phoneNumberId?: string
+    phoneNumberId?: string,
+    redirectUri?: string
   ) {
     setStatus("loading");
     try {
@@ -82,11 +83,11 @@ export default function WhatsAppSetupPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            code,
-            wabaId,
-            phoneNumberId,
-            redirect_uri: "https://barbara-e-amanda.vercel.app/admin/whatsapp-setup",
-          }),
+          code,
+          wabaId,
+          phoneNumberId,
+          redirect_uri: redirectUri,
+        }),
       });
 
       const data = await res.json();
@@ -109,6 +110,8 @@ export default function WhatsAppSetupPage() {
     setStatus("idle");
     setErrorMsg("");
     setResult(null);
+
+    const redirectUri = window.location.origin + window.location.pathname;
 
     /* Captura WABA ID e Phone Number ID do evento de mensagem do popup */
     function handleMessage(event: MessageEvent) {
@@ -143,7 +146,8 @@ export default function WhatsAppSetupPage() {
           exchangeToken(
             response.authResponse.code,
             info?.wabaId,
-            info?.phoneNumberId
+            info?.phoneNumberId,
+            redirectUri
           );
         } else {
           if (response.status !== "connected") {
