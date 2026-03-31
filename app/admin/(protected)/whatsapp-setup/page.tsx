@@ -71,23 +71,13 @@ export default function WhatsAppSetupPage() {
   }, []);
 
   /* ── Trocar code pelo token via API route ─────────────────────── */
-  async function exchangeToken(
-    code: string,
-    wabaId?: string,
-    phoneNumberId?: string,
-    redirectUri?: string
-  ) {
+  async function exchangeToken(code: string) {
     setStatus("loading");
     try {
       const res = await fetch("/api/whatsapp/exchange-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code,
-          wabaId,
-          phoneNumberId,
-          redirect_uri: redirectUri,
-        }),
+        body: JSON.stringify({ code }),
       });
 
       const data = await res.json();
@@ -110,8 +100,6 @@ export default function WhatsAppSetupPage() {
     setStatus("idle");
     setErrorMsg("");
     setResult(null);
-
-    const redirectUri = window.location.origin + window.location.pathname;
 
     /* Captura WABA ID e Phone Number ID do evento de mensagem do popup */
     function handleMessage(event: MessageEvent) {
@@ -142,13 +130,7 @@ export default function WhatsAppSetupPage() {
         window.removeEventListener("message", handleMessage);
 
         if (response.authResponse?.code) {
-          const info = sessionInfoRef.current;
-          exchangeToken(
-            response.authResponse.code,
-            info?.wabaId,
-            info?.phoneNumberId,
-            redirectUri
-          );
+          exchangeToken(response.authResponse.code);
         } else {
           if (response.status !== "connected") {
             setErrorMsg("Fluxo cancelado ou não autorizado.");
