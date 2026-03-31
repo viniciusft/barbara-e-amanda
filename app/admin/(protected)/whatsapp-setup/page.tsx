@@ -86,22 +86,26 @@ export default function WhatsAppSetupPage() {
 
     const redirectUri = window.location.origin + window.location.pathname;
 
-    const extras = JSON.stringify({
-      setup: { featureType: "coex" },
-      sessionInfoVersion: "3",
-    });
+    const extrasString = encodeURIComponent(
+      JSON.stringify({
+        setup: { featureType: "coex" },
+        sessionInfoVersion: "3",
+      })
+    );
 
-    const params = new URLSearchParams({
-      client_id: process.env.NEXT_PUBLIC_WHATSAPP_APP_ID ?? "",
-      config_id: process.env.NEXT_PUBLIC_WHATSAPP_CONFIG_ID ?? "",
-      response_type: "code",
-      pipeline: "whatsapp_embedded_signup",
-      extras,
-      redirect_uri: redirectUri,
-      state: Math.random().toString(36).substring(7),
-    });
+    const appId = process.env.NEXT_PUBLIC_WHATSAPP_APP_ID ?? "";
+    const configId = process.env.NEXT_PUBLIC_WHATSAPP_CONFIG_ID ?? "";
+    const state = Math.random().toString(36).substring(7);
 
-    const oauthUrl = `https://www.facebook.com/v19.0/dialog/oauth?${params.toString()}`;
+    const oauthUrl =
+      `https://www.facebook.com/v19.0/dialog/oauth?` +
+      `client_id=${appId}` +
+      `&config_id=${configId}` +
+      `&response_type=code` +
+      `&pipeline=whatsapp_embedded_signup` +
+      `&extras=${extrasString}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&state=${state}`;
 
     const popup = window.open(oauthUrl, "whatsapp-signup", "width=600,height=700,scrollbars=yes");
 
