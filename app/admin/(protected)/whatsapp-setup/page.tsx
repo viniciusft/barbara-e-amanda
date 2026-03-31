@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle, AlertCircle, Loader2, MessageCircle, ArrowRight, Info } from "lucide-react";
 
 /* ── Tipagem mínima do Facebook JS SDK ────────────────────────────── */
@@ -13,18 +13,6 @@ declare global {
         xfbml: boolean;
         version: string;
       }) => void;
-      login: (
-        callback: (response: {
-          authResponse?: { code: string } | null;
-          status: string;
-        }) => void,
-        params: {
-          config_id: string;
-          response_type: string;
-          override_default_response_type: boolean;
-          extras: { featureType: string; sessionInfoVersion: string };
-        }
-      ) => void;
     };
   }
 }
@@ -41,11 +29,7 @@ export default function WhatsAppSetupPage() {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [result, setResult] = useState<ConnectionResult | null>(null);
-  const [sdkReady, setSdkReady] = useState(false);
-
-  const sessionInfoRef = useRef<{ wabaId: string; phoneNumberId: string } | null>(null);
-
-  const configId = "2205757726897177";
+  const [, setSdkReady] = useState(false);
 
   /* ── Carregar e inicializar o Facebook SDK diretamente ───────── */
   useEffect(() => {
@@ -71,13 +55,13 @@ export default function WhatsAppSetupPage() {
   }, []);
 
   /* ── Trocar code pelo token via API route ─────────────────────── */
-  async function exchangeToken(code: string) {
+  async function exchangeToken(code: string, redirectUri: string) {
     setStatus("loading");
     try {
       const res = await fetch("/api/whatsapp/exchange-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, redirect_uri: redirectUri }),
       });
 
       const data = await res.json();
@@ -94,60 +78,62 @@ export default function WhatsAppSetupPage() {
     }
   }
 
-  /* ── Abrir fluxo Embedded Signup ──────────────────────────────── */
+  /* ── Abrir fluxo Embedded Signup via popup OAuth manual ──────── */
   function launchEmbeddedSignup() {
-    sessionInfoRef.current = null;
     setStatus("idle");
     setErrorMsg("");
     setResult(null);
 
-    /* Captura WABA ID e Phone Number ID do evento de mensagem do popup */
-    function handleMessage(event: MessageEvent) {
-      if (event.origin !== "https://www.facebook.com") return;
-      try {
-        const data = JSON.parse(event.data as string) as {
-          type?: string;
-          event?: string;
-          data?: { phone_number_id?: string; waba_id?: string };
-        };
-        if (data.type === "WA_EMBEDDED_SIGNUP") {
-          if (data.event === "FINISH" && data.data) {
-            sessionInfoRef.current = {
-              wabaId: data.data.waba_id ?? "",
-              phoneNumberId: data.data.phone_number_id ?? "",
-            };
-          }
-        }
-      } catch {
-        // mensagens não-JSON do Facebook; ignorar
-      }
+    const redirectUri = window.location.origin + window.location.pathname;
+
+    const extras = JSON.stringify({
+      setup: { featureType: "coex" },
+      sessionInfoVersion: "3",
+    });
+
+    const params = new URLSearchParams({
+      client_id: process.env.NEXT_PUBLIC_WHATSAPP_APP_ID ?? "",
+      config_id: process.env.NEXT_PUBLIC_WHATSAPP_CONFIG_ID ?? "",
+      response_type: "code",
+      pipeline: "whatsapp_embedded_signup",
+      extras,
+      redirect_uri: redirectUri,
+      state: Math.random().toString(36).substring(7),
+    });
+
+    const oauthUrl = `https://facebook.com/v22.0/dialog/oauth?${params.toString()}`;
+
+    const popup = window.open(oauthUrl, "whatsapp-signup", "width=600,height=700,scrollbars=yes");
+
+    if (!popup) {
+      setErrorMsg("Popup bloqueado pelo navegador. Permita popups para este site e tente novamente.");
+      setStatus("error");
+      return;
     }
 
-    window.addEventListener("message", handleMessage);
-
-    window.FB.login(
-      (response) => {
-        window.removeEventListener("message", handleMessage);
-
-        if (response.authResponse?.code) {
-          exchangeToken(response.authResponse.code);
-        } else {
-          if (response.status !== "connected") {
-            setErrorMsg("Fluxo cancelado ou não autorizado.");
+    const interval = setInterval(() => {
+      try {
+        if (popup.closed) {
+          clearInterval(interval);
+          return;
+        }
+        const popupUrl = popup.location.href;
+        if (popupUrl.includes(redirectUri) && popupUrl.includes("code=")) {
+          clearInterval(interval);
+          const urlParams = new URLSearchParams(popup.location.search);
+          const code = urlParams.get("code");
+          popup.close();
+          if (code) {
+            exchangeToken(code, redirectUri);
+          } else {
+            setErrorMsg("Código de autorização não encontrado na URL de retorno.");
             setStatus("error");
           }
         }
-      },
-      {
-        config_id: configId,
-        response_type: "code",
-        override_default_response_type: true,
-        extras: {
-          featureType: "coex",
-          sessionInfoVersion: "3",
-        },
+      } catch {
+        // cross-origin — popup ainda está no Facebook, aguarda
       }
-    );
+    }, 500);
   }
 
   return (
@@ -221,20 +207,15 @@ export default function WhatsAppSetupPage() {
         </div>
       )}
 
-      {/* Botão principal — desabilitado até o FB.init() completar */}
+      {/* Botão principal */}
       <button
         onClick={launchEmbeddedSignup}
-        disabled={!sdkReady || status === "loading"}
+        disabled={status === "loading"}
         className="flex items-center gap-2.5 px-6 py-3 rounded-lg font-medium text-sm
           bg-[var(--gold)] text-[#111] hover:bg-[var(--gold-light)] active:bg-[var(--gold-dark)]
           disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {!sdkReady ? (
-          <>
-            <Loader2 size={16} className="animate-spin" />
-            Aguardando SDK…
-          </>
-        ) : status === "loading" ? (
+        {status === "loading" ? (
           <>
             <Loader2 size={16} className="animate-spin" />
             Processando…

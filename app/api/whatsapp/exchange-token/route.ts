@@ -10,10 +10,11 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { code, wabaId, phoneNumberId } = body as {
+  const { code, wabaId, phoneNumberId, redirect_uri } = body as {
     code: string;
     wabaId?: string;
     phoneNumberId?: string;
+    redirect_uri?: string;
   };
 
   if (!code) {
@@ -30,8 +31,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Trocar o code pelo access token — Embedded Signup com config_id NÃO usa redirect_uri
-  const params = new URLSearchParams({ client_id: appId, client_secret: appSecret, code });
+  // Trocar o code pelo access token — redirect_uri obrigatório no popup OAuth manual
+  const params = new URLSearchParams({
+    client_id: appId,
+    client_secret: appSecret,
+    code,
+    ...(redirect_uri ? { redirect_uri } : {}),
+  });
   const tokenUrl = `https://graph.facebook.com/v22.0/oauth/access_token?${params.toString()}`;
   console.log("[WhatsApp] Chamando Graph API:", tokenUrl.replace(appSecret, "***"));
 
