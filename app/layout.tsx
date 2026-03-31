@@ -36,6 +36,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  other: {
+    "facebook-domain-verification": "wm1efinak4tljab1d1kuzi73t7uigo",
+  },
 };
 
 const localBusinessSchema = {
