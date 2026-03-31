@@ -101,7 +101,7 @@ export default function WhatsAppSetupPage() {
       state: Math.random().toString(36).substring(7),
     });
 
-    const oauthUrl = `https://facebook.com/v22.0/dialog/oauth?${params.toString()}`;
+    const oauthUrl = `https://www.facebook.com/v19.0/dialog/oauth?${params.toString()}`;
 
     const popup = window.open(oauthUrl, "whatsapp-signup", "width=600,height=700,scrollbars=yes");
 
