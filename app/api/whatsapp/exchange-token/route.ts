@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     code,
     ...(redirect_uri ? { redirect_uri } : {}),
   });
-  const tokenUrl = `https://graph.facebook.com/v22.0/oauth/access_token?${params.toString()}`;
+  const tokenUrl = `https://graph.facebook.com/v19.0/oauth/access_token?${params.toString()}`;
   console.log("[WhatsApp] Chamando Graph API:", tokenUrl.replace(appSecret, "***"));
 
   let tokenRes: Response;
