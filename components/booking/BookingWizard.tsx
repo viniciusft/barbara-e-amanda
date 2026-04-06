@@ -36,7 +36,7 @@ const DEFAULT_CONFIG: PublicConfig = {
   mensagem_destination_beauty: "Olá! Gostaria de saber mais sobre o serviço de Destination Beauty — atendimento no local de minha preferência. Podem me ajudar? ✨",
   mensagem_horario_personalizado: "Olá! Não encontrei um horário disponível que se encaixe na minha agenda. Gostaria de solicitar um horário personalizado. Podem me ajudar? 😊",
   titulo_casamento: "Casamento 💍",
-  descricao_casamento: "Pacote exclusivo para noivas e madrinhas. Entre em contato para montar o seu look perfeito.",
+  descricao_casamento: "Pacote exclusivo para noivas e madrinhas. Entre em contato para um atendimento exclusivo no seu dia único.",
   titulo_destination_beauty: "Destination Beauty ✈️",
   descricao_destination_beauty: "Levamos a experiência de maquiagem e penteado até você. Ideal para eventos, ensaios, casamentos ou qualquer ocasião especial no local de sua preferência.",
 };
@@ -106,7 +106,7 @@ export default function BookingWizard() {
           Studio
         </p>
         <h1 className="font-display text-4xl md:text-5xl text-[#111111] font-light tracking-wide">
-          Amanda & Barbara
+          Âmbar Beauty Studio
         </h1>
         <p className="text-[#6B7280] text-sm mt-2 font-sans">
           Maquiagem • Cabelo
