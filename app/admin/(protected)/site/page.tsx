@@ -385,7 +385,7 @@ export default function AdminSitePage() {
   // ── Derived ─────────────────────────────────────────────────────────────────
   const heroFoto = fotos.find((f) => f.tipo_exibicao === "hero") ?? null;
   const fotosFiltradas = fotos.filter((f) => f.tipo_exibicao === tipoFoto);
-  const LIMITE = 6;
+  const LIMITE = tipoFoto === "carrossel" ? 12 : 6;
   const atLimit = fotosFiltradas.length >= LIMITE;
 
   // ── FAQ ─────────────────────────────────────────────────────────────────────
@@ -1116,7 +1116,7 @@ export default function AdminSitePage() {
                         </div>
                         <p className="text-[10px] text-gray-500 font-sans mt-2">
                           {tipoFoto === "carrossel"
-                            ? "Fotos em destaque logo após o hero. Máx. 6 fotos. Proporção 4:3"
+                            ? "Fotos em destaque logo após o hero. Máx. 12 fotos. Proporção 4:3"
                             : "Portfólio adicional mais abaixo na página. Máx. 6 fotos. Proporção 1:1"}
                         </p>
                       </div>
@@ -1159,11 +1159,11 @@ export default function AdminSitePage() {
                           className="w-full flex items-center justify-center gap-2 border border-dashed border-surface-border text-xs font-sans text-gray-400 hover:border-gold/40 hover:text-gold py-2.5 rounded-btn transition-colors disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           <Plus size={13} />
-                          {atLimit ? "Limite de 6 fotos atingido" : "+ Adicionar foto"}
+                          {atLimit ? `Limite de ${LIMITE} fotos atingido` : "+ Adicionar foto"}
                         </button>
                         {atLimit && (
                           <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-elevated border border-surface-border text-[10px] font-sans text-gray-400 px-2 py-1 rounded-badge whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none">
-                            Limite de 6 fotos atingido
+                            Limite de {LIMITE} fotos atingido
                           </div>
                         )}
                       </div>
