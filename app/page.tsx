@@ -129,7 +129,7 @@ export default async function HomePage() {
             <span className="italic text-[#C9A84C]">transforma</span>
           </h2>
           <p className="text-[rgba(245,240,232,0.5)] font-sans text-lg mb-12 max-w-xl mx-auto leading-relaxed">
-            Experiencia exclusiva de beleza com atencao a cada detalhe.
+            Experiência exclusiva de beleza com atenção em cada detalhe.
             Maquiagem e cabelo para o seu dia mais especial.
           </p>
           <HomeAgendarLink className="inline-flex items-center gap-3 btn-gold text-base px-8 py-4 group">
@@ -160,7 +160,7 @@ export default async function HomePage() {
           <Carrossel fotos={fotosHome} />
           <div className="mt-10 text-center">
             <Link
-              href="/servicos/maquiagem-social"
+              href="/agendar"
               className="inline-flex items-center gap-3 border border-[#E5E0D8] text-[#6B7280] px-8 py-4 font-sans font-semibold text-sm uppercase tracking-widest hover:border-[#C9A84C] hover:text-[#A07830] transition-colors rounded-btn"
             >
               Ver todos os serviços
